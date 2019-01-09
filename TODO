@@ -1,0 +1,8 @@
+### WiFi
+Passer en mode AP si le Wifi ne répond plus.
+
+### Indi
+Créer un driver firmata/Wifi pour les auxiliaires: <br>
+    Alimentation(s)
+    Eclairages
+    Météo ?
