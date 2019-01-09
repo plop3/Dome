@@ -15,7 +15,8 @@
 Adafruit_MCP23017 mcp;
 
 // WiFi
-#include <ESP8266WiFi.h>
+#include <ESP8266WiFi.h>*
+#include <ESP8266mDNS.h>
 
 //---------------------------------------CONSTANTES-----------------------------------------------
 
@@ -98,11 +99,21 @@ void setup() {
 
   // Connexion WiFi
   int attempts = 0;
+  WiFi.disconnect();
+  WiFi.mode(WIFI_STA);
+  //WiFi.hostname("dome");
   WiFi.begin(ssid, pwd);
   while (WiFi.status() != WL_CONNECTED && attempts < 10) {
     delay(500);
     attempts++;
   }
+  if (attempts == 10) {
+    // WiFi non accessible, on passe en mode AP
+    WiFi.disconnect();
+    WiFi.mode(WIFI_STA);
+    WiFi.softAP(ssid2,pwd2);
+  }
+  MDNS.begin("dome");
 }
 
 //---------------------------------------BOUCLE PRINCIPALE------------------------------------
