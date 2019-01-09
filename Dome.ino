@@ -5,12 +5,17 @@
   # 22/10/2018-28/12/2018
 */
 
+//-------------------------------------FICHIERS EXTERNES---------------------------------------------
+#include "Dome.h"
 //---------------------------------------PERIPHERIQUES-----------------------------------------------
 
 // MCP23017
 #include <Wire.h>
 #include "Adafruit_MCP23017.h"
 Adafruit_MCP23017 mcp;
+
+// WiFi
+#include <ESP8266WiFi.h>
 
 //---------------------------------------CONSTANTES-----------------------------------------------
 
@@ -90,6 +95,14 @@ void setup() {
   }
   // TODO Tant qu'on n'a pas les contacts portes fermées et abri fermé
   PortesFerme = !PortesOuvert;
+
+  // Connexion WiFi
+  int attempts = 0;
+  WiFi.begin(ssid, pwd);
+  while (WiFi.status() != WL_CONNECTED && attempts < 10) {
+    delay(500);
+    attempts++;
+  }
 }
 
 //---------------------------------------BOUCLE PRINCIPALE------------------------------------
