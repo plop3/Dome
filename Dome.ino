@@ -7,35 +7,32 @@
 
 //---------------------------------------PERIPHERIQUES-----------------------------------------------
 
-// MCP23017
-#include <Wire.h>
-#include "Adafruit_MCP23017.h"
-Adafruit_MCP23017 mcp;
-
 //---------------------------------------CONSTANTES-----------------------------------------------
 
 // Sorties
-#define LEDPARK D7	// LED d'indication du park // TODO Remplacer par 1 led APA106 + éclairages intérieurs
-// Sorties MCP23017
-#define ALIM12V 2   // (R3) Alimentation 12V
-#define ALIMTEL 3   // (R4) Alimentation télescope
-#define ALIMMOT 1   // (R2) Alimentation 220V moteur abri
-#define MOTEUR  0   // (R1) Ouverture/fermeture abri
-#define P11     4   // (R5) Relais 1 porte 1
-#define P12     5   // (R6) Relais 2 porte 1
-#define P21     6   // (R7) Relais 1 porte 2
-#define P22     7   // (R8) Relais 2 porte 2
+#define LEDPARK 13	// LED d'indication du park // TODO Remplacer par 1 led APA106 + éclairages intérieurs
+#define LUMIERE 10  // Eclairage de l'abri
+#define ALIM12V 27   // (R3) Alimentation 12V
+#define ALIMTEL 29   // (R4) Alimentation télescope
+#define ALIMMOT 25   // (R2) Alimentation 220V moteur abri
+#define MOTEUR  23   // (R1) Ouverture/fermeture abri
+#define P11     31   // (R5) Relais 1 porte 1
+#define P12     33   // (R6) Relais 2 porte 1
+#define P21     35   // (R7) Relais 1 porte 2
+#define P22     37   // (R8) Relais 2 porte 2
+#define RESET   9    // Reset
 
 // Entrées
-#define PARK  D6	// Etat du telescope 0: non parqué, 1: parqué
+#define PARK  2	// Etat du telescope 0: non parqué, 1: parqué
 /* TODO 
  * entrée ouverture portes
  */
-// Entrées MCP23017
-#define AO 9        // Capteur abri ouvert
-#define AF 8        // Capteur abri fermé
-#define PO 11       // Capteur portes ouvertes
-#define PF 10       // Capteur portes fermées
+#define AO 4        // Capteur abri ouvert
+#define AF 3        // Capteur abri fermé
+#define PO 5       // Capteur portes ouvertes
+#define PF 6       // Capteur portes fermées
+#define BARU  7     // Bouton arret d'urgence
+#define BMA   8     // Bouton marche/arret
 /* TODO
  *  Ecran LCD I2c
  */
@@ -47,35 +44,42 @@ Adafruit_MCP23017 mcp;
 
 //---------------------------------------Variables globales------------------------------------
 
-#define PortesOuvert !mcp.digitalRead(PO)
+#define PortesOuvert !digitalRead(PO)
 bool PortesFerme = !PortesOuvert;    // A remplacer par les capteurs fin de course
-#define AbriOuvert mcp.digitalRead(AO)
-#define AbriFerme mcp.digitalRead(AF)
-#define TelPark digitalRead(PARK)
-//#define TelPark 1
-#define AlimStatus  !mcp.digitalRead(ALIM12V)    // Etat de l'alimentation 12V
+#define AbriOuvert digitalRead(AO)
+#define AbriFerme digitalRead(AF)
+//#define TelPark digitalRead(PARK)
+#define TelPark 1
+#define AlimStatus  !digitalRead(ALIM12V)    // Etat de l'alimentation 12V
 
 //---------------------------------------SETUP-----------------------------------------------
 
 void setup() {
   Serial.begin(9600);
-  mcp.begin();                      // Utilise l'adresse par défaut qui est 0
   // Initialisation des relais
-  for (int i = 0; i < 8; i++) {
-    mcp.pinMode(i, OUTPUT);
-    mcp.digitalWrite(i, HIGH);
-  }
-  mcp.digitalWrite(ALIMMOT, MOTOFF); // Coupure alimentation moteur abri
+  pinMode(LEDPARK, OUTPUT);
+  pinMode(LUMIERE, OUTPUT);
+  digitalWrite(ALIM12V,HIGH);pinMode(ALIM12V, OUTPUT);
+  digitalWrite(ALIMTEL,HIGH);pinMode(ALIMTEL, OUTPUT);
+  digitalWrite(ALIMMOT,HIGH);pinMode(ALIMMOT, OUTPUT);
+  digitalWrite(MOTEUR,HIGH);pinMode(MOTEUR, OUTPUT);
+  digitalWrite(P11,HIGH);pinMode(P11, OUTPUT);
+  digitalWrite(P12,HIGH);pinMode(P12, OUTPUT);
+  digitalWrite(P21,HIGH);pinMode(P21, OUTPUT);
+  digitalWrite(P22,HIGH);pinMode(P22, OUTPUT);
+  
+  digitalWrite(ALIMMOT, MOTOFF); // Coupure alimentation moteur abri
   // Activation des entrées (capteurs...)
-  mcp.pinMode(AO, INPUT);
-  mcp.pinMode(AF, INPUT);
-  mcp.pinMode(PO, INPUT);
-  mcp.pinMode(PF, INPUT);
-  mcp.pullUp(AO, HIGH);
-  mcp.pullUp(AF, HIGH);
-  mcp.pullUp(PO, HIGH);
-  mcp.pullUp(PF, HIGH);
-
+  pinMode(AO, INPUT_PULLUP);
+  pinMode(AF, INPUT_PULLUP);
+  pinMode(PO, INPUT_PULLUP);
+  pinMode(PF, INPUT_PULLUP);
+  pinMode(BARU, INPUT_PULLUP);
+  pinMode(BMA, INPUT_PULLUP);
+  
+  digitalWrite(RESET, HIGH);
+  pinMode(RESET, OUTPUT);
+  
   //pinMode(PARK, INPUT_PULLUP);
   pinMode(PARK, INPUT);
   pinMode(LEDPARK, OUTPUT);
@@ -83,11 +87,11 @@ void setup() {
 
   // Etat du dome initialisation des interrupteurs
   if (PortesOuvert || !AbriFerme) {	// TODO remplacer par AbriOuvert quand le capteur sera changé
-    mcp.digitalWrite(ALIM12V, LOW);
+    digitalWrite(ALIM12V, LOW);
   }
-  if ( !AbriFerme) {	// TODO remplacer par AbriOuvert
-    mcp.digitalWrite(ALIMTEL, LOW); // Alimentation télescope
-  }
+  //if ( !AbriFerme) {	// TODO remplacer par AbriOuvert
+    digitalWrite(ALIMTEL, LOW); // Alimentation télescope
+  //}
   // TODO Tant qu'on n'a pas les contacts portes fermées et abri fermé
   PortesFerme = !PortesOuvert;
 }
@@ -117,11 +121,11 @@ void loop() {
 	          Serial.println(AbriFerme ? "1" : "0");
     }
     else if (SerMsg == "A+") {
-	    mcp.digitalWrite(ALIM12V,LOW);
+	    digitalWrite(ALIM12V,LOW);
 	    Serial.println("1");
     }
     else if ( SerMsg == "A-") {
-	    mcp.digitalWrite(ALIM12V,HIGH);
+	    digitalWrite(ALIM12V,HIGH);
 	    Serial.println("1");
     }
     else if (SerMsg == "P?") {
@@ -144,9 +148,10 @@ void loop() {
     else if (SerMsg == "C?") {
 	Serial.print(AbriFerme);
 	Serial.print(AbriOuvert);
-	Serial.print(PortesFerme);
+	//Serial.print(PortesFerme);
+	Serial.print(!PortesOuvert);
 	Serial.print(PortesOuvert);
-	Serial.println(AlimStatus);
+  	Serial.println(AlimStatus);
     }
   }
   digitalWrite(LEDPARK, TelPark);
@@ -158,12 +163,12 @@ void loop() {
 void ouvrePorte1(void) {
   if (!AlimStatus) {
     // Mise en marche de l'alimentation 12V
-    mcp.digitalWrite(ALIM12V, LOW);
+    digitalWrite(ALIM12V, LOW);
     delay(3000);
   }	
-  mcp.digitalWrite(P12, LOW);
+  digitalWrite(P12, LOW);
   delay(DELAIPORTES);
-  mcp.digitalWrite(P12, HIGH);
+  digitalWrite(P12, HIGH);
 }
 
 // Change la position des portes 0: ouverture 1 fermeture
@@ -175,21 +180,21 @@ void changePortes(bool etat) {
   }
   if (!AlimStatus) {
     // Mise en marche de l'alimentation 12V
-    mcp.digitalWrite(ALIM12V, LOW);
+    digitalWrite(ALIM12V, LOW);
     delay(3000);
   }
   if (etat) {   // Ouverture des portes
-    mcp.digitalWrite(P12, LOW);
+    digitalWrite(P12, LOW);
     delay(5000);
     PortesFerme = false;	// TODO En attendant d'avoir un capteur portes fermées
-    mcp.digitalWrite(P22, LOW);
+    digitalWrite(P22, LOW);
     delay(DELAIPORTES);
     while (!PortesOuvert) {
       delay(10);
     }
     delay(5000);
-    mcp.digitalWrite(P12, HIGH);
-    mcp.digitalWrite(P22, HIGH);
+    digitalWrite(P12, HIGH);
+    digitalWrite(P22, HIGH);
     PortesFerme = !PortesOuvert; // TODO En attendant d'avoir un capteur portes fermées
   }
   else {    // Fermeture des portes
@@ -197,15 +202,15 @@ void changePortes(bool etat) {
     if (!AbriFerme) {
       return;
     }
-    mcp.digitalWrite(P21, LOW);
+    digitalWrite(P21, LOW);
     delay(5000);
-    mcp.digitalWrite(P11, LOW);
+    digitalWrite(P11, LOW);
     attendDep(DELAIPORTES);
-    mcp.digitalWrite(P11, HIGH);
-    mcp.digitalWrite(P21, HIGH);
+    digitalWrite(P11, HIGH);
+    digitalWrite(P21, HIGH);
     if (AbriFerme) {
       // Coupure de l'alimentation 12V
-      mcp.digitalWrite(ALIM12V, HIGH);
+      digitalWrite(ALIM12V, HIGH);
     }
     PortesFerme = !PortesOuvert;	// TODO En attendant le capteur
   }
@@ -222,10 +227,10 @@ void deplaceAbri(bool etat) {
   /* if ((AbriOuvert && AbriFerme) || (!AbriOuvert && ! AbriFerme)) {
     return;
   } */
-  mcp.digitalWrite(ALIMMOT, !MOTOFF); // Alimentation du moteur
+  digitalWrite(ALIMMOT, !MOTOFF); // Alimentation du moteur
   // Pas d'alimentation 12V ?
   if (!AlimStatus) {
-    mcp.digitalWrite(ALIM12V, false);
+    digitalWrite(ALIM12V, false);
     // Boucle d'attente télescope parqué
     for (int i = 0; i < 15; i++) {
       if (TelPark) break;
@@ -233,7 +238,7 @@ void deplaceAbri(bool etat) {
     }
   }
   // Test telescope parqué
-  if (!TelPark) {
+   if (!TelPark) {
     return;
   }
   if (!PortesOuvert) {
@@ -243,17 +248,17 @@ void deplaceAbri(bool etat) {
     delay(10000); 	// A ajuster
     // Mini impulsion pour activer le moteur ???
   }
-  mcp.digitalWrite(ALIMTEL, HIGH); // Coupure alimentation télescope
+  digitalWrite(ALIMTEL, HIGH); // Coupure alimentation télescope
   // Deplacement de l'abri
-  mcp.digitalWrite(MOTEUR, LOW);
+  digitalWrite(MOTEUR, LOW);
   delay(600);
-  mcp.digitalWrite(MOTEUR, HIGH);
+  digitalWrite(MOTEUR, HIGH);
   attendDep(5000);		// On verifie 	au bout de 5s si l'abri a bougé
   if (etat) {			// Abri en cours d'ouverture
     if (AbriFerme) {
-      mcp.digitalWrite(MOTEUR, LOW);
+      digitalWrite(MOTEUR, LOW);
       delay(600);
-      mcp.digitalWrite(MOTEUR, HIGH);
+      digitalWrite(MOTEUR, HIGH);
     }
     attendDep(DELAIABRI);
     while (!AbriOuvert && !AbriFerme) {
@@ -262,9 +267,9 @@ void deplaceAbri(bool etat) {
   }
   else {
     if (AbriOuvert) {
-      mcp.digitalWrite(MOTEUR, LOW);
+      digitalWrite(MOTEUR, LOW);
       delay(600);
-      mcp.digitalWrite(MOTEUR, HIGH);
+      digitalWrite(MOTEUR, HIGH);
     }
     attendDep(DELAIABRI);
     while(!AbriFerme && !AbriOuvert) {	
@@ -272,19 +277,19 @@ void deplaceAbri(bool etat) {
     }
   }
   attendDep(5000);		   // Finir le déplacement
-  mcp.digitalWrite(ALIMMOT, MOTOFF); // Coupure alimentation moteur abri
+  digitalWrite(ALIMMOT, MOTOFF); // Coupure alimentation moteur abri
   // Etat réel de l'abri au cas ou le déplacement soit inversé
   etat=!AbriFerme;
   if (etat) {
     // Abri ouvert
-    mcp.digitalWrite(ALIMTEL, LOW); // Alimentation télescope
+    digitalWrite(ALIMTEL, LOW); // Alimentation télescope
   }
   else {
     // Abri fermé
-    mcp.digitalWrite(ALIMTEL, HIGH); // Coupure alimentation télescope
+    digitalWrite(ALIMTEL, HIGH); // Coupure alimentation télescope
     delay(500);
     changePortes(false);             // Fermeture des portes
-    mcp.digitalWrite(ALIM12V, HIGH); // Coupure alimentation 12V
+    digitalWrite(ALIM12V, HIGH); // Coupure alimentation 12V
   }
 }
 
@@ -303,7 +308,7 @@ void attendDep(unsigned long delai) {	// Boucle d'attente pendant le déplacemen
     	}
     }
     // Si le telescope n'est plus parqué pendant le déplacement -> ARU
-    if (!TelPark) nbpark++;
+    if (!TelPark) nbpark++; // TODO capteur HS
     if (nbpark >= ERRMAX) ARU();
     delay(100);    // Sinon ça plante (delay(1) marche aussi)...
   }
@@ -313,11 +318,16 @@ void attendDep(unsigned long delai) {	// Boucle d'attente pendant le déplacemen
 void ARU() {				// Arret d'urgence
   // Arret de l'alimentation de l'abri
   // Initialisation des relais
-  for (int i = 0; i < 8; i++) {
-    mcp.digitalWrite(i, HIGH);
-  }
-  mcp.digitalWrite(ALIMMOT, MOTOFF);
+  digitalWrite(ALIM12V,HIGH);
+  digitalWrite(ALIMTEL,HIGH);
+  digitalWrite(ALIMMOT,HIGH);
+  digitalWrite(MOTEUR,HIGH);
+  digitalWrite(P11,HIGH);
+  digitalWrite(P12,HIGH);
+  digitalWrite(P21,HIGH);
+  digitalWrite(P22,HIGH);
+  digitalWrite(ALIMMOT, MOTOFF);
   // Ouverture des portes
   changePortes(true);
-  ESP.restart(); // ESP.reset();
+  digitalWrite(RESET, LOW);
 }
