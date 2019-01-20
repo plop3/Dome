@@ -49,6 +49,7 @@ bool PortesFerme = !PortesOuvert;    // A remplacer par les capteurs fin de cour
 #define AbriOuvert digitalRead(AO)
 #define AbriFerme digitalRead(AF)
 //#define TelPark digitalRead(PARK)
+#define TelPark2 digitalRead(PARK)
 #define TelPark 1
 #define AlimStatus  !digitalRead(ALIM12V)    // Etat de l'alimentation 12V
 
@@ -83,7 +84,7 @@ void setup() {
   //pinMode(PARK, INPUT_PULLUP);
   pinMode(PARK, INPUT);
   pinMode(LEDPARK, OUTPUT);
-  digitalWrite(LEDPARK, TelPark);
+  digitalWrite(LEDPARK, TelPark2);
 
   // Etat du dome initialisation des interrupteurs
   if (PortesOuvert || !AbriFerme) {	// TODO remplacer par AbriOuvert quand le capteur sera changé
@@ -151,10 +152,11 @@ void loop() {
 	//Serial.print(PortesFerme);
 	Serial.print(!PortesOuvert);
 	Serial.print(PortesOuvert);
-  	Serial.println(AlimStatus);
+  	Serial.print(AlimStatus);
+	if (TelPark2 ) Serial.println("p"); else Serial.println();
     }
   }
-  digitalWrite(LEDPARK, TelPark);
+  digitalWrite(LEDPARK, TelPark2);
 }
 
 //---------------------------------------FONCTIONS--------------------------------------------
