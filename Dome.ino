@@ -152,7 +152,7 @@ void loop() {
 	//Serial.print(PortesFerme);
 	Serial.print(!PortesOuvert);
 	Serial.print(PortesOuvert);
-  	Serial.print(AlimStatus);
+  Serial.print(AlimStatus);
 	if (TelPark2 ) Serial.println("p"); else Serial.println();
     }
   }
@@ -201,7 +201,7 @@ void changePortes(bool etat) {
   }
   else {    // Fermeture des portes
     //if ((AbriOuvert && AbriFerme) || (!AbriOuvert && ! AbriFerme)) {
-    if (!AbriFerme) {
+    if (!AbriFerme || !TelPark) {
       return;
     }
     digitalWrite(P21, LOW);
@@ -233,11 +233,14 @@ void deplaceAbri(bool etat) {
   // Pas d'alimentation 12V ?
   if (!AlimStatus) {
     digitalWrite(ALIM12V, false);
+    delay(3000);
     // Boucle d'attente télescope parqué
+    /*
     for (int i = 0; i < 15; i++) {
       if (TelPark) break;
       attendDep(2000);
     }
+    */
   }
   // Test telescope parqué
    if (!TelPark) {
