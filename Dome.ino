@@ -1,8 +1,8 @@
 /* Pilotage automatique de l'abri du telescope
   # Serge CLAUS
   # GPL V3
-  # Version 2.0
-  # 22/10/2018-28/12/2018
+  # Version 2.1
+  # 22/10/2018-22/01/2019
 */
 
 //---------------------------------------PERIPHERIQUES-----------------------------------------------
@@ -48,9 +48,8 @@
 bool PortesFerme = !PortesOuvert;    // A remplacer par les capteurs fin de course
 #define AbriOuvert digitalRead(AO)
 #define AbriFerme digitalRead(AF)
-//#define TelPark digitalRead(PARK)
-#define TelPark2 digitalRead(PARK)
-#define TelPark 1
+#define TelPark digitalRead(PARK)
+//#define TelPark 1
 #define AlimStatus  !digitalRead(ALIM12V)    // Etat de l'alimentation 12V
 
 //---------------------------------------SETUP-----------------------------------------------
@@ -84,7 +83,7 @@ void setup() {
   //pinMode(PARK, INPUT_PULLUP);
   pinMode(PARK, INPUT);
   pinMode(LEDPARK, OUTPUT);
-  digitalWrite(LEDPARK, TelPark2);
+  digitalWrite(LEDPARK, TelPark);
 
   // Etat du dome initialisation des interrupteurs
   if (PortesOuvert || !AbriFerme) {	// TODO remplacer par AbriOuvert quand le capteur sera changé
@@ -147,16 +146,16 @@ void loop() {
 	Serial.println("0");
     }	  
     else if (SerMsg == "C?") {
-	Serial.print(AbriFerme);
-	Serial.print(AbriOuvert);
-	//Serial.print(PortesFerme);
-	Serial.print(!PortesOuvert);
-	Serial.print(PortesOuvert);
-  Serial.print(AlimStatus);
-	if (TelPark2 ) Serial.println("p"); else Serial.println();
+      Serial.print(AbriFerme);
+      Serial.print(AbriOuvert);
+      //Serial.print(PortesFerme);
+      Serial.print(!PortesOuvert);
+      Serial.print(PortesOuvert);
+      Serial.print(AlimStatus);
+      Serial.println(TelPark ? "p" : "n");
     }
   }
-  digitalWrite(LEDPARK, TelPark2);
+  digitalWrite(LEDPARK, TelPark);
 }
 
 //---------------------------------------FONCTIONS--------------------------------------------
