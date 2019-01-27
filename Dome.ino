@@ -232,14 +232,11 @@ void deplaceAbri(bool etat) {
   // Pas d'alimentation 12V ?
   if (!AlimStatus) {
     digitalWrite(ALIM12V, false);
-    delay(3000);
     // Boucle d'attente télescope parqué
-    /*
     for (int i = 0; i < 15; i++) {
       if (TelPark) break;
-      attendDep(2000);
+      delay(500);
     }
-    */
   }
   // Test telescope parqué
    if (!TelPark) {
