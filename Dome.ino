@@ -141,6 +141,10 @@ void loop() {
 	    Serial.println("0");
             ARU();
     }
+    else if (SerMsg == "p-") {
+	fermePorte1();
+	Serial.println("0");
+    }	  
     else if (SerMsg == "p+") {
 	ouvrePorte1();
 	Serial.println("0");
@@ -160,6 +164,18 @@ void loop() {
 
 //---------------------------------------FONCTIONS--------------------------------------------
 
+// Ferme la petite porte
+void fermePorte1(void) {
+  if (!AlimStatus) {
+    // Mise en marche de l'alimentation 12V
+    digitalWrite(ALIM12V, LOW);
+    delay(3000);
+  }	
+  digitalWrite(P11, LOW);
+  delay(DELAIPORTES);
+  digitalWrite(P11, HIGH);
+}
+
 // Ouvre la petite porte
 void ouvrePorte1(void) {
   if (!AlimStatus) {
@@ -171,6 +187,7 @@ void ouvrePorte1(void) {
   delay(DELAIPORTES);
   digitalWrite(P12, HIGH);
 }
+
 
 // Change la position des portes 0: ouverture 1 fermeture
 void changePortes(bool etat) {
@@ -190,9 +207,11 @@ void changePortes(bool etat) {
     PortesFerme = false;	// TODO En attendant d'avoir un capteur portes fermées
     digitalWrite(P22, LOW);
     delay(DELAIPORTES);
+    /* TODO attente changement capteurs
     while (!PortesOuvert) {
       delay(10);
     }
+    */	
     delay(5000);
     digitalWrite(P12, HIGH);
     digitalWrite(P22, HIGH);
@@ -249,6 +268,7 @@ void deplaceAbri(bool etat) {
     delay(10000); 	// A ajuster
     // Mini impulsion pour activer le moteur ???
   }
+  
   digitalWrite(ALIMTEL, HIGH); // Coupure alimentation télescope
   // Deplacement de l'abri
   digitalWrite(MOTEUR, LOW);
