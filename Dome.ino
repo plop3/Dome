@@ -46,8 +46,9 @@
 
 #define PortesOuvert !digitalRead(PO)
 bool PortesFerme = !PortesOuvert;    // A remplacer par les capteurs fin de course
-#define AbriOuvert digitalRead(AO)
 #define AbriFerme digitalRead(AF)
+bool AbriOuvert=!AbriFerme;         // TODO A remplacer par capteur de fin de course
+//#define AbriOuvert digitalRead(AO)
 #define TelPark digitalRead(PARK)
 //#define TelPark 1
 #define AlimStatus  !digitalRead(ALIM12V)    // Etat de l'alimentation 12V
@@ -93,7 +94,7 @@ void setup() {
     digitalWrite(ALIMTEL, LOW); // Alimentation télescope
   //}
   // TODO Tant qu'on n'a pas les contacts portes fermées et abri fermé
-  PortesFerme = !PortesOuvert;
+  //PortesFerme = !PortesOuvert;
 }
 
 //---------------------------------------BOUCLE PRINCIPALE------------------------------------
@@ -301,6 +302,7 @@ void deplaceAbri(bool etat) {
   digitalWrite(ALIMMOT, MOTOFF); // Coupure alimentation moteur abri
   // Etat réel de l'abri au cas ou le déplacement soit inversé
   etat=!AbriFerme;
+  AbriOuvert=!AbriFerme;        // TODO en attendant le capteur
   if (etat) {
     // Abri ouvert
     digitalWrite(ALIMTEL, LOW); // Alimentation télescope
