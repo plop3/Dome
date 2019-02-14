@@ -1,8 +1,8 @@
 /* Pilotage automatique de l'abri du telescope
   # Serge CLAUS
   # GPL V3
-  # Version 2.1
-  # 22/10/2018-22/01/2019
+  # Version 2.2
+  # 22/10/2018-214/02/2019
 */
 
 //---------------------------------------PERIPHERIQUES-----------------------------------------------
@@ -13,7 +13,7 @@
 #define LEDPARK 13	// LED d'indication du park // TODO Remplacer par 1 led APA106 + éclairages intérieurs
 #define LUMIERE 10  // Eclairage de l'abri
 #define ALIM12V 27   // (R3) Alimentation 12V
-#define ALIMTEL 29   // (R4) Alimentation télescope
+#define ALIM24V 29   // (R4) Alimentation télescope
 #define ALIMMOT 25   // (R2) Alimentation 220V moteur abri
 #define MOTEUR  23   // (R1) Ouverture/fermeture abri
 #define P11     31   // (R5) Relais 1 porte 1
@@ -45,9 +45,7 @@
 //---------------------------------------Variables globales------------------------------------
 
 #define PortesOuvert !digitalRead(PO)
-bool PortesFerme = !PortesOuvert;    // A remplacer par les capteurs fin de course
 #define AbriFerme digitalRead(AF)
-bool AbriOuvert=!AbriFerme;         // TODO A remplacer par capteur de fin de course
 //#define AbriOuvert digitalRead(AO)
 #define TelPark digitalRead(PARK)
 //#define TelPark 1
@@ -61,7 +59,7 @@ void setup() {
   pinMode(LEDPARK, OUTPUT);
   pinMode(LUMIERE, OUTPUT);
   digitalWrite(ALIM12V,HIGH);pinMode(ALIM12V, OUTPUT);
-  digitalWrite(ALIMTEL,HIGH);pinMode(ALIMTEL, OUTPUT);
+  digitalWrite(ALIM24V,HIGH);pinMode(ALIM24V, OUTPUT);
   digitalWrite(ALIMMOT,HIGH);pinMode(ALIMMOT, OUTPUT);
   digitalWrite(MOTEUR,HIGH);pinMode(MOTEUR, OUTPUT);
   digitalWrite(P11,HIGH);pinMode(P11, OUTPUT);
@@ -77,7 +75,7 @@ void setup() {
   pinMode(PF, INPUT_PULLUP);
   pinMode(BARU, INPUT_PULLUP);
   pinMode(BMA, INPUT_PULLUP);
-  
+
   digitalWrite(RESET, HIGH);
   pinMode(RESET, OUTPUT);
   
@@ -91,7 +89,7 @@ void setup() {
     digitalWrite(ALIM12V, LOW);
   }
   //if ( !AbriFerme) {	// TODO remplacer par AbriOuvert
-    digitalWrite(ALIMTEL, LOW); // Alimentation télescope
+    digitalWrite(ALIM24V, LOW); // Alimentation télescope
   //}
   // TODO Tant qu'on n'a pas les contacts portes fermées et abri fermé
   //PortesFerme = !PortesOuvert;
@@ -111,11 +109,11 @@ void loop() {
 	  }
     else if (SerMsg == "P-") {
       changePortes(false);
-      Serial.println(PortesFerme ? "1" : "0");
+      Serial.println(!PortesOuvert ? "1" : "0");
     }
     else if (SerMsg == "D+") {
       deplaceAbri(true);
-	          Serial.println(AbriOuvert ? "1" : "0");
+	          Serial.println(!AbriFerme ? "1" : "0");
     }
     else if (SerMsg == "D-") {
       deplaceAbri(false);
@@ -152,7 +150,7 @@ void loop() {
     }	  
     else if (SerMsg == "C?") {
       Serial.print(AbriFerme);
-      Serial.print(AbriOuvert);
+      Serial.print(!AbriFerme);
       //Serial.print(PortesFerme);
       Serial.print(!PortesOuvert);
       Serial.print(PortesOuvert);
@@ -193,8 +191,7 @@ void ouvrePorte1(void) {
 // Change la position des portes 0: ouverture 1 fermeture
 void changePortes(bool etat) {
   // Commande identique à l'état actuel, on sort
-  PortesFerme=!PortesOuvert;	// TODO En attendant le capteur portes fermées
-  if ((etat && PortesOuvert) || (!etat && PortesFerme)) {
+  if ((etat && PortesOuvert) || (!etat && !PortesOuvert)) {
     return;
   }
   if (!AlimStatus) {
@@ -205,7 +202,6 @@ void changePortes(bool etat) {
   if (etat) {   // Ouverture des portes
     digitalWrite(P12, LOW);
     delay(5000);
-    PortesFerme = false;	// TODO En attendant d'avoir un capteur portes fermées
     digitalWrite(P22, LOW);
     delay(DELAIPORTES);
     /* TODO attente changement capteurs
@@ -216,11 +212,10 @@ void changePortes(bool etat) {
     delay(5000);
     digitalWrite(P12, HIGH);
     digitalWrite(P22, HIGH);
-    PortesFerme = !PortesOuvert; // TODO En attendant d'avoir un capteur portes fermées
   }
   else {    // Fermeture des portes
     //if ((AbriOuvert && AbriFerme) || (!AbriOuvert && ! AbriFerme)) {
-    if (!AbriFerme || !TelPark) {
+    if (!AbriFerme) {
       return;
     }
     digitalWrite(P21, LOW);
@@ -233,21 +228,15 @@ void changePortes(bool etat) {
       // Coupure de l'alimentation 12V
       digitalWrite(ALIM12V, HIGH);
     }
-    PortesFerme = !PortesOuvert;	// TODO En attendant le capteur
   }
 }
 
 // Déplacement de l'abri 1: ouverture 0: fermeture
 void deplaceAbri(bool etat) {
   // Commande identique à l'état actuel, on sort
-  //if ((etat && AbriOuvert) || (!etat && AbriFerme)) {
   if ((etat && !AbriFerme) || (!etat && AbriFerme)) { // TODO Patch contacteur abri ouvert problématique
     return;
   }
-  // Abri dans une position indeterminée, on sort avec message d'erreur
-  /* if ((AbriOuvert && AbriFerme) || (!AbriOuvert && ! AbriFerme)) {
-    return;
-  } */
   digitalWrite(ALIMMOT, !MOTOFF); // Alimentation du moteur
   // Pas d'alimentation 12V ?
   if (!AlimStatus) {
@@ -266,50 +255,32 @@ void deplaceAbri(bool etat) {
     changePortes(true);    //Ouverture des portes
   }
   else {
-    delay(10000); 	// A ajuster
+    delay(30000); 	// A ajuster
     // Mini impulsion pour activer le moteur ???
   }
   
-  digitalWrite(ALIMTEL, HIGH); // Coupure alimentation télescope
+  digitalWrite(ALIM24V, HIGH); // Coupure alimentation télescope
   // Deplacement de l'abri
   digitalWrite(MOTEUR, LOW);
   delay(600);
   digitalWrite(MOTEUR, HIGH);
-  attendDep(5000);		// On verifie 	au bout de 5s si l'abri a bougé
-  if (etat) {			// Abri en cours d'ouverture
-    if (AbriFerme) {
-      digitalWrite(MOTEUR, LOW);
-      delay(600);
-      digitalWrite(MOTEUR, HIGH);
-    }
-    attendDep(DELAIABRI);
-    while (!AbriOuvert && !AbriFerme) {
+  attendDep(DELAIABRI);
+  /*
+    while(!AbriFerme) {	
       attendDep(1000);
     }
-  }
-  else {
-    if (AbriOuvert) {
-      digitalWrite(MOTEUR, LOW);
-      delay(600);
-      digitalWrite(MOTEUR, HIGH);
-    }
-    attendDep(DELAIABRI);
-    while(!AbriFerme && !AbriOuvert) {	
-      attendDep(1000);
-    }
-  }
+    */
   attendDep(5000);		   // Finir le déplacement
   digitalWrite(ALIMMOT, MOTOFF); // Coupure alimentation moteur abri
   // Etat réel de l'abri au cas ou le déplacement soit inversé
   etat=!AbriFerme;
-  AbriOuvert=!AbriFerme;        // TODO en attendant le capteur
   if (etat) {
     // Abri ouvert
-    digitalWrite(ALIMTEL, LOW); // Alimentation télescope
+    digitalWrite(ALIM24V, LOW); // Alimentation télescope
   }
   else {
     // Abri fermé
-    digitalWrite(ALIMTEL, HIGH); // Coupure alimentation télescope
+    digitalWrite(ALIM24V, HIGH); // Coupure alimentation télescope
     delay(500);
     changePortes(false);             // Fermeture des portes
     digitalWrite(ALIM12V, HIGH); // Coupure alimentation 12V
@@ -342,7 +313,7 @@ void ARU() {				// Arret d'urgence
   // Arret de l'alimentation de l'abri
   // Initialisation des relais
   digitalWrite(ALIM12V,HIGH);
-  digitalWrite(ALIMTEL,HIGH);
+  digitalWrite(ALIM24V,HIGH);
   digitalWrite(ALIMMOT,HIGH);
   digitalWrite(MOTEUR,HIGH);
   digitalWrite(P11,HIGH);
