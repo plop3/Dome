@@ -159,6 +159,7 @@ void loop() {
     }
   }
   digitalWrite(LEDPARK, TelPark);
+  if (! AbriFerme) digitalWrite(ALIMMOT, !MOTOFF); // Alimentation du moteur
 }
 
 //---------------------------------------FONCTIONS--------------------------------------------
@@ -191,15 +192,17 @@ void ouvrePorte1(void) {
 // Change la position des portes 0: ouverture 1 fermeture
 void changePortes(bool etat) {
   // Commande identique à l'état actuel, on sort
-  if ((etat && PortesOuvert) || (!etat && !PortesOuvert)) {
+/*  if ((etat && PortesOuvert) || (!etat && !PortesOuvert)) {
     return;
   }
+*/
   if (!AlimStatus) {
     // Mise en marche de l'alimentation 12V
     digitalWrite(ALIM12V, LOW);
     delay(3000);
   }
   if (etat) {   // Ouverture des portes
+  digitalWrite(ALIMMOT, !MOTOFF); // Alimentation du moteur
     digitalWrite(P12, LOW);
     delay(5000);
     digitalWrite(P22, LOW);
@@ -230,14 +233,15 @@ void changePortes(bool etat) {
     }
   }
 }
-
 // Déplacement de l'abri 1: ouverture 0: fermeture
 void deplaceAbri(bool etat) {
+Serial.println("Déplacement abri");
   // Commande identique à l'état actuel, on sort
   if ((etat && !AbriFerme) || (!etat && AbriFerme)) { // TODO Patch contacteur abri ouvert problématique
     return;
   }
   digitalWrite(ALIMMOT, !MOTOFF); // Alimentation du moteur
+
   // Pas d'alimentation 12V ?
   if (!AlimStatus) {
     digitalWrite(ALIM12V, false);
@@ -255,12 +259,14 @@ void deplaceAbri(bool etat) {
     changePortes(true);    //Ouverture des portes
   }
   else {
-    delay(30000); 	// A ajuster
+    changePortes(true);    //Ouverture des portes
+    //delay(DELAIPORTES);
     // Mini impulsion pour activer le moteur ???
   }
   
   digitalWrite(ALIM24V, HIGH); // Coupure alimentation télescope
   // Deplacement de l'abri
+Serial.println("Déplace abri moteur on");
   digitalWrite(MOTEUR, LOW);
   delay(600);
   digitalWrite(MOTEUR, HIGH);
@@ -271,7 +277,7 @@ void deplaceAbri(bool etat) {
     }
     */
   attendDep(5000);		   // Finir le déplacement
-  digitalWrite(ALIMMOT, MOTOFF); // Coupure alimentation moteur abri
+  //digitalWrite(ALIMMOT, MOTOFF); // Coupure alimentation moteur abri
   // Etat réel de l'abri au cas ou le déplacement soit inversé
   etat=!AbriFerme;
   if (etat) {
@@ -284,6 +290,7 @@ void deplaceAbri(bool etat) {
     delay(500);
     changePortes(false);             // Fermeture des portes
     digitalWrite(ALIM12V, HIGH); // Coupure alimentation 12V
+    digitalWrite(ALIMMOT, MOTOFF); // Coupure alimentation moteur abri
   }
 }
 
