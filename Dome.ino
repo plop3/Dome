@@ -232,7 +232,6 @@ void changePortes(bool etat) {
 }
 // Déplacement de l'abri 1: ouverture 0: fermeture
 void deplaceAbri(bool etat) {
-Serial.println("Déplacement abri");
   // Commande identique à l'état actuel, on sort
   if ((etat && !AbriFerme) || (!etat && AbriFerme)) { // TODO Patch contacteur abri ouvert problématique
     return;
@@ -263,7 +262,6 @@ Serial.println("Déplacement abri");
   
   digitalWrite(ALIM24V, HIGH); // Coupure alimentation télescope
   // Deplacement de l'abri
-Serial.println("Déplace abri moteur on");
   digitalWrite(MOTEUR, LOW);
   delay(600);
   digitalWrite(MOTEUR, HIGH);
