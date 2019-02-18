@@ -242,7 +242,7 @@ void deplaceAbri(bool etat) {
   if (!AlimStatus) {
     digitalWrite(ALIM12V, false);
     // Boucle d'attente télescope parqué
-    for (int i = 0; i < 15; i++) {
+    for (int i = 0; i < 20; i++) {
       if (TelPark) break;
       delay(500);
     }
