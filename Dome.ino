@@ -2,7 +2,7 @@
   # Serge CLAUS
   # GPL V3
   # Version 2.2
-  # 22/10/2018-214/02/2019
+  # 22/10/2018-18/02/2019
 */
 
 //---------------------------------------PERIPHERIQUES-----------------------------------------------
@@ -33,9 +33,6 @@
 #define PF 6       // Capteur portes fermées
 #define BARU  7     // Bouton arret d'urgence
 #define BMA   8     // Bouton marche/arret
-/* TODO
- *  Ecran LCD I2c
- */
 
 // Constantes globales
 #define DELAIPORTES 40000L  // Durée d'ouverture/fermeture des portes
@@ -88,9 +85,9 @@ void setup() {
   if (PortesOuvert || !AbriFerme) {	// TODO remplacer par AbriOuvert quand le capteur sera changé
     digitalWrite(ALIM12V, LOW);
   }
-  //if ( !AbriFerme) {	// TODO remplacer par AbriOuvert
+  if ( !AbriFerme) {	// TODO remplacer par AbriOuvert
     digitalWrite(ALIM24V, LOW); // Alimentation télescope
-  //}
+  }
   // TODO Tant qu'on n'a pas les contacts portes fermées et abri fermé
   //PortesFerme = !PortesOuvert;
 }
