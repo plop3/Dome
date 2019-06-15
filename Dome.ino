@@ -44,8 +44,8 @@
 #define PortesOuvert !digitalRead(PO)
 #define AbriFerme digitalRead(AF)
 //#define AbriOuvert digitalRead(AO)
-#define TelPark digitalRead(PARK)
-//#define TelPark 1
+##define TelPark digitalRead(PARK)
+#define TelPark 1
 #define AlimStatus  !digitalRead(ALIM12V)    // Etat de l'alimentation 12V
 
 //---------------------------------------SETUP-----------------------------------------------
