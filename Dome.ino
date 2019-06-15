@@ -7,6 +7,11 @@
 
 //---------------------------------------PERIPHERIQUES-----------------------------------------------
 
+//---------------------------------------AP WIFI-----------------------------------------------
+#include <WiFi.h>
+#define SSID "DomeAP"
+#define PWD "DomeAstro"
+
 //---------------------------------------CONSTANTES-----------------------------------------------
 
 // Sorties
@@ -51,7 +56,8 @@
 //---------------------------------------SETUP-----------------------------------------------
 
 void setup() {
-  Serial.begin(9600);
+  Serial.begin(115200);
+  /*
   // Initialisation des relais
   pinMode(LEDPARK, OUTPUT);
   pinMode(LUMIERE, OUTPUT);
@@ -90,6 +96,13 @@ void setup() {
   }
   // TODO Tant qu'on n'a pas les contacts portes fermées et abri fermé
   //PortesFerme = !PortesOuvert;
+*/
+  // Point d'accès WiFi
+   //WiFi.mode(WIFI_AP);
+   WiFi.softAP(SSID,PWD);
+   IPAddress IP = WiFi.softAPIP();
+   Serial.print("AP IP address: ");
+   Serial.println(IP);
 }
 
 //---------------------------------------BOUCLE PRINCIPALE------------------------------------
