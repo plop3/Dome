@@ -44,14 +44,14 @@
 #define PortesOuvert !digitalRead(PO)
 #define AbriFerme digitalRead(AF)
 //#define AbriOuvert digitalRead(AO)
-//#define TelPark digitalRead(PARK)
-#define TelPark 1
+#define TelPark digitalRead(PARK)
+//#define TelPark 1
 #define AlimStatus  !digitalRead(ALIM12V)    // Etat de l'alimentation 12V
 
 //---------------------------------------SETUP-----------------------------------------------
 
 void setup() {
-  Serial.begin(9600);
+  Serial2.begin(9600);
   // Initialisation des relais
   pinMode(LEDPARK, OUTPUT);
   pinMode(LUMIERE, OUTPUT);
@@ -98,61 +98,61 @@ String SerMsg="";		// Message reçu sur le port série
 
 void loop() {
   // Lecture des ordres reçus du port série
-  if (Serial.available()) {
-    SerMsg=Serial.readStringUntil(35);
+  if (Serial2.available()) {
+    SerMsg=Serial2.readStringUntil(35);
 	  if (SerMsg == "P+") {
       changePortes(true);
-      Serial.println(PortesOuvert ? "1" : "0");
+      Serial2.println(PortesOuvert ? "1" : "0");
 	  }
     else if (SerMsg == "P-") {
       changePortes(false);
-      Serial.println(!PortesOuvert ? "1" : "0");
+      Serial2.println(!PortesOuvert ? "1" : "0");
     }
     else if (SerMsg == "D+") {
       deplaceAbri(true);
-	          Serial.println(!AbriFerme ? "1" : "0");
+	          Serial2.println(!AbriFerme ? "1" : "0");
     }
     else if (SerMsg == "D-") {
       deplaceAbri(false);
-	          Serial.println(AbriFerme ? "1" : "0");
+	          Serial2.println(AbriFerme ? "1" : "0");
     }
     else if (SerMsg == "A+") {
 	    digitalWrite(ALIM12V,LOW);
-	    Serial.println("1");
+	    Serial2.println("1");
     }
     else if ( SerMsg == "A-") {
 	    digitalWrite(ALIM12V,HIGH);
-	    Serial.println("1");
+	    Serial2.println("1");
     }
     else if (SerMsg == "P?") {
-      Serial.println(PortesOuvert ? "1" : "0");
+      Serial2.println(PortesOuvert ? "1" : "0");
     }
     else if (SerMsg == "D?") {
-            Serial.println(AbriFerme ? "0" : "1");
+            Serial2.println(AbriFerme ? "0" : "1");
     }
     else if (SerMsg == "A?") {
-            Serial.println(AlimStatus ? "1" : "0");
+            Serial2.println(AlimStatus ? "1" : "0");
     }
     else if (SerMsg == "AU") {
-	    Serial.println("0");
+	    Serial2.println("0");
             ARU();
     }
     else if (SerMsg == "p-") {
 	fermePorte1();
-	Serial.println("0");
+	Serial2.println("0");
     }	  
     else if (SerMsg == "p+") {
 	ouvrePorte1();
-	Serial.println("0");
+	Serial2.println("0");
     }	  
     else if (SerMsg == "C?") {
-      Serial.print(AbriFerme);
-      Serial.print(!AbriFerme);
-      //Serial.print(PortesFerme);
-      Serial.print(!PortesOuvert);
-      Serial.print(PortesOuvert);
-      Serial.print(AlimStatus);
-      Serial.println(TelPark ? "p" : "n");
+      Serial2.print(AbriFerme);
+      Serial2.print(!AbriFerme);
+      //Serial2.print(PortesFerme);
+      Serial2.print(!PortesOuvert);
+      Serial2.print(PortesOuvert);
+      Serial2.print(AlimStatus);
+      Serial2.println(TelPark ? "p" : "n");
     }
   }
   digitalWrite(LEDPARK, TelPark);
@@ -296,10 +296,10 @@ void attendDep(unsigned long delai) {	// Boucle d'attente pendant le déplacemen
   unsigned long Cprevious = millis();
   while ((millis() - Cprevious) < delai) {
     // Lecture des ordres reçus du port série
-    if (Serial.available()) {
-    	SerMsg=Serial.readStringUntil(35);
+    if (Serial2.available()) {
+    	SerMsg=Serial2.readStringUntil(35);
     	if (SerMsg == "AU") {
-	    Serial.println("0");
+	    Serial2.println("0");
             ARU();
     	}
     }
