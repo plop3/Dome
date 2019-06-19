@@ -1,5 +1,13 @@
 TODO:
 -----
+
+ON/OFF Dome:
+ON#:    Démarrage des alimentations
+OF#:    Arret des alimentations
+Si pas d'alimentation:
+    Retour portes: fermées
+    Retour dome: fermé
+    
 - Schéma de cablage de la carte
 - Gestion du capteur portes ouvertes
 - Gestion du capteur ports fermées
