@@ -45,6 +45,7 @@
 #define PortesOuvert !digitalRead(PO) 
 #define AbriFerme !digitalRead(AF) 
 #define AbriOuvert !digitalRead(AO)
+#define MoteurStatus !digitalRead(MOTEUR)
 //#define TelPark digitalRead(PARK)
 #define TelPark 1
 
@@ -191,8 +192,9 @@ void changePortes(bool etat) {
     return;
   }
 */
+  //if (!AlimStatus)  {digitalWrite(ALIM12V, LOW);delay(3000);}
   if (etat) {   // Ouverture des portes
-  //digitalWrite(ALIMMOT, !MOTOFF); // Alimentation du moteur
+    //digitalWrite(ALIMMOT, !MOTOFF); // Alimentation du moteur
     //digitalWrite(ALIM12V,LOW);delay(3000);
     digitalWrite(P12, LOW);
     delay(5000);
@@ -227,14 +229,19 @@ void deplaceAbri(bool etat) {
   if ((etat && AbriOuvert) || (!etat && AbriFerme)) { 
     return;
   }
-  //if (AbriFerme) {digitalWrite(ALIM12V,LOW);};delay(3000);
+  //if (!AlimStatus) {digitalWrite(ALIM12V,LOW);delay(3000);}
   // Test telescope parqué
    if (!TelPark) {
     return;
   }
-  digitalWrite(ALIMMOT, !MOTOFF); // Alimentation du moteur
-  changePortes(true);    //Ouverture des portes
-  
+  //if (!PortesOuvert) {
+  if (!MoteurStatus) digitalWrite(ALIMMOT, !MOTOFF); // Alimentation du moteur
+    changePortes(true);    //Ouverture des portes
+  //}
+  //else if (!MoteurStatus) {
+    // Attente d'initialisation du moteur de l'abri
+  //  delay(DELAIPORTES);
+  //}
   digitalWrite(ALIM24V, HIGH); // Coupure alimentation télescope
   // Deplacement de l'abri
   digitalWrite(MOTEUR, LOW);
@@ -245,7 +252,6 @@ void deplaceAbri(bool etat) {
   while(!AbriFerme && !AbriOuvert) {	
     attendDep(1000);
   }
-    
   attendDep(5000);		   // Finir le déplacement
   // Etat réel de l'abri au cas ou le déplacement soit inversé
   etat=AbriOuvert;
@@ -259,7 +265,7 @@ void deplaceAbri(bool etat) {
     delay(500);
     changePortes(false);             // Fermeture des portes
     digitalWrite(ALIMMOT, MOTOFF); // Coupure alimentation moteur abri
-    //digitalWrite(ALIM12V, HIGH); // Coupure alimentation télescope
+    digitalWrite(ALIM12V, HIGH); // Coupure alimentation télescope
   }
 }
 
