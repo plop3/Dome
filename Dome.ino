@@ -44,7 +44,7 @@
 #define AlimStatus  !digitalRead(ALIM24V)    // Etat de l'alimentation télescope
 #define PortesOuvert !digitalRead(PO) 
 #define AbriFerme !digitalRead(AF) 
-//#define AbriOuvert digitalRead(AO)
+#define AbriOuvert !digitalRead(AO)
 //#define TelPark digitalRead(PARK)
 #define TelPark 1
 
@@ -92,7 +92,7 @@ void setup() {
   //PortesFerme = !PortesOuvert;
   
   // Etat du dome initialisation des interrupteurs
-  if ( !AbriFerme) {	// TODO remplacer par AbriOuvert
+  if ( AbriOuvert) {
     digitalWrite(ALIM24V, LOW); // Alimentation télescope
   }
 }
@@ -115,7 +115,7 @@ void loop() {
     }
     else if (SerMsg == "D+") {
       deplaceAbri(true);
-	          Serial2.println(!AbriFerme ? "1" : "0");
+	          Serial2.println(AbriOuvert ? "1" : "0");
     }
     else if (SerMsg == "D-") {
       deplaceAbri(false);
@@ -161,10 +161,10 @@ void loop() {
     }
   }
   digitalWrite(LEDPARK, TelPark);
-  /*  
-  /!\ AJOUTER TEST DEPLACEMENT INOPINE DU DOME QUAND LES 2 CAPTEURS SERONT OPERATIONNELS 
-  if (!AbriFerme && !AbriOuvert) {ARU()};
-  */
+    
+  // TEST DEPLACEMENT INOPINE DU DOME
+  if (!AbriFerme && !AbriOuvert) {ARU();};
+  
 }
 
 //---------------------------------------FONCTIONS--------------------------------------------
@@ -224,7 +224,7 @@ void changePortes(bool etat) {
 // Déplacement de l'abri 1: ouverture 0: fermeture
 void deplaceAbri(bool etat) {
   // Commande identique à l'état actuel, on sort
-  if ((etat && !AbriFerme) || (!etat && AbriFerme)) { // TODO Patch contacteur abri ouvert problématique
+  if ((etat && AbriOuvert) || (!etat && AbriFerme)) { 
     return;
   }
   //if (AbriFerme) {digitalWrite(ALIM12V,LOW);};delay(3000);
@@ -241,14 +241,14 @@ void deplaceAbri(bool etat) {
   delay(600);
   digitalWrite(MOTEUR, HIGH);
   attendDep(DELAIABRI);
-  /*
-    while(!AbriFerme) {	
-      attendDep(1000);
-    }
-    */
+  
+  while(!AbriFerme && !AbriOuvert) {	
+    attendDep(1000);
+  }
+    
   attendDep(5000);		   // Finir le déplacement
   // Etat réel de l'abri au cas ou le déplacement soit inversé
-  etat=!AbriFerme;
+  etat=AbriOuvert;
   if (etat) {
     // Abri ouvert
     digitalWrite(ALIM24V, LOW); // Alimentation télescope
