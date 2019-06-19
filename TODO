@@ -1,0 +1,16 @@
+TODO:
+-----
+- Schéma de cablage de la carte
+- Gestion du capteur dome ouvert
+- Gestion du capteur portes ouvertes
+- Gestion du capteur ports fermées
+- Gestion de l'entrée "Park"
+- Remplacement de la LED Park par 2 LEDS APA106
+- Ajout des éclairages
+
+Options:
+--------
+- Gérer de nouveau la coupure de l'alimentation 12V
+
+
+
