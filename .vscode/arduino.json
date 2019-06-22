@@ -1,6 +1,6 @@
 {
-    "board": "esp32:esp32:ttgo-lora32-v1",
-    "configuration": "FlashFreq=80,UploadSpeed=921600,DebugLevel=none",
+    "board": "arduino:avr:mega",
+    "configuration": "cpu=atmega2560",
     "sketch": "Dome.ino",
     "port": "/dev/ttyUSB0",
     "programmer": "AVRISP mkII"

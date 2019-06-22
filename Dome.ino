@@ -1,8 +1,8 @@
 /* Pilotage automatique de l'abri du telescope
   # Serge CLAUS
   # GPL V3
-  # Version 2.4
-  # 22/10/2018-20/06/2019
+  # Version 2.5
+  # 22/10/2018-22/06/2019
 */
 
 //---------------------------------------PERIPHERIQUES-----------------------------------------------
@@ -48,10 +48,10 @@
 #define PortesFerme (!digitalRead(Pf1) && !digitalRead(Pf2))
 #define AbriFerme !digitalRead(AF) 
 #define AbriOuvert !digitalRead(AO)
-#define MoteurStatus !digitalRead(MOTEUR)
+#define MoteurStatus !digitalRead(ALIMMOT)
 #define StartTel digitalWrite(ALIM24V, LOW)
 #define StopTel digitalWrite(ALIM24V, HIGH)
-#define StartMot digitalWrite(ALIMMOT, !MOTOFF)
+#define StartMot digitalWrite(ALIMMOT, MOTON)
 #define StopMot digitalWrite(ALIMMOT, MOTOFF)
 //#define TelPark digitalRead(PARK)
 #define TelPark 1
@@ -193,9 +193,8 @@ void ouvrePorte1(void) {
 // Change la position des portes 0: ouverture 1 fermeture
 void changePortes(bool etat) {
   // Commande identique à l'état actuel, on sort
-  if ((etat && PortesOuvert) || (!etat && !PortesOuvert)) {
-	// On remet l'alim dans l'état initial
-    return;
+  if ((etat && PortesOuvert) || (!etat && PortesFerme)) {
+	  return;
   }
   if (etat) {   // Ouverture des portes
 	// Alimentation du moteur
@@ -218,7 +217,7 @@ void changePortes(bool etat) {
     if (!AbriFerme) {
       return;
     }
-	StopMot;
+	  StopMot;
     digitalWrite(P21, LOW);
     attendPorte(5000);
     digitalWrite(P11, LOW);

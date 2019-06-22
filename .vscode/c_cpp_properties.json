@@ -10,7 +10,9 @@
                 "/opt/arduino-1.8.9/hardware/arduino/avr/**",
                 "/opt/arduino-1.8.9/tools/**"
             ],
-            "forcedInclude": [],
+            "forcedInclude": [
+                "/opt/arduino-1.8.9/hardware/arduino/avr/cores/arduino/Arduino.h"
+            ],
             "intelliSenseMode": "gcc-x64",
             "compilerPath": "/usr/bin/clang",
             "cStandard": "c11",
