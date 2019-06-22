@@ -29,10 +29,10 @@
  */
 #define AO 4        // Capteur abri ouvert
 #define AF 3        // Capteur abri fermé
-#define PO 5       // Capteur portes ouvertes
-#define PF 6       // Capteur portes fermées
-#define BARU  7     // Bouton arret d'urgence
-#define BMA   8     // Bouton marche/arret
+#define Po1 5       // Capteur portes ouvertes
+#define Po2 6       // Capteur portes fermées
+#define Pf1 7	    // BARU Bouton arret d'urgence
+#define Pf2 8       // BMA Bouton marche/arret
 
 // Constantes globales
 #define DELAIPORTES 40000L  // Durée d'ouverture/fermeture des portes
@@ -44,8 +44,8 @@
 //---------------------------------------Variables globales------------------------------------
 
 #define AlimStatus  !digitalRead(ALIM24V)    // Etat de l'alimentation télescope
-#define PortesOuvert !digitalRead(PO) 
-#define PortesFerme !digitalRead(PF)
+#define PortesOuvert (!digitalRead(Po1) && !digitalRead(Po2))
+#define PortesFerme (!digitalRead(Pf1) && !digitalRead(Pf2))
 #define AbriFerme !digitalRead(AF) 
 #define AbriOuvert !digitalRead(AO)
 #define MoteurStatus !digitalRead(MOTEUR)
@@ -77,10 +77,12 @@ void setup() {
   // Activation des entrées (capteurs...)
   pinMode(AO, INPUT_PULLUP);
   pinMode(AF, INPUT_PULLUP);
-  pinMode(PO, INPUT_PULLUP);
-  pinMode(PF, INPUT_PULLUP);
-  pinMode(BARU, INPUT_PULLUP);
-  pinMode(BMA, INPUT_PULLUP);
+  pinMode(Po1, INPUT_PULLUP);
+  pinMode(Pf1, INPUT_PULLUP);
+  pinMode(Po2, INPUT_PULLUP);
+  pinMode(Pf2, INPUT_PULLUP);
+  //pinMode(BARU, INPUT_PULLUP);
+  //pinMode(BMA, INPUT_PULLUP);
 
   digitalWrite(RESET, HIGH);
   pinMode(RESET, OUTPUT);
@@ -152,10 +154,14 @@ void loop() {
     else if (SerMsg == "C?") {
       Serial2.print(AbriFerme);
       Serial2.print(!AbriFerme);
-      Serial2.print(!PortesFerme);
+      Serial2.print(PortesFerme);
       Serial2.print(PortesOuvert);
       Serial2.print(AlimStatus);
       Serial2.println(TelPark ? "p" : "n");
+	Serial2.print(digitalRead(Pf1));
+	Serial2.print(digitalRead(Pf2));
+	Serial2.print(digitalRead(Po1));
+	Serial2.println(digitalRead(Po2));
     }
   }
   digitalWrite(LEDPARK, TelPark);
