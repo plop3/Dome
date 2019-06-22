@@ -35,10 +35,11 @@
 #define Pf2 8       // BMA Bouton marche/arret
 
 // Constantes globales
-#define DELAIPORTES 40000L  // Durée d'ouverture/fermeture des portes
+#define DELAIPORTES 40000L  // Durée d'ouverture/fermeture des portes (40000L)
+#define DELAIPORTESCAPTEUR  30000L  // Durée d'ouverture/fermeture des portes (40000L)
 #define DELAIMOTEUR 40000L  // Durée d'initialisation du moteur
-#define DELAIABRI   25000L  // Durée de déplacement de l'abri
-#define MOTOFF HIGH          // Etat pour l'arret du moteur
+#define DELAIABRI   15000L  // Durée de déplacement de l'abri (25000L)
+#define MOTOFF HIGH         // Etat pour l'arret du moteur
 #define MOTON !MOTOFF
 
 //---------------------------------------Variables globales------------------------------------
@@ -203,12 +204,11 @@ void changePortes(bool etat) {
     digitalWrite(P12, LOW);
     attendPorte(5000);
     digitalWrite(P22, LOW);
-    attendPorte(DELAIPORTES); // Délai minimum
+    attendPorte(DELAIPORTESCAPTEUR); // Délai minimum
     // On attend que les portes sont ouvertes
     while (!PortesOuvert) {
       attendPorte(100);
     }
-    //attendPorte(2000);
     digitalWrite(P12, HIGH);
     digitalWrite(P22, HIGH);
   }
@@ -217,7 +217,7 @@ void changePortes(bool etat) {
     if (!AbriFerme) {
       return;
     }
-	  StopMot;
+    StopMot;
     digitalWrite(P21, LOW);
     attendPorte(5000);
     digitalWrite(P11, LOW);
@@ -244,8 +244,8 @@ void deplaceAbri(bool etat) {
   }
   else if (!MoteurStatus) {
     // Attente d'initialisation du moteur de l'abri
-	StartMot;
-	//Attente pour l'initialisation du moteur
+    StartMot;
+    //Attente pour l'initialisation du moteur
     attendPorte(DELAIMOTEUR); // Protection contre les déplacements intempestifs
   }
   // Deplacement de l'abri
@@ -289,7 +289,7 @@ void attendDep(unsigned long delai) {	// Boucle d'attente pendant le déplacemen
     	}
     }
     // Si le telescope n'est plus parqué pendant le déplacement -> ARU
-    if (!TelPark) nbpark++; // TODO capteur HS
+    if (!TelPark) nbpark++;
     if (nbpark >= ERRMAX) ARU();
     // Bouton Arret d'urgence
     //if digitalRead(BARU) {ARU();}
@@ -311,7 +311,7 @@ void attendPorte(unsigned long delai) {	// Boucle d'attente pendant l'ouverture/
     	}
     }
     // Si le telescope n'est plus parqué pendant le déplacement -> ARU
-    if (!TelPark) nbpark++; // TODO capteur HS
+    if (!TelPark) nbpark++;
     if (nbpark >= ERRMAX) ARU();
 	// Si le dome se déplace pendant le mouvement des portes: ARU
 	if (!AbriFerme && !AbriOuvert) {ARU();}
