@@ -44,12 +44,12 @@
 
 //---------------------------------------Variables globales------------------------------------
 
-#define AlimStatus  !digitalRead(ALIM24V)    // Etat de l'alimentation télescope
+#define AlimStatus  (!digitalRead(ALIM24V))    // Etat de l'alimentation télescope
 #define PortesOuvert (!digitalRead(Po1) && !digitalRead(Po2))
 #define PortesFerme (!digitalRead(Pf1) && !digitalRead(Pf2))
-#define AbriFerme !digitalRead(AF) 
-#define AbriOuvert !digitalRead(AO)
-#define MoteurStatus !digitalRead(ALIMMOT)
+#define AbriFerme (!digitalRead(AF)) 
+#define AbriOuvert (!digitalRead(AO))
+#define MoteurStatus (!digitalRead(ALIMMOT))
 #define StartTel digitalWrite(ALIM24V, LOW)
 #define StopTel digitalWrite(ALIM24V, HIGH)
 #define StartMot digitalWrite(ALIMMOT, MOTON)
@@ -209,6 +209,8 @@ void changePortes(bool etat) {
     while (!PortesOuvert) {
       attendPorte(100);
     }
+    // Délai pour finir le mouvement
+    attendPorte(5000);
     digitalWrite(P12, HIGH);
     digitalWrite(P22, HIGH);
   }
