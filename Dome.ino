@@ -44,13 +44,11 @@
 //---------------------------------------Variables globales------------------------------------
 
 #define AlimStatus  !digitalRead(ALIM24V)    // Etat de l'alimentation télescope
-#define DomeStatus	!digitalRead(ALIM12V)
 #define PortesOuvert !digitalRead(PO) 
+#define PortesFerme !digitalRead(PF)
 #define AbriFerme !digitalRead(AF) 
 #define AbriOuvert !digitalRead(AO)
 #define MoteurStatus !digitalRead(MOTEUR)
-#define StartDome digitalWrite(ALIM12V, LOW);delay(3000)
-#define StopDome digitalWrite(ALIM12V, HIGH)
 #define StartTel digitalWrite(ALIM24V, LOW)
 #define StopTel digitalWrite(ALIM24V, HIGH)
 #define StartMot digitalWrite(ALIMMOT, !MOTOFF)
@@ -92,19 +90,9 @@ void setup() {
   pinMode(LEDPARK, OUTPUT);
   digitalWrite(LEDPARK, TelPark);
 
-
-  // Mise en marche de l'alimentation 12V
-  StartDome;
-  
-  // TODO Tant qu'on n'a pas des contacts portes fermées
-  //PortesFerme = !PortesOuvert;
-  
   // Etat du dome initialisation des interrupteurs
   if ( AbriOuvert) {
     StartTel; // Alimentation télescope
-  }
-  if (AbriFerme) {
-	  StopDome;	// L'abri est fermé: alimentation coupée
   }
 }
 
@@ -118,19 +106,19 @@ void loop() {
     SerMsg=Serial2.readStringUntil(35);
 	  if (SerMsg == "P+") {
       changePortes(true);
-      Serial2.println((PortesOuvert && DomeStatus) ? "1" : "0");
+      Serial2.println((PortesOuvert) ? "1" : "0");
 	  }
     else if (SerMsg == "P-") {
       changePortes(false);
-      Serial2.println((!PortesOuvert || DomeStatus) ? "1" : "0");
+      Serial2.println((!PortesOuvert) ? "1" : "0");
     }
     else if (SerMsg == "D+") {
       deplaceAbri(true);
-	          Serial2.println((AbriOuvert && DomeStatus) ? "1" : "0");
+	          Serial2.println((AbriOuvert) ? "1" : "0");
     }
     else if (SerMsg == "D-") {
       deplaceAbri(false);
-	          Serial2.println((AbriFerme || !DomeStatus)? "1" : "0");
+	          Serial2.println((AbriFerme)? "1" : "0");
     }
     else if (SerMsg == "A+") {
 	    StartTel;
@@ -140,17 +128,11 @@ void loop() {
 	    StopTel;
 	    Serial2.println("1");
     }
-	else if ( SerMsg == "ON") {
-		StartDome;
-	}
-	else if ( SerMsg == "OF") {
-		StopDome;
-	}
-    else if (SerMsg == "P?") {
-      Serial2.println((PortesOuvert && DomeStatus) ? "1" : "0");
+	  else if (SerMsg == "P?") {
+      Serial2.println((PortesOuvert) ? "1" : "0");
     }
     else if (SerMsg == "D?") {
-            Serial2.println((AbriFerme || !DomeStatus) ? "0" : "1");
+            Serial2.println((AbriFerme) ? "0" : "1");
     }
     else if (SerMsg == "A?") {
             Serial2.println(AlimStatus ? "1" : "0");
@@ -170,18 +152,16 @@ void loop() {
     else if (SerMsg == "C?") {
       Serial2.print(AbriFerme);
       Serial2.print(!AbriFerme);
-      //Serial2.print(PortesFerme);
-      Serial2.print(!PortesOuvert);
+      Serial2.print(!PortesFerme);
       Serial2.print(PortesOuvert);
       Serial2.print(AlimStatus);
-	  Serial2.print(DomeStatus);
       Serial2.println(TelPark ? "p" : "n");
     }
   }
   digitalWrite(LEDPARK, TelPark);
     
   // TEST DEPLACEMENT INOPINE DU DOME
-  if (!AbriFerme && !AbriOuvert && DomeStatus) {ARU();};
+  if (!AbriFerme && !AbriOuvert) {ARU();};
   
   // Bouton Arret d'urgence
   //if digitalRead(BARU) {ARU();}
@@ -192,32 +172,23 @@ void loop() {
 
 // Ferme la petite porte
 void fermePorte1(void) {
-  bool etat12V=DomeStatus;
-  if (!etat12V) {StartDome;}
   digitalWrite(P11, LOW);
   delay(DELAIPORTES);
   digitalWrite(P11, HIGH);
-  if (!etat12V) {StopDome;}
 }
 
 // Ouvre la petite porte
 void ouvrePorte1(void) {
-  bool etat12V=DomeStatus;
-  if (!etat12V) {StartDome;}
   digitalWrite(P12, LOW);
   delay(DELAIPORTES);
   digitalWrite(P12, HIGH);
-  if (!etat12V) {StopDome;}
 }
 
 // Change la position des portes 0: ouverture 1 fermeture
 void changePortes(bool etat) {
-  bool etat12V=DomeStatus;
-  if (!etat12V) {StartDome;}
   // Commande identique à l'état actuel, on sort
   if ((etat && PortesOuvert) || (!etat && !PortesOuvert)) {
 	// On remet l'alim dans l'état initial
-	if (!etat12V) {StopDome;}
     return;
   }
   if (etat) {   // Ouverture des portes
@@ -248,22 +219,17 @@ void changePortes(bool etat) {
     attendPorte(DELAIPORTES);
     digitalWrite(P11, HIGH);
     digitalWrite(P21, HIGH);
-    StopDome;
   }
 }
 
 // Déplacement de l'abri 1: ouverture 0: fermeture
 void deplaceAbri(bool etat) {
-  bool etat12V=DomeStatus;
-  if (!etat12V) {StartDome;}
   // Commande identique à l'état actuel, on sort
   if ((etat && AbriOuvert) || (!etat && AbriFerme)) { 
-    if (!etat12V) {StopDome;}
     return;
   }
   // Test telescope parqué
    if (!TelPark) {
-	   if (!etat12V) {StopDome;}
     return;
   }
   StopTel; // Coupure alimentation télescope
@@ -298,7 +264,7 @@ void deplaceAbri(bool etat) {
     delay(500);
     changePortes(false);             // Fermeture des portes
     // Pas nécessaire (déjà fait à la fermeture des portes)
-	StopMot; // Coupure alimentation moteur abri
+	  StopMot; // Coupure alimentation moteur abri
     StopTel; // Coupure alimentation dome
   }
 }
@@ -322,7 +288,6 @@ void attendDep(unsigned long delai) {	// Boucle d'attente pendant le déplacemen
     if (nbpark >= ERRMAX) ARU();
     // Bouton Arret d'urgence
     //if digitalRead(BARU) {ARU();}
-
     delay(100);    // Sinon ça plante (delay(1) marche aussi)...
   }
 }
