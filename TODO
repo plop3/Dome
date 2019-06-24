@@ -1,6 +1,8 @@
 TODO:
 -----
 - Bouton ARU    
+- Ouverture/fermeture RFID
+- Commandes par LoRa MQTT/MySensors
 - Schéma de cablage de la carte
 - Gestion de l'entrée "Park"
 - Gestion du capteur ports fermées

@@ -15,8 +15,8 @@ Les principales commandes (liaison série 9600,8,N,1) <br>
   P-# Ferme les portes <br>
   D+# Ouvre l'abri (et les portes si besoin) <br>
   D-# Ferme l'abri et les portes <br>
-  A+# Mise en marche de l'alimentation 12V <br>
-  A-# Arret de l'alimentation 12V <br>
+  A+# Mise en marche de l'alimentation 12V télescope<br>
+  A-# Arret de l'alimentation 12V télescope<br>
   p+# Ouverture de la porte 1 <br>
   p-# Fermeture de la porte 1 <br>
   C?# Informations de l'état des capteurs <br>
