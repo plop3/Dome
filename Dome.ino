@@ -48,10 +48,10 @@ WiFiServer Server(23);
  */
 #define AO 9        // Capteur abri ouvert
 #define AF 8        // Capteur abri fermé
-#define Po1 11       // Capteur portes ouvertes
-#define Po2 13       // Capteur portes fermées
-#define Pf1 10	    // BARU Bouton arret d'urgence
-#define Pf2 12       // BMA Bouton marche/arret
+#define Po1 11       // Capteur porte 1 ouverte
+#define Po2 13       // Capteur porte 2 ouverte
+#define Pf1 10	    //  Capteur porte 1 fermée (BARU)
+#define Pf2 12       // Capteur porte 2 fermée (BMA)
 
 // Constantes globales
 #define DELAIPORTES 40000L  // Durée d'ouverture/fermeture des portes (40000L)
