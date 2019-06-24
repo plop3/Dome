@@ -22,12 +22,14 @@ Adafruit_MCP23017 mcp;
 #include <WiFiUdp.h>
 #include <ArduinoOTA.h>
 
+// Serveur TCP
+WiFiServer Server(23);
+
 //---------------------------------------CONSTANTES-----------------------------------------------
 
 // Sorties
-#define LEDPARK D7	// LED d'indication du park // TODO Remplacer par 1 led APA106 + éclairages intérieurs
-#define LUMIERE 10  // Eclairage de l'abri TODO à modifier
-#define RESET   9    // Reset TODO à modifier
+#define LEDPARK 2	// LED d'indication du park // TODO Remplacer par 1 led APA106 + éclairages intérieurs
+#define LUMIERE 4  // Eclairage de l'abri TODO à modifier
 
 // Sorties MCP23017
 #define ALIM12V 2   // (R3) Alimentation 12V
@@ -40,7 +42,7 @@ Adafruit_MCP23017 mcp;
 #define P22     7   // (R8) Relais 2 porte 2
 
 // Entrées
-#define PARK  D6	// Etat du telescope 0: non parqué, 1: parqué
+#define PARK  13	// Etat du telescope 0: non parqué, 1: parqué
 /* TODO 
  * entrée ouverture portes
  */
@@ -103,9 +105,6 @@ void setup() {
   //pinMode(BARU, INPUT_PULLUP);
   //pinMode(BMA, INPUT_PULLUP);
 
-  digitalWrite(RESET, HIGH);
-  pinMode(RESET, OUTPUT);
-  
   //pinMode(PARK, INPUT_PULLUP);
   pinMode(PARK, INPUT);
   pinMode(LEDPARK, OUTPUT);
@@ -119,7 +118,7 @@ void setup() {
   
   // Connexion WiFi
   WiFi.mode(WIFI_AP_STA);
-  WiFi.hostname("dome");
+  //WiFi.hostname("dome");
   //access point part
   Serial.println("Creating Accesspoint");
   WiFi.softAP(assid,asecret,7,0,5);
@@ -131,7 +130,7 @@ void setup() {
   IPAddress subnet(255,255,255,0);
   IPAddress primaryDNS(212,27,40,240);
   IPAddress secondaryDNS(212,27,40,241);
-  WiFi.config(localIP,gateway,subnet,primaryDNS,secondaryDNS);
+  WiFi.config(local_IP,gateway,subnet,primaryDNS,secondaryDNS);
   Serial.print("connecting to...");
   Serial.println(ssid);
   WiFi.begin(ssid,password);
@@ -188,10 +187,8 @@ void setup() {
       else if (error == OTA_END_ERROR) Serial.println("End Failed");
     });
   ArduinoOTA.begin();
-
-// Serveur TCP
-WiFiServer Server(23);
-Server.begin();
+  // Serveur TCP
+  Server.begin();
 }
 
 //---------------------------------------BOUCLE PRINCIPALE------------------------------------
@@ -388,7 +385,7 @@ void attendDep(unsigned long delai) {	// Boucle d'attente pendant le déplacemen
 	    client.println("0");
             ARU();
     	}
-		client.close();
+	client.stop();
     }
     // Si le telescope n'est plus parqué pendant le déplacement -> ARU
     if (!TelPark) nbpark++;
@@ -412,7 +409,7 @@ void attendPorte(unsigned long delai) {	// Boucle d'attente pendant l'ouverture/
 	    client.println("0");
             ARU();
     	}
-		client.close();
+	client.stop();
     }
     // Si le telescope n'est plus parqué pendant le déplacement -> ARU
     if (!TelPark) nbpark++;
@@ -440,5 +437,5 @@ void ARU() {				// Arret d'urgence
   mcp.digitalWrite(ALIMMOT, MOTOFF);
   // Ouverture des portes
   changePortes(true);
-  digitalWrite(RESET, LOW);
+  ESP.restart();
 }
