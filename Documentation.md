@@ -25,34 +25,34 @@ MCP23017:
 Utilisation d'un MCP23017 pour la gestion des sorties relais et des entrées capteurs.
 Sorties:
 --------
-  -0:	Ouverture/fermeture abri
-  -1:	Alimentation 220V moteur/abri
-  -2:	(Alimentation 12V) N/A
-  -3:	Alimentation 12V télescope
-  -4:	Relais 1 porte 1
-  -5:	Relais 2 porte 1
-  -6:	Relais 1 porte 2
-  -7:	Relais 2 porte 2
+  - 0:	Ouverture/fermeture abri
+  - 1:	Alimentation 220V moteur/abri
+  - 2:	(Alimentation 12V) N/A
+  - 3:	Alimentation 12V télescope
+  - 4:	Relais 1 porte 1
+  - 5:	Relais 2 porte 1
+  - 6:	Relais 1 porte 2
+  - 7:	Relais 2 porte 2
 
 Entrées:
 --------
-   -8:	Capteur abri fermé
-   -9:	Capteur abri ouvert
-  -10:	Porte 2 fermée
-  -11:	Porte 1 ouverte
-  -12:   Porte 2 fermée
-  -13:	Porte 2 ouverte
-  -14:
-  -15:
+   - 8:	Capteur abri fermé
+   - 9:	Capteur abri ouvert
+  - 10:	Porte 2 fermée
+  - 11:	Porte 1 ouverte
+  - 12:   Porte 2 fermée
+  - 13:	Porte 2 ouverte
+  - 14:
+  - 15:
   
 E/S ESP32:
 ----------
 Sorties:
-  -2: LED Park
-  -4: LEDs APA106
+  - 2: LED Park
+  - 4: LEDs APA106
 
 Entrées:
-  -13: Etat parqué du télescope.	
+  - 13: Etat parqué du télescope.	
 
 Convertisseur 5V/3.3V
 ---------------------
