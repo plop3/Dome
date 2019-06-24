@@ -7,7 +7,8 @@ L'ouverture/fermeture de l'abri est commandée par une motorisation de porte de 
 
 L'ensemble est piloté par: <br>
   1 carte 8 relais <br>
-  1 Arduino Mega + Wemos/ESPLink
+  1 TTGO ESP32 + LoRa<br>
+  1 MCP23017 (Sorties relais, entrées capteurs)
 
 Les principales commandes (liaison série 9600,8,N,1) <br>
   P+# Ouvre les portes <br>
