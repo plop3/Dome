@@ -1,38 +1,55 @@
 /* Pilotage automatique de l'abri du telescope
   # Serge CLAUS
   # GPL V3
-  # Version 2.5
-  # 22/10/2018-22/06/2019
+  # Version 3.0
+  # 22/10/2018-24/06/2019
+  # Version pour TTGO ESP32 LoRa + MCP23017
 */
 
+//-------------------------------------FICHIERS EXTERNES---------------------------------------------
+#include "Dome.h"
+
 //---------------------------------------PERIPHERIQUES-----------------------------------------------
+// MCP23017
+#include <Wire.h>
+#include "Adafruit_MCP23017.h"
+Adafruit_MCP23017 mcp;
+
+// WiFi + OTA
+#include <WiFi.h>
+#include <WiFiAP.h>
+#include <ESPmDNS.h>
+#include <WiFiUdp.h>
+#include <ArduinoOTA.h>
 
 //---------------------------------------CONSTANTES-----------------------------------------------
 
 // Sorties
-#define LEDPARK 13	// LED d'indication du park // TODO Remplacer par 1 led APA106 + éclairages intérieurs
-#define LUMIERE 10  // Eclairage de l'abri
-#define ALIM12V 27   // (R3) Alimentation 12V
-#define ALIM24V 29   // (R4) Alimentation télescope
-#define ALIMMOT 25   // (R2) Alimentation 220V moteur abri
-#define MOTEUR  23   // (R1) Ouverture/fermeture abri
-#define P11     31   // (R5) Relais 1 porte 1
-#define P12     33   // (R6) Relais 2 porte 1
-#define P21     35   // (R7) Relais 1 porte 2
-#define P22     37   // (R8) Relais 2 porte 2
-#define RESET   9    // Reset
+#define LEDPARK D7	// LED d'indication du park // TODO Remplacer par 1 led APA106 + éclairages intérieurs
+#define LUMIERE 10  // Eclairage de l'abri TODO à modifier
+#define RESET   9    // Reset TODO à modifier
+
+// Sorties MCP23017
+#define ALIM12V 2   // (R3) Alimentation 12V
+#define ALIM24V 3   // (R4) Alimentation télescope
+#define ALIMMOT 1   // (R2) Alimentation 220V moteur abri
+#define MOTEUR  0   // (R1) Ouverture/fermeture abri
+#define P11     4   // (R5) Relais 1 porte 1
+#define P12     5   // (R6) Relais 2 porte 1
+#define P21     6   // (R7) Relais 1 porte 2
+#define P22     7   // (R8) Relais 2 porte 2
 
 // Entrées
-#define PARK  2	// Etat du telescope 0: non parqué, 1: parqué
+#define PARK  D6	// Etat du telescope 0: non parqué, 1: parqué
 /* TODO 
  * entrée ouverture portes
  */
-#define AO 4        // Capteur abri ouvert
-#define AF 3        // Capteur abri fermé
-#define Po1 5       // Capteur portes ouvertes
-#define Po2 6       // Capteur portes fermées
-#define Pf1 7	    // BARU Bouton arret d'urgence
-#define Pf2 8       // BMA Bouton marche/arret
+#define AO 9        // Capteur abri ouvert
+#define AF 8        // Capteur abri fermé
+#define Po1 11       // Capteur portes ouvertes
+#define Po2 13       // Capteur portes fermées
+#define Pf1 10	    // BARU Bouton arret d'urgence
+#define Pf2 12       // BMA Bouton marche/arret
 
 // Constantes globales
 #define DELAIPORTES 40000L  // Durée d'ouverture/fermeture des portes (40000L)
@@ -44,44 +61,45 @@
 
 //---------------------------------------Variables globales------------------------------------
 
-#define AlimStatus  (!digitalRead(ALIM24V))    // Etat de l'alimentation télescope
-#define PortesOuvert (!digitalRead(Po1) && !digitalRead(Po2))
-#define PortesFerme (!digitalRead(Pf1) && !digitalRead(Pf2))
-#define AbriFerme (!digitalRead(AF)) 
-#define AbriOuvert (!digitalRead(AO))
-#define MoteurStatus (!digitalRead(ALIMMOT))
-#define StartTel digitalWrite(ALIM24V, LOW)
-#define StopTel digitalWrite(ALIM24V, HIGH)
-#define StartMot digitalWrite(ALIMMOT, MOTON)
-#define StopMot digitalWrite(ALIMMOT, MOTOFF)
+#define AlimStatus  (!mcp.digitalRead(ALIM24V))    // Etat de l'alimentation télescope
+#define PortesOuvert (!mcp.digitalRead(Po1) && !mcp.digitalRead(Po2))
+#define PortesFerme (!mcp.digitalRead(Pf1) && !mcp.digitalRead(Pf2))
+#define AbriFerme (!mcp.digitalRead(AF)) 
+#define AbriOuvert (!mcp.digitalRead(AO))
+#define MoteurStatus (!mcp.digitalRead(ALIMMOT))
+#define StartTel mcp.digitalWrite(ALIM24V, LOW)
+#define StopTel mcp.digitalWrite(ALIM24V, HIGH)
+#define StartMot mcp.digitalWrite(ALIMMOT, MOTON)
+#define StopMot mcp.digitalWrite(ALIMMOT, MOTOFF)
 //#define TelPark digitalRead(PARK)
 #define TelPark 1
 
 //---------------------------------------SETUP-----------------------------------------------
 
 void setup() {
-  Serial2.begin(9600);
+  Serial.begin(9600);
+  mcp.begin();	// Utilise l'adresse par défaut qui est 0
   // Initialisation des relais
   pinMode(LEDPARK, OUTPUT);
   pinMode(LUMIERE, OUTPUT);
-  digitalWrite(ALIM12V,HIGH);
-  pinMode(ALIM12V, OUTPUT);
-  digitalWrite(ALIM24V,HIGH);pinMode(ALIM24V, OUTPUT);
-  digitalWrite(ALIMMOT,HIGH);pinMode(ALIMMOT, OUTPUT);
-  digitalWrite(MOTEUR,HIGH);pinMode(MOTEUR, OUTPUT);
-  digitalWrite(P11,HIGH);pinMode(P11, OUTPUT);
-  digitalWrite(P12,HIGH);pinMode(P12, OUTPUT);
-  digitalWrite(P21,HIGH);pinMode(P21, OUTPUT);
-  digitalWrite(P22,HIGH);pinMode(P22, OUTPUT);
+  mcp.digitalWrite(ALIM12V,HIGH);
+  mcp.pinMode(ALIM12V, OUTPUT);
+  mcp.digitalWrite(ALIM24V,HIGH);mcp.pinMode(ALIM24V, OUTPUT);
+  mcp.digitalWrite(ALIMMOT,HIGH);mcp.pinMode(ALIMMOT, OUTPUT);
+  mcp.digitalWrite(MOTEUR,HIGH);mcp.pinMode(MOTEUR, OUTPUT);
+  mcp.digitalWrite(P11,HIGH);mcp.pinMode(P11, OUTPUT);
+  mcp.digitalWrite(P12,HIGH);mcp.pinMode(P12, OUTPUT);
+  mcp.digitalWrite(P21,HIGH);mcp.pinMode(P21, OUTPUT);
+  mcp.digitalWrite(P22,HIGH);mcp.pinMode(P22, OUTPUT);
   
-  digitalWrite(ALIMMOT, MOTOFF); // Coupure alimentation moteur abri
+  mcp.digitalWrite(ALIMMOT, MOTOFF); // Coupure alimentation moteur abri
   // Activation des entrées (capteurs...)
-  pinMode(AO, INPUT_PULLUP);
-  pinMode(AF, INPUT_PULLUP);
-  pinMode(Po1, INPUT_PULLUP);
-  pinMode(Pf1, INPUT_PULLUP);
-  pinMode(Po2, INPUT_PULLUP);
-  pinMode(Pf2, INPUT_PULLUP);
+  mcp.pinMode(AO, INPUT_PULLUP);
+  mcp.pinMode(AF, INPUT_PULLUP);
+  mcp.pinMode(Po1, INPUT_PULLUP);
+  mcp.pinMode(Pf1, INPUT_PULLUP);
+  mcp.pinMode(Po2, INPUT_PULLUP);
+  mcp.pinMode(Pf2, INPUT_PULLUP);
   //pinMode(BARU, INPUT_PULLUP);
   //pinMode(BMA, INPUT_PULLUP);
 
@@ -97,6 +115,83 @@ void setup() {
   if ( AbriOuvert) {
     StartTel; // Alimentation télescope
   }
+  
+  
+  // Connexion WiFi
+  WiFi.mode(WIFI_AP_STA);
+  WiFi.hostname("dome");
+  //access point part
+  Serial.println("Creating Accesspoint");
+  WiFi.softAP(assid,asecret,7,0,5);
+  Serial.print("IP address:\t");
+  Serial.println(WiFi.softAPIP());
+  //station part
+  IPAddress local_IP(192,168,0,17);
+  IPAddress gateway(192,168,0,1);
+  IPAddress subnet(255,255,255,0);
+  IPAddress primaryDNS(212,27,40,240);
+  IPAddress secondaryDNS(212,27,40,241);
+  WiFi.config(localIP,gateway,subnet,primaryDNS,secondaryDNS);
+  Serial.print("connecting to...");
+  Serial.println(ssid);
+  WiFi.begin(ssid,password);
+  int attempts = 0;
+  while(WiFi.status() != WL_CONNECTED && attempts < 10){
+    delay(500);
+	attempts++;
+    Serial.print(".");
+  }
+  Serial.println("");
+  Serial.println("WiFi connected");
+  Serial.println("IP address: ");
+  Serial.println(WiFi.localIP());   
+  //MDNS.begin("dome");
+
+
+// OTA
+  // Port defaults to 3232
+  // ArduinoOTA.setPort(3232);
+
+  // Hostname defaults to esp3232-[MAC]
+  ArduinoOTA.setHostname("dome");
+
+  // No authentication by default
+  // ArduinoOTA.setPassword("admin");
+
+  // Password can be set with it's md5 value as well
+  // MD5(admin) = 21232f297a57a5a743894a0e4a801fc3
+  // ArduinoOTA.setPasswordHash("21232f297a57a5a743894a0e4a801fc3");
+
+  ArduinoOTA
+    .onStart([]() {
+      String type;
+      if (ArduinoOTA.getCommand() == U_FLASH)
+        type = "sketch";
+      else // U_SPIFFS
+        type = "filesystem";
+
+      // NOTE: if updating SPIFFS this would be the place to unmount SPIFFS using SPIFFS.end()
+      Serial.println("Start updating " + type);
+    })
+    .onEnd([]() {
+      Serial.println("\nEnd");
+    })
+    .onProgress([](unsigned int progress, unsigned int total) {
+      Serial.printf("Progress: %u%%\r", (progress / (total / 100)));
+    })
+    .onError([](ota_error_t error) {
+      Serial.printf("Error[%u]: ", error);
+      if (error == OTA_AUTH_ERROR) Serial.println("Auth Failed");
+      else if (error == OTA_BEGIN_ERROR) Serial.println("Begin Failed");
+      else if (error == OTA_CONNECT_ERROR) Serial.println("Connect Failed");
+      else if (error == OTA_RECEIVE_ERROR) Serial.println("Receive Failed");
+      else if (error == OTA_END_ERROR) Serial.println("End Failed");
+    });
+  ArduinoOTA.begin();
+
+// Serveur TCP
+WiFiServer Server(23);
+Server.begin();
 }
 
 //---------------------------------------BOUCLE PRINCIPALE------------------------------------
@@ -104,66 +199,69 @@ void setup() {
 String SerMsg="";		// Message reçu sur le port série
 
 void loop() {
+  ArduinoOTA.handle();	
   // Lecture des ordres reçus du port série2 (ESP8266)
-  if (Serial2.available()) {
-    SerMsg=Serial2.readStringUntil(35);
+  WiFiClient client = Server.available();
+  if (client) {
+    SerMsg=client.readStringUntil(35);
 	  if (SerMsg == "P+") {
       changePortes(true);
-      Serial2.println((PortesOuvert) ? "1" : "0");
+      client.println((PortesOuvert) ? "1" : "0");
 	  }
     else if (SerMsg == "P-") {
       changePortes(false);
-      Serial2.println((!PortesOuvert) ? "1" : "0");
+      client.println((!PortesOuvert) ? "1" : "0");
     }
     else if (SerMsg == "D+") {
       deplaceAbri(true);
-	          Serial2.println((AbriOuvert) ? "1" : "0");
+	          client.println((AbriOuvert) ? "1" : "0");
     }
     else if (SerMsg == "D-") {
       deplaceAbri(false);
-	          Serial2.println((AbriFerme)? "1" : "0");
+	          client.println((AbriFerme)? "1" : "0");
     }
     else if (SerMsg == "A+") {
 	    StartTel;
-	    Serial2.println("1");
+	    client.println("1");
     }
     else if ( SerMsg == "A-") {
 	    StopTel;
-	    Serial2.println("1");
+	    client.println("1");
     }
 	  else if (SerMsg == "P?") {
-      Serial2.println((PortesOuvert) ? "1" : "0");
+      client.println((PortesOuvert) ? "1" : "0");
     }
     else if (SerMsg == "D?") {
-            Serial2.println((AbriFerme) ? "0" : "1");
+            client.println((AbriFerme) ? "0" : "1");
     }
     else if (SerMsg == "A?") {
-            Serial2.println(AlimStatus ? "1" : "0");
+            client.println(AlimStatus ? "1" : "0");
     }
     else if (SerMsg == "AU") {
-	    Serial2.println("0");
+	    client.println("0");
             ARU();
     }
     else if (SerMsg == "p-") {
-	fermePorte1();
-	Serial2.println("0");
+	  fermePorte1();
+	  client.println("0");
     }	  
     else if (SerMsg == "p+") {
-	ouvrePorte1();
-	Serial2.println("0");
+	  ouvrePorte1();
+	  client.println("0");
     }	  
     else if (SerMsg == "C?") {
-      Serial2.print(AbriFerme);
-      Serial2.print(!AbriFerme);
-      Serial2.print(PortesFerme);
-      Serial2.print(PortesOuvert);
-      Serial2.print(AlimStatus);
-      Serial2.println(TelPark ? "p" : "n");
-	Serial2.print(digitalRead(Pf1));
-	Serial2.print(digitalRead(Pf2));
-	Serial2.print(digitalRead(Po1));
-	Serial2.println(digitalRead(Po2));
+      client.print(AbriFerme);
+      client.print(!AbriFerme);
+      client.print(PortesFerme);
+      client.print(PortesOuvert);
+      client.print(AlimStatus);
+      client.println(TelPark ? "p" : "n");
+	  client.print(digitalRead(Pf1));
+	  client.print(digitalRead(Pf2));
+	  client.print(digitalRead(Po1));
+	  client.println(digitalRead(Po2));
     }
+  client.stop();
   }
   digitalWrite(LEDPARK, TelPark);
     
@@ -179,16 +277,16 @@ void loop() {
 
 // Ferme la petite porte
 void fermePorte1(void) {
-  digitalWrite(P11, LOW);
+  mcp.digitalWrite(P11, LOW);
   delay(DELAIPORTES);
-  digitalWrite(P11, HIGH);
+  mcp.digitalWrite(P11, HIGH);
 }
 
 // Ouvre la petite porte
 void ouvrePorte1(void) {
-  digitalWrite(P12, LOW);
+  mcp.digitalWrite(P12, LOW);
   delay(DELAIPORTES);
-  digitalWrite(P12, HIGH);
+  mcp.digitalWrite(P12, HIGH);
 }
 
 // Change la position des portes 0: ouverture 1 fermeture
@@ -201,9 +299,9 @@ void changePortes(bool etat) {
 	// Alimentation du moteur
 	StartMot; // On allume assez tôt pour laisser le temps de s'initialiser
 	// Ouverture des portes
-    digitalWrite(P12, LOW);
+    mcp.digitalWrite(P12, LOW);
     attendPorte(5000);
-    digitalWrite(P22, LOW);
+    mcp.digitalWrite(P22, LOW);
     attendPorte(DELAIPORTESCAPTEUR); // Délai minimum
     // On attend que les portes sont ouvertes
     while (!PortesOuvert) {
@@ -211,8 +309,8 @@ void changePortes(bool etat) {
     }
     // Délai pour finir le mouvement
     attendPorte(5000);
-    digitalWrite(P12, HIGH);
-    digitalWrite(P22, HIGH);
+    mcp.digitalWrite(P12, HIGH);
+    mcp.digitalWrite(P22, HIGH);
   }
   else {    // Fermeture des portes
     //if ((AbriOuvert && AbriFerme) || (!AbriOuvert && ! AbriFerme)) {
@@ -220,12 +318,12 @@ void changePortes(bool etat) {
       return;
     }
     StopMot;
-    digitalWrite(P21, LOW);
+    mcp.digitalWrite(P21, LOW);
     attendPorte(5000);
-    digitalWrite(P11, LOW);
+    mcp.digitalWrite(P11, LOW);
     attendPorte(DELAIPORTES);
-    digitalWrite(P11, HIGH);
-    digitalWrite(P21, HIGH);
+    mcp.digitalWrite(P11, HIGH);
+    mcp.digitalWrite(P21, HIGH);
   }
 }
 
@@ -251,9 +349,9 @@ void deplaceAbri(bool etat) {
     attendPorte(DELAIMOTEUR); // Protection contre les déplacements intempestifs
   }
   // Deplacement de l'abri
-  digitalWrite(MOTEUR, LOW);
+  mcp.digitalWrite(MOTEUR, LOW);
   delay(600);
-  digitalWrite(MOTEUR, HIGH);
+  mcp.digitalWrite(MOTEUR, HIGH);
   attendDep(DELAIABRI);
   while(!AbriFerme && !AbriOuvert) {	
     attendDep(1000);
@@ -283,12 +381,14 @@ void attendDep(unsigned long delai) {	// Boucle d'attente pendant le déplacemen
   unsigned long Cprevious = millis();
   while ((millis() - Cprevious) < delai) {
     // Lecture des ordres reçus du port série
-    if (Serial2.available()) {
-    	SerMsg=Serial2.readStringUntil(35);
+	WiFiClient client = Server.available();
+	if (client) {
+    	SerMsg=client.readStringUntil(35);
     	if (SerMsg == "AU") {
-	    Serial2.println("0");
+	    client.println("0");
             ARU();
     	}
+		client.close();
     }
     // Si le telescope n'est plus parqué pendant le déplacement -> ARU
     if (!TelPark) nbpark++;
@@ -305,12 +405,14 @@ void attendPorte(unsigned long delai) {	// Boucle d'attente pendant l'ouverture/
   unsigned long Cprevious = millis();
   while ((millis() - Cprevious) < delai) {
     // Lecture des ordres reçus du port série
-    if (Serial2.available()) {
-    	SerMsg=Serial2.readStringUntil(35);
+	WiFiClient client = Server.available();
+	if (client) {
+    	SerMsg=client.readStringUntil(35);
     	if (SerMsg == "AU") {
-	    Serial2.println("0");
+	    client.println("0");
             ARU();
     	}
+		client.close();
     }
     // Si le telescope n'est plus parqué pendant le déplacement -> ARU
     if (!TelPark) nbpark++;
@@ -327,15 +429,15 @@ void attendPorte(unsigned long delai) {	// Boucle d'attente pendant l'ouverture/
 void ARU() {				// Arret d'urgence
   // Arret de l'alimentation de l'abri
   // Initialisation des relais
-  digitalWrite(ALIM12V,HIGH);
-  digitalWrite(ALIM24V,HIGH);
-  digitalWrite(ALIMMOT,HIGH);
-  digitalWrite(MOTEUR,HIGH);
-  digitalWrite(P11,HIGH);
-  digitalWrite(P12,HIGH);
-  digitalWrite(P21,HIGH);
-  digitalWrite(P22,HIGH);
-  digitalWrite(ALIMMOT, MOTOFF);
+  mcp.digitalWrite(ALIM12V,HIGH);
+  mcp.digitalWrite(ALIM24V,HIGH);
+  mcp.digitalWrite(ALIMMOT,HIGH);
+  mcp.digitalWrite(MOTEUR,HIGH);
+  mcp.digitalWrite(P11,HIGH);
+  mcp.digitalWrite(P12,HIGH);
+  mcp.digitalWrite(P21,HIGH);
+  mcp.digitalWrite(P22,HIGH);
+  mcp.digitalWrite(ALIMMOT, MOTOFF);
   // Ouverture des portes
   changePortes(true);
   digitalWrite(RESET, LOW);
