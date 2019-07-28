@@ -54,8 +54,8 @@
 #define StopTel digitalWrite(ALIM24V, HIGH)
 #define StartMot digitalWrite(ALIMMOT, MOTON)
 #define StopMot digitalWrite(ALIMMOT, MOTOFF)
-//#define TelPark digitalRead(PARK)
-#define TelPark 1
+#define TelPark digitalRead(PARK)
+//#define TelPark 1
 
 //---------------------------------------SETUP-----------------------------------------------
 
@@ -96,6 +96,7 @@ void setup() {
   // Etat du dome initialisation des interrupteurs
   if ( AbriOuvert) {
     StartTel; // Alimentation télescope
+    StartMot; // Alimentation du moteur de l'abri
   }
 }
 
@@ -154,7 +155,7 @@ void loop() {
     }	  
     else if (SerMsg == "C?") {
       Serial2.print(AbriFerme);
-      Serial2.print(!AbriFerme);
+      Serial2.print(AbriOuvert);
       Serial2.print(PortesFerme);
       Serial2.print(PortesOuvert);
       Serial2.print(AlimStatus);
