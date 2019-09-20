@@ -5,13 +5,15 @@ Matériel:
 - 2 MCP23017  (carte relais, entrée capteurs + boutons)
 - 1 Alimentation 220V/12V 15A
 - 1 Convertisseur 12V/5V 3A
-- 8 capteurs inductifs 12V (portes, position abri)
+- 6 capteurs inductifs 12V (portes, position abri)
 - 1 Convertisseur I2c 4 voies 5V <-> 3.3V
+- 1 Régulateur 5V -> 3.3V (Alimentation TM1638)
 - 2 LEDs APA106 (Status, LED arrière abri)
 - 3 Barrettes de LEDs APA106 (éclairage table, abri, extérieur). 
 - 1 Afficheur + boutons Led & Keys TM1638
 - 1 Module PCF8574
 - 1 Clavier 4x4
+- 1 Afiicheur LCD/I2c 20x4 (optionnel)
 
 
 Alimentation:
@@ -22,9 +24,9 @@ Alimentation:
 
 Entrées/sorties:
 ----------------
-
-Utilisation de deux MCP23017 pour la gestion des sorties relais, des boutons et des entrées capteurs.
-
+ - Utilisation de deux MCP23017 pour la gestion des sorties relais, des boutons et des entrées capteurs.
+ - Un PCF8574 pour le pilotage du clavier matriciel 4x4 
+ 
 MCP23017(1):
 ---------
 Sorties:
