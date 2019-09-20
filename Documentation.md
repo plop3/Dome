@@ -43,32 +43,32 @@ MCP23017(2):
 
 Entrées:
 --------
-  - 01:	Capteur abri fermé
-  - 02:	Capteur abri ouvert
-  - 03:	Porte 2 fermée
-  - 04:	Porte 1 ouverte
-  - 05: Porte 2 fermée
-  - 06:	Porte 2 ouverte
-  - 07: Bouton 1
-  - 08: Bouton 2
-  - 09: Bouton 3
-  - 10; Bouton 4
+  - A07:	Capteur abri fermé
+  - A05:	Capteur abri ouvert
+  - A06:	Porte 1 fermée
+  - A04:	Porte 1 ouverte
+  - A02: Porte 2 fermée
+  - A00:	Porte 2 ouverte
+  - B00: Bouton 1
+  - B01: Bouton 2
+  - B02: Bouton 3
+  - B03; Bouton 4
   
 E/S ESP32:
 ----------
 Sorties:
-  - 4: LEDs APA106
-  - x: Rétro-éclairage afficheur LCD
+  -  4: LEDs APA106
+  - 13: Rétro-éclairage afficheur LCD
 
 Entrées:
   - 36: Etat parqué du télescope.	
 
 Communication:
-  - xx: TM1638  (DIO)
-  - xy: TM1638  (CLK)
-  - xz: TM1638  (STB)
-  - yx: I2c (SCL)
-  - yy: I2c (SDA)
+  - 25: TM1638  (DIO)
+  - 17: TM1638  (CLK)
+  -  4: TM1638  (STB)
+  - 22: I2c (SCL)
+  - 21: I2c (SDA)
 
 Convertisseur 5V/3.3V
 ---------------------
@@ -78,7 +78,7 @@ Convertisseur 5V/3.3V
 
 Périphériques I2c:
 -----------------
-  0x20	MCP23017	entrées capteurs
-  0x24	MCP23017	sorties relais
-  0x26	PCF8574	  Clavier 4x4 (jumper 1 ON, 2 ON, 3 OFF)
-  0x27	LCD 20x4	Afficheur
+  - 0x20	MCP23017	entrées capteurs
+  - 0x24	MCP23017	sorties relais
+  - 0x26	PCF8574	  Clavier 4x4 (jumper 1 ON, 2 ON, 3 OFF)
+  - 0x27	LCD 20x4	Afficheur LCD/I2c
