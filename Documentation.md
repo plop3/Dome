@@ -9,6 +9,9 @@ Matériel:
 - 1 Convertisseur I2c 4 voies 5V <-> 3.3V
 - 2 LEDs APA106 (Status, LED arrière abri)
 - 3 Barrettes de LEDs APA106 (éclairage table, abri, extérieur). 
+- 1 Afficheur + boutons Led & Keys TM1638
+- 1 Module PCF8574
+- 1 Clavier 4x4
 
 
 Alimentation:
@@ -54,11 +57,18 @@ Entrées:
 E/S ESP32:
 ----------
 Sorties:
-  - 2: LED Park
   - 4: LEDs APA106
+  - x: Rétro-éclairage afficheur LCD
 
 Entrées:
-  - 13: Etat parqué du télescope.	
+  - 36: Etat parqué du télescope.	
+
+Communication:
+  - xx: TM1638  (DIO)
+  - xy: TM1638  (CLK)
+  - xz: TM1638  (STB)
+  - yx: I2c (SCL)
+  - yy: I2c (SDA)
 
 Convertisseur 5V/3.3V
 ---------------------
@@ -66,3 +76,9 @@ Convertisseur 5V/3.3V
 - Conversion vers la LED park
 - Conversion vers les LEDs APA106
 
+Périphériques I2c:
+-----------------
+  0x20	MCP23017	entrées capteurs
+  0x24	MCP23017	sorties relais
+  0x26	PCF8574	  Clavier 4x4 (jumper 1 ON, 2 ON, 3 OFF)
+  0x27	LCD 20x4	Afficheur
