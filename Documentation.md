@@ -63,7 +63,7 @@ Sorties:
   - 13: Rétro-éclairage afficheur LCD
 
 Entrées:
-  - 36: Etat parqué du télescope.	
+  - 26: Etat parqué du télescope.	
 
 Communication:
   - 25: TM1638  (DIO)
