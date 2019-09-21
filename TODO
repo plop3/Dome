@@ -1,16 +1,16 @@
 TODO:
 -----
 - Bouton ARU    
-- Ouverture/fermeture RFID
+- Ouverture/fermeture par clavier matriciel
+- Mode manuel (clavier et TM1638)
 - Commandes par LoRa MQTT/MySensors
-- Schéma de cablage de la carte
-- Gestion de l'entrée "Park"
-- Gestion du capteur ports fermées
-- Remplacement de la LED Park par 2 LEDS APA106
+- Remplacement de la LED Park par 1 LED APA106
 - Ajout des éclairages
+- Ajout de l'afficheur TM1638
 
 Options:
 --------
+- Ajout de l'afficheur LCD 20x4 
 - Gérer de nouveau la coupure de l'alimentation 12V
 
 
