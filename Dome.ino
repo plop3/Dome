@@ -1,8 +1,8 @@
 /* Pilotage automatique de l'abri du telescope
   # Serge CLAUS
   # GPL V3
-  # Version 3.0
-  # 22/10/2018-24/06/2019
+  # Version 3.1
+  # 22/10/2018-21/09/2019
   # Version pour TTGO ESP32 LoRa + MCP23017
 */
 
@@ -42,16 +42,16 @@ WiFiServer Server(23);
 #define P22     7   // (R8) Relais 2 porte 2
 
 // Entrées
-#define PARK  13	// Etat du telescope 0: non parqué, 1: parqué
+#define PARK  26	// Etat du telescope 0: non parqué, 1: parqué
 /* TODO 
  * entrée ouverture portes
  */
-#define AO 9        // Capteur abri ouvert
-#define AF 8        // Capteur abri fermé
-#define Po1 11       // Capteur porte 1 ouverte
-#define Po2 13       // Capteur porte 2 ouverte
-#define Pf1 10	    //  Capteur porte 1 fermée (BARU)
-#define Pf2 12       // Capteur porte 2 fermée (BMA)
+#define AO 5        // Capteur abri ouvert
+#define AF 7        // Capteur abri fermé
+#define Po1 4       // Capteur porte 1 ouverte
+#define Po2 0       // Capteur porte 2 ouverte
+#define Pf1 6	    //  Capteur porte 1 fermée (BARU)
+#define Pf2 2       // Capteur porte 2 fermée (BMA)
 
 // Constantes globales
 #define DELAIPORTES 40000L  // Durée d'ouverture/fermeture des portes (40000L)
@@ -73,8 +73,8 @@ WiFiServer Server(23);
 #define StopTel mcp.digitalWrite(ALIM24V, HIGH)
 #define StartMot mcp.digitalWrite(ALIMMOT, MOTON)
 #define StopMot mcp.digitalWrite(ALIMMOT, MOTOFF)
-//#define TelPark digitalRead(PARK)
-#define TelPark 1
+#define TelPark digitalRead(PARK)
+//#define TelPark 1
 
 //---------------------------------------SETUP-----------------------------------------------
 
@@ -113,6 +113,7 @@ void setup() {
   // Etat du dome initialisation des interrupteurs
   if ( AbriOuvert) {
     StartTel; // Alimentation télescope
+    StartMot; // Alimentation du moteur de l'abri
   }
   
   
@@ -248,15 +249,15 @@ void loop() {
     }	  
     else if (SerMsg == "C?") {
       client.print(AbriFerme);
-      client.print(!AbriFerme);
+      client.print(AbriOuvert);
       client.print(PortesFerme);
       client.print(PortesOuvert);
       client.print(AlimStatus);
       client.println(TelPark ? "p" : "n");
-	  client.print(digitalRead(Pf1));
-	  client.print(digitalRead(Pf2));
-	  client.print(digitalRead(Po1));
-	  client.println(digitalRead(Po2));
+	  client.print(mcp.digitalRead(Pf1));
+	  client.print(mcp.digitalRead(Pf2));
+	  client.print(mcp.digitalRead(Po1));
+	  client.println(mcp.digitalRead(Po2));
     }
   client.stop();
   }
