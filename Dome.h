@@ -1,7 +1,7 @@
 // WiFi
 // STA
 char ssid[40] = "astro";
-char password[40] = "12345678";
+char password[40] = "B546546AF0";
 // AP
 char assid[40] = "dome";
 char asecret[40] = "12345678";

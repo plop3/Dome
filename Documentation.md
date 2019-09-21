@@ -84,3 +84,54 @@ Périphériques I2c:
   - 0x24	MCP23017	sorties relais
   - 0x26	PCF8574	  Clavier 4x4 (jumper 1 ON, 2 ON, 3 OFF)
   - 0x27	LCD 20x4	Afficheur LCD/I2c
+  
+LEDs TM1638:
+-----------
+ - 0	Dome pret
+ - 1	Télescope parqué
+ - 2	Présence 12V télescope
+ - 3
+ - 4
+ - 5
+ - 6
+ - 7	Dome locké
+
+Boutons TM1638:
+--------------
+ - 0	Bascule affichage HH MM SS / TT HH
+ - 1	M/A affichage
+ - 2	
+ - 3
+ - 4
+ - 5
+ - 6
+ - 7	Park télescope
+ 
+ Affichage TM1638:
+ ----------------
+ Heure / T° ext
+ T° ext / hum %
+
+Boutons:
+-------
+ - 0	Eclairage table
+ - 1	Eclairage intérieur
+ - 2	Eclairage extérieur
+ - 3	Arret télescope (bouton rouge)
+ - 4	Park télescope
+ - 5	Fermer dome (park télescope, puis fermer dome)
+ 
+LED1 Status:
+----------
+  - Vert:	Télescope parqué ,
+  - Rouge:	Problème
+  
+Clavier matriciel:
+-----------------
+ - A	Ouvre dome
+ - B	Ferme dome
+ - C	Ouvre portes
+ - D 	Ferme portes
+ - #	Verrouille dome
+ - 1	Ouvre porte 1
+ - 2	Ferme porte 1

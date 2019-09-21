@@ -1,17 +1,18 @@
 TODO:
 -----
 - Bouton ARU    
-- Ouverture/fermeture par clavier matriciel
-- Mode manuel (clavier et TM1638)
+- Mise en veille du clavier externe (LED eteinte) réveil par appui sur n'importe quelle touche mais sans code.
 - Commandes par LoRa MQTT/MySensors
 - Remplacement de la LED Park par 1 LED APA106
 - Ajout des éclairages
-- Ajout de l'afficheur TM1638
+- Récupération des infos météo depuis Domoticz
+- Park du télescope (appel direct à OnStep par WiFi)
 
 Options:
 --------
 - Ajout de l'afficheur LCD 20x4 
 - Gérer de nouveau la coupure de l'alimentation 12V
+- Mode manuel (clavier et TM1638)
 
 
 
