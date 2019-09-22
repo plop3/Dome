@@ -59,11 +59,11 @@ Entrées:
 E/S ESP32:
 ----------
 Sorties:
-  -  4: LEDs APA106
-  - 13: Rétro-éclairage afficheur LCD
+  - 13: LEDs APA106
+  - 23: Rétro-éclairage afficheur LCD
 
 Entrées:
-  - 26: Etat parqué du télescope.	
+  - 33: Etat parqué du télescope.	
 
 Communication:
   - 25: TM1638  (DIO)
@@ -135,3 +135,4 @@ Clavier matriciel:
  - #	Verrouille dome
  - 1	Ouvre porte 1
  - 2	Ferme porte 1
+ - *	Réactive l'éclairage

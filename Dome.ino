@@ -1,7 +1,7 @@
 /* Pilotage automatique de l'abri du telescope
   # Serge CLAUS
   # GPL V3
-  # Version 3.2.0
+  # Version 3.2.1
   # 22/10/2018-21/09/2019
   # Version pour TTGO ESP32 LoRa + MCP23017
 */
@@ -44,10 +44,26 @@ WiFiServer Server(23);
 // Timer
 #include <SimpleTimer.h>
 SimpleTimer timer;
-SimpleTimer timerV;
 
 // MQTT
 #include <PubSubClient.h>
+
+// LEDs
+#include <NeoPixelBus.h>
+#define NBLEDS 3
+#define PINRGB 13
+NeoPixelBus<NeoGrbFeature, Neo400KbpsMethod> pixels(NBLEDS, PINRGB);
+//Adafruit_NeoPixel pixels(NUMPIXELS, PINRGB, NEO_GRB + NEO_KHZ800);
+#define colorSaturation 50
+RgbColor green(colorSaturation, 0, 0);
+RgbColor red(0, colorSaturation, 0);
+RgbColor blue(0, 0, colorSaturation);
+RgbColor white(colorSaturation);
+RgbColor black(0);
+
+// Reset ESP
+#include <esp_int_wdt.h>
+#include <esp_task_wdt.h>
 
 //---------------------------------------CONSTANTES-----------------------------------------------
 
@@ -66,7 +82,7 @@ SimpleTimer timerV;
 #define P22     7   // (R8) Relais 2 porte 2
 
 // Entrées
-#define PARK  26	// Etat du telescope 0: non parqué, 1: parqué
+#define PARK  33	// Etat du telescope 0: non parqué, 1: parqué
 /* TODO
    entrée ouverture portes
 */
@@ -85,9 +101,15 @@ SimpleTimer timerV;
 #define MOTOFF HIGH         // Etat pour l'arret du moteur
 #define MOTON !MOTOFF
 
+#define LEDSTATUS 0
+#define LEDCLAVIER 1
+
+
 #define TPSVEILLE 30  //Delai avant la mise en veille du clavier (s)
-const char *topicin = "domoticz/in";  
-const char *topicout = "domoticz/out";  
+const char *topicin = "domoticz/in";
+const char *topicout = "domoticz/out";
+
+
 
 //---------------------------------------Variables globales------------------------------------
 #define AlimStatus  (!mcp.digitalRead(ALIM24V))    // Etat de l'alimentation télescope
@@ -100,8 +122,8 @@ const char *topicout = "domoticz/out";
 #define StopTel mcp.digitalWrite(ALIM24V, HIGH)
 #define StartMot mcp.digitalWrite(ALIMMOT, MOTON)
 #define StopMot mcp.digitalWrite(ALIMMOT, MOTOFF)
-#define TelPark digitalRead(PARK)
-//#define TelPark 1
+//#define TelPark digitalRead(PARK)
+#define TelPark 1
 #define NiveauAff 0
 
 bool Lock = true; // Dome locké
@@ -112,6 +134,9 @@ String dayStamp;
 String timeStamp;
 int TypeAff = 1; // 0: Eteint, 1: Heure GMT, 2: T° /H%
 bool StateAff = true;
+int timerLED;
+
+bool LastPark = false;
 //---------------------------------------SETUP-----------------------------------------------
 
 void setup() {
@@ -133,14 +158,14 @@ void setup() {
 
   mcp.digitalWrite(ALIMMOT, MOTOFF); // Coupure alimentation moteur abri
   // Activation des entrées (capteurs...)
-  mcpE.pinMode(AO, INPUT_PULLUP);
-  mcpE.pinMode(AF, INPUT_PULLUP);
-  mcpE.pinMode(Po1, INPUT_PULLUP);
-  mcpE.pinMode(Pf1, INPUT_PULLUP);
-  mcpE.pinMode(Po2, INPUT_PULLUP);
-  mcpE.pinMode(Pf2, INPUT_PULLUP);
-  //pinMode(BARU, INPUT_PULLUP);
-  //pinMode(BMA, INPUT_PULLUP);
+  mcpE.pinMode(AO, INPUT); mcpE.pullUp(AO, HIGH);
+  mcpE.pinMode(AF, INPUT); mcpE.pullUp(AF, HIGH);
+  mcpE.pinMode(Po1, INPUT); mcpE.pullUp(Po1, HIGH);
+  mcpE.pinMode(Pf1, INPUT); mcpE.pullUp(Pf1, HIGH);
+  mcpE.pinMode(Po2, INPUT); mcpE.pullUp(Po2, HIGH);
+  mcpE.pinMode(Pf2, INPUT); mcpE.pullUp(Pf2, HIGH);
+  //pinMode(BARU, INPUT);
+  //pinMode(BMA, INPUT);
 
   //pinMode(PARK, INPUT_PULLUP);
   pinMode(PARK, INPUT);
@@ -156,6 +181,13 @@ void setup() {
   // Afficheur TM1638
   module.setupDisplay(1, 0);
   module.setDisplayToString("Start");
+
+  // LEDs RGB
+  pixels.Begin();
+  pixels.Show();
+  pixels.SetPixelColor(LEDCLAVIER, black);
+  pixels.SetPixelColor(LEDSTATUS, red);
+  pixels.Show();
 
   // Clavier matriciel
   kpd.init();
@@ -245,7 +277,14 @@ void setup() {
 
   // Timer
   timer.setInterval(1000, FuncSec);
-  timerV.setTimeout(TPSVEILLE*1000,ModeVeille);
+
+  // Eteint l'afficheur si les portes sont fermées
+  if (mcpE.digitalRead(Po1)) {
+    //module.setupDisplay(0, 0);
+  }
+  pixels.SetPixelColor(LEDSTATUS, black);
+  pixels.Show();
+  delay(1000);
 }
 
 //---------------------------------------BOUCLE PRINCIPALE------------------------------------
@@ -254,11 +293,10 @@ String SerMsg = "";		// Message reçu sur le port série
 
 void loop() {
   timer.run();
-  timerV.run();
   ArduinoOTA.handle();
   // MQTT
-//WiFiClient mqttClient;
-//PubSubClient mqtt(mqttClient);
+  //WiFiClient mqttClient;
+  //PubSubClient mqtt(mqttClient);
 
   // Lecture des ordres reçus du port série2 (ESP8266)
   WiFiClient client = Server.available();
@@ -345,60 +383,69 @@ void loop() {
   // Lecture du clavier matriciel
   char key = kpd.get_key();
   if (key != '\0') {
-    // Clavier locké, lecture du code de déverrouillage
-    if (Lock) {
-      // TODO Allume la LED du clavier en mode éclairage
-      if (ClavierCode(key)) {
-        Lock = false;
-      }
-    }
-    else if (Veille) {
-      // TODO Allume la LED du clavier en mode éclairage
-      Veille=false;
-      delay(500);
+    if (key == 42) {
+      // Active l'éclairage du clavier
+      EclaireClavier();
     }
     else {
-      Serial.print(key);
-      Serial.print(" ");
-      Serial.println(char(key));
-      // Clavier débloqué: commandes autorisées
-      switch(char(key)) {
-        case 65: // A
-          deplaceAbri(true);
-          break;
-        case 66: // B
-          deplaceAbri(false);
-          break;
-        case 67:  // C
-          changePortes(true);
-          break;
-        case 68:  // D
-          changePortes(false);
-          break;
-        case 49:
-          ouvrePorte1();
-          break;
-        case 50:
-          fermePorte1();
-          break;
-        case 35:
-          module.setLED(0, 7);
-          Lock=true;
-          break;
+      // Clavier locké, lecture du code de déverrouillage
+      if (Lock) {
+        // TODO Allume la LED du clavier en mode éclairage
+        if (ClavierCode(key)) {
+          Lock = false;
+        }
+      }
+      else {
+        Serial.print(key);
+        Serial.print(" ");
+        Serial.println(char(key));
+        // Clavier débloqué: commandes autorisées
+        switch (char(key)) {
+          case 65: // A
+            deplaceAbri(true);
+            break;
+          case 66: // B
+            deplaceAbri(false);
+            break;
+          case 67:  // C
+            changePortes(true);
+            break;
+          case 68:  // D
+            changePortes(false);
+            break;
+          case 49:  // 1
+            ouvrePorte1();
+            break;
+          case 50:  // 2
+            fermePorte1();
+            break;
+          case 35:  // #  TODO Verrouillage du dome
+            module.setLED(0, 7);
+            Lock = true;
+            break;
+        }
       }
     }
   }
 
-  digitalWrite(LEDPARK, TelPark);
-
+  // LEDs
+  if ((TelPark != LastPark) && AbriOuvert) {
+    LastPark = !LastPark;
+    if (TelPark) {
+      pixels.SetPixelColor(LEDSTATUS, green);
+    }
+    else {
+      pixels.SetPixelColor(LEDSTATUS, black);
+    }
+    //digitalWrite(LEDPARK, TelPark);
+    pixels.Show();
+  }
   // TEST DEPLACEMENT INOPINE DU DOME
   if (!AbriFerme && !AbriOuvert) {
     ARU();
-  };
-
+  }
   // Bouton Arret d'urgence
   //if digitalRead(BARU) {ARU();}
-
 }
 
 //---------------------------------------FONCTIONS--------------------------------------------
@@ -424,14 +471,32 @@ void FuncSec() {
         module.setDisplayToString("T° / H%");
       }
   }
+  //pixels.Show();
+
 }
 
-// Mode veille du clavier
-void ModeVeille() {
-  Veille=true;
+// Eclairage du clavier
+void EclaireClavier() {
+  // Allume la LED
+  module.setLED(TM1638_COLOR_RED, 4);
+  pixels.SetPixelColor(LEDCLAVIER, white);
+  pixels.Show();
+  // Demarre le temporisateur
+  if (!Veille) {
+    timerLED = timer.setTimeout(TPSVEILLE * 1000, EteintClavier);
+    Veille = true;
+  }
   // Eteint la LED du clavier
-  
+
 }
+void EteintClavier() {
+  // Eteint l'éclaraige du clavier
+  pixels.SetPixelColor(LEDCLAVIER, black);
+  pixels.Show();
+  module.setLED(0, 4);
+  Veille = false;
+}
+
 // Déverrouillage au clavier
 bool ClavierCode(char key) {
   String code = String(key);
@@ -439,6 +504,8 @@ bool ClavierCode(char key) {
   int delai = 10; // Delai pour rentrer le code en secondes
   module.setDisplayToString("Code    ");
   // TODO Allumage de la LED en orange pour éclairer le clavier
+  pixels.SetPixelColor(LEDCLAVIER, white);
+  pixels.Show();
   module.setLED(TM1638_COLOR_RED, 7);
   while (true) {
     unsigned long currentMillis = millis();
@@ -447,6 +514,8 @@ bool ClavierCode(char key) {
       Serial.println("Mauvais code");
       // TODO Eteint la LED d'éclairage
       module.setLED(0, 7);
+      pixels.SetPixelColor(LEDCLAVIER, black);
+      pixels.Show();
       module.setDisplayToString("        ");
       return false;
     }
@@ -465,7 +534,11 @@ bool ClavierCode(char key) {
         // TODO Allume la LED en vert pendant 2s
         module.setLED(TM1638_COLOR_RED, 6);
         module.setDisplayToString("Accept  ");
+        pixels.SetPixelColor(LEDCLAVIER, green);
+        pixels.Show();
         delay(2000);
+        pixels.SetPixelColor(LEDCLAVIER, black);
+        pixels.Show();
         module.setLED(0, 6);
         module.setDisplayToString("        ");
         return true;
@@ -479,7 +552,7 @@ void fermePorte1(void) {
   module.setDisplayToString("P1 F... ");
   mcp.digitalWrite(P11, LOW);
   delay(DELAIPORTES);
-  module.setDisplayToString("P1 CLOSE");delay(500);
+  module.setDisplayToString("P1 CLOSE"); delay(500);
   module.setupDisplay(0, NiveauAff);
   mcp.digitalWrite(P11, HIGH);
 }
@@ -490,7 +563,7 @@ void ouvrePorte1(void) {
   module.setDisplayToString("P1 O... ");
   mcp.digitalWrite(P12, LOW);
   delay(DELAIPORTES);
-  module.setDisplayToString("P1 OPEN ");delay(500);
+  module.setDisplayToString("P1 OPEN "); delay(500);
   mcp.digitalWrite(P12, HIGH);
 }
 
@@ -498,7 +571,7 @@ void ouvrePorte1(void) {
 void changePortes(bool etat) {
   // Commande identique à l'état actuel, on sort
   if ((etat && PortesOuvert) || (!etat && PortesFerme)) {
-    module.setDisplayToString("Error   ");delay(500);
+    module.setDisplayToString("Error   "); delay(500);
     return;
   }
   if (etat) {   // Ouverture des portes
@@ -508,41 +581,53 @@ void changePortes(bool etat) {
     module.setupDisplay(1, NiveauAff);
     module.setDisplayToString("P1 O... ");
     mcp.digitalWrite(P12, LOW);
-    attendPorte(5000);
+    attendARU(5000, false, false);
     mcp.digitalWrite(P22, LOW);
     module.setDisplayToString("P12 O...");
-    attendPorte(DELAIPORTESCAPTEUR); // Délai minimum
-    // On attend que les portes sont ouvertes
+    attendARU(DELAIPORTESCAPTEUR, false, false); // Délai minimum
+    // On attend que les portes soient ouvertes
     while (!PortesOuvert) {
-      attendPorte(100);
+      attendARU(100, false, false);
     }
     // Délai pour finir le mouvement
-    attendPorte(5000);
+    attendARU(5000, false, false);
     mcp.digitalWrite(P12, HIGH);
     mcp.digitalWrite(P22, HIGH);
-    module.setDisplayToString("P12 OPEN");delay(500);
-    
+    module.setDisplayToString("P12 OPEN"); delay(500);
+
   }
   else {    // Fermeture des portes
     //if ((AbriOuvert && AbriFerme) || (!AbriOuvert && ! AbriFerme)) {
     if (!AbriFerme) {
-      module.setDisplayToString("Error   ");delay(500);
+      module.setDisplayToString("Error   "); delay(500);
+      return;
+    }
+    if (!TelPark) {
+      // Lance la commande de park sur OnStep
+      module.setDisplayToString("Error   "); delay(500);
       return;
     }
     StopMot;
     module.setDisplayToString("P2 F... ");
     mcp.digitalWrite(P21, LOW);
-    attendPorte(5000);
+
+    attendARU(5000, true, true);
+
     module.setDisplayToString("P12 F...");
     mcp.digitalWrite(P11, LOW);
-    attendPorte(DELAIPORTES);
+    attendARU(DELAIPORTES, true, true);
     mcp.digitalWrite(P11, HIGH);
     mcp.digitalWrite(P21, HIGH);
-    module.setDisplayToString("P12 CLOS");delay(500);
+
+    module.setDisplayToString("P12 CLOS"); delay(500);
     Lock = true;
     // Eteint les affichages
     module.setupDisplay(0, NiveauAff);
     module.setLED(0, 7);
+    for (int i = 0; i < NBLEDS; i++) {
+      pixels.SetPixelColor(i, black);
+    }
+    pixels.Show();
   }
 }
 
@@ -550,13 +635,13 @@ void changePortes(bool etat) {
 void deplaceAbri(bool etat) {
   // Commande identique à l'état actuel, on sort
   if ((etat && AbriOuvert) || (!etat && AbriFerme)) {
-    module.setDisplayToString("Error   ");delay(500);
+    module.setDisplayToString("Error   "); delay(500);
     return;
   }
   // Test telescope parqué
   if (!TelPark) {
     // Lance la commande de park sur OnStep
-    module.setDisplayToString("Error   ");delay(500);
+    module.setDisplayToString("Error   "); delay(500);
     return;
   }
   StopTel; // Coupure alimentation télescope
@@ -568,18 +653,18 @@ void deplaceAbri(bool etat) {
     // Attente d'initialisation du moteur de l'abri
     StartMot;
     //Attente pour l'initialisation du moteur
-    attendPorte(DELAIMOTEUR); // Protection contre les déplacements intempestifs
+    attendARU(DELAIMOTEUR, true, false); // Protection contre les déplacements intempestifs
   }
   // Deplacement de l'abri
-  module.setDisplayToString("Abri O..");
+  module.setDisplayToString("Abri d..");
   mcp.digitalWrite(MOTEUR, LOW);
   delay(600);
   mcp.digitalWrite(MOTEUR, HIGH);
-  attendDep(DELAIABRI);
+  attendARU(DELAIABRI, true, false);
   while (!AbriFerme && !AbriOuvert) {
-    attendDep(1000);
+    attendARU(1000, true, false);
   }
-  attendDep(2000);		   // Finir le déplacement
+  attendARU(2000, true, false);		 // Finir le déplacement
   // Etat réel de l'abri au cas ou le déplacement soit inversé
   etat = AbriOuvert;
   if (etat) {
@@ -601,8 +686,7 @@ void deplaceAbri(bool etat) {
   }
 }
 
-// Boucle d'attente lors du déplacement
-void attendDep(unsigned long delai) {	// Boucle d'attente pendant le déplacement de l'abri
+void attendARU(unsigned long delai, bool park, bool depl) {	// Boucle d'attente pendant l'ouverture/fermeture des portes
   int ERRMAX = 2;
   int nbpark = 0;
   unsigned long Cprevious = millis();
@@ -617,41 +701,28 @@ void attendDep(unsigned long delai) {	// Boucle d'attente pendant le déplacemen
       }
       client.stop();
     }
-    // Si le telescope n'est plus parqué pendant le déplacement -> ARU
-    if (!TelPark) nbpark++;
-    if (nbpark >= ERRMAX) ARU();
+    if (park) {
+      // Si le telescope n'est plus parqué pendant le déplacement -> ARU
+      if (!TelPark) nbpark++;
+      if (nbpark >= ERRMAX) ARU();
+      // Si le dome se déplace pendant le mouvement des portes: ARU
+    }
+    if (depl) {
+      if (!AbriFerme && !AbriOuvert) {
+        ARU();
+      }
+    }
     // Bouton Arret d'urgence
     //if digitalRead(BARU) {ARU();}
     delay(100);    // Sinon ça plante (delay(1) marche aussi)...
   }
 }
 
-void attendPorte(unsigned long delai) {	// Boucle d'attente pendant l'ouverture/fermeture des portes
-  int ERRMAX = 2;
-  int nbpark = 0;
-  unsigned long Cprevious = millis();
-  while ((millis() - Cprevious) < delai) {
-    // Lecture des ordres reçus du port série
-    WiFiClient client = Server.available();
-    if (client) {
-      SerMsg = client.readStringUntil(35);
-      if (SerMsg == "AU") {
-        client.println("0");
-        ARU();
-      }
-      client.stop();
-    }
-    // Si le telescope n'est plus parqué pendant le déplacement -> ARU
-    if (!TelPark) nbpark++;
-    if (nbpark >= ERRMAX) ARU();
-    // Si le dome se déplace pendant le mouvement des portes: ARU
-    if (!AbriFerme && !AbriOuvert) {
-      ARU();
-    }
-    // Bouton Arret d'urgence
-    //if digitalRead(BARU) {ARU();}
-    delay(100);    // Sinon ça plante (delay(1) marche aussi)...
-  }
+void hard_restart() {
+  // Reset de l'ESP
+  esp_task_wdt_init(1, true);
+  esp_task_wdt_add(NULL);
+  while (true);
 }
 
 // Commande d'arret d'urgence
@@ -669,5 +740,12 @@ void ARU() {				// Arret d'urgence
   mcp.digitalWrite(ALIMMOT, MOTOFF);
   // Ouverture des portes
   changePortes(true);
-  ESP.restart();
+  module.setDisplayToString("Aru Aru ");
+  // Attente d'un retour a la normale (abri ouvert ou fermé et télescope parqué)
+  while ((!AbriFerme && !AbriOuvert) || (AbriFerme && AbriOuvert) || !TelPark) {
+    delay(1000);
+  }
+  module.setDisplayToString("reboot..");
+  delay(1000);
+  hard_restart();
 }

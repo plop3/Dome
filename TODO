@@ -1,7 +1,6 @@
 TODO:
 -----
 - Bouton ARU    
-- Mise en veille du clavier externe (LED eteinte) réveil par appui sur n'importe quelle touche mais sans code.
 - Commandes par LoRa MQTT/MySensors
 - Remplacement de la LED Park par 1 LED APA106
 - Ajout des éclairages
