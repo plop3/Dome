@@ -1,8 +1,8 @@
 /* Pilotage automatique de l'abri du telescope
   # Serge CLAUS
   # GPL V3
-  # Version 3.2.1
-  # 22/10/2018-21/09/2019
+  # Version 3.2.2
+  # 22/10/2018-23/09/2019
   # Version pour TTGO ESP32 LoRa + MCP23017
 */
 
@@ -13,8 +13,9 @@
 // MCP23017
 #include <Wire.h>
 #include "Adafruit_MCP23017.h"
-Adafruit_MCP23017 mcp;
-Adafruit_MCP23017 mcpE;
+Adafruit_MCP23017 mcp;		//MCP externe connecté à la carte 8 relais
+Adafruit_MCP23017 mcpE;		//MCP intégré à la carte pour les entrées capteurs
+
 // WiFi + OTA
 #include <WiFi.h>
 #include <WiFiAP.h>
@@ -27,7 +28,7 @@ Adafruit_MCP23017 mcpE;
 WiFiUDP ntpUDP;
 NTPClient timeClient(ntpUDP);
 
-// TM1638 LEDs & Keys
+// TM1638 LEDs & Keys /!\ Librairie sur Ghitub plop3 (https://github.com/plop3/tm1638-library)
 #include <TM1638.h>
 TM1638 module(4, 17, 25);
 
@@ -39,7 +40,7 @@ TM1638 module(4, 17, 25);
 i2ckeypad kpd = i2ckeypad(PCF8574_ADDR, ROWS, COLS);
 
 // Serveur TCP
-WiFiServer Server(23);
+WiFiServer Server(23);	//Serial2Net
 
 // Timer
 #include <SimpleTimer.h>
@@ -50,10 +51,9 @@ SimpleTimer timer;
 
 // LEDs
 #include <NeoPixelBus.h>
-#define NBLEDS 3
+#define NBLEDS 3	// 26 (2 + 3x8)
 #define PINRGB 13
 NeoPixelBus<NeoGrbFeature, Neo400KbpsMethod> pixels(NBLEDS, PINRGB);
-//Adafruit_NeoPixel pixels(NUMPIXELS, PINRGB, NEO_GRB + NEO_KHZ800);
 #define colorSaturation 50
 RgbColor green(colorSaturation, 0, 0);
 RgbColor red(0, colorSaturation, 0);
@@ -68,12 +68,10 @@ RgbColor black(0);
 //---------------------------------------CONSTANTES-----------------------------------------------
 
 // Sorties
-#define LEDPARK 2	// LED d'indication du park // TODO Remplacer par 1 led APA106 + éclairages intérieurs
-#define LUMIERE 4  // Eclairage de l'abri TODO à modifier
 
-// Sorties MCP23017
-#define ALIM12V 2   // (R3) Alimentation 12V
-#define ALIM24V 3   // (R4) Alimentation télescope
+// Sorties MCP23017_2	(Carte externe I2c)
+#define ALIM12V 2   // (R3) Alimentation 12V	(Inutilisée)
+#define ALIMTEL 3   // (R4) Alimentation télescope
 #define ALIMMOT 1   // (R2) Alimentation 220V moteur abri
 #define MOTEUR  0   // (R1) Ouverture/fermeture abri
 #define P11     4   // (R5) Relais 1 porte 1
@@ -83,15 +81,21 @@ RgbColor black(0);
 
 // Entrées
 #define PARK  33	// Etat du telescope 0: non parqué, 1: parqué
-/* TODO
-   entrée ouverture portes
-*/
+
+// Entrées MCP23017_1
 #define AO 5        // Capteur abri ouvert
 #define AF 7        // Capteur abri fermé
 #define Po1 4       // Capteur porte 1 ouverte
 #define Po2 0       // Capteur porte 2 ouverte
-#define Pf1 6	    //  Capteur porte 1 fermée (BARU)
-#define Pf2 2       // Capteur porte 2 fermée (BMA)
+#define Pf1 6	    // Capteur porte 1 fermée 
+#define Pf2 2       // Capteur porte 2 fermée 
+
+#define BEclI 8		// Eclairage interieur
+#define BEclT 9		// Eclairage table
+#define BEclE 10	// Eclairage extérieur
+#define BPark 11	// Bouton Park télescope
+
+#define BARU 15		// Bouton arret d'urgence
 
 // Constantes globales
 #define DELAIPORTES 40000L  // Durée d'ouverture/fermeture des portes (40000L)
@@ -101,61 +105,71 @@ RgbColor black(0);
 #define MOTOFF HIGH         // Etat pour l'arret du moteur
 #define MOTON !MOTOFF
 
-#define LEDSTATUS 0
-#define LEDCLAVIER 1
+// Neopixel
+#define LEDSTATUS 0		// Status du dome (Vert: télescope parqué)
+#define LEDCLAVIER 1	// LED éclairage du clavier matriciel
+#define LEI 2			// LEDs éclairage interieur
+#define LET 10			// LEDs éclairage table
+#define LEE	18			// LEDs éclairage extérieur
 
-
+// PCF8574
 #define TPSVEILLE 30  //Delai avant la mise en veille du clavier (s)
+
+// TM1638
+#define NiveauAff 0
+
+// MQTT
 const char *topicin = "domoticz/in";
 const char *topicout = "domoticz/out";
 
+// OnStep
+#define OnStepHost 192.168.0.159
+#define OnStepPort 9999
 
-
-//---------------------------------------Variables globales------------------------------------
-#define AlimStatus  (!mcp.digitalRead(ALIM24V))    // Etat de l'alimentation télescope
+//---------------------------------------Macros------------------------------------------------
+#define AlimStatus  (!mcp.digitalRead(ALIMTEL))    // Etat de l'alimentation télescope
 #define PortesOuvert (!mcpE.digitalRead(Po1) && !mcpE.digitalRead(Po2))
 #define PortesFerme (!mcpE.digitalRead(Pf1) && !mcpE.digitalRead(Pf2))
 #define AbriFerme (!mcpE.digitalRead(AF))
 #define AbriOuvert (!mcpE.digitalRead(AO))
 #define MoteurStatus (!mcp.digitalRead(ALIMMOT))
-#define StartTel mcp.digitalWrite(ALIM24V, LOW)
-#define StopTel mcp.digitalWrite(ALIM24V, HIGH)
+#define StartTel mcp.digitalWrite(ALIMTEL, LOW)
+#define StopTel mcp.digitalWrite(ALIMTEL, HIGH)
 #define StartMot mcp.digitalWrite(ALIMMOT, MOTON)
 #define StopMot mcp.digitalWrite(ALIMMOT, MOTOFF)
 //#define TelPark digitalRead(PARK)
 #define TelPark 1
-#define NiveauAff 0
 
+
+//---------------------------------------Variables globales------------------------------------
+String SerMsg = "";		// Message reçu sur le port série
 bool Lock = true; // Dome locké
 bool Veille = false; // Clavier matriciel en veille
-String SECRET = "1234";
-String formattedDate;
-String dayStamp;
-String timeStamp;
-int TypeAff = 1; // 0: Eteint, 1: Heure GMT, 2: T° /H%
-bool StateAff = true;
-int timerLED;
+String SECRET = "1234"; // Code de déverrouillage
+String formattedDate;	// Client NTP
+int TypeAff = 1; 		// 0: Eteint, 1: Heure GMT, 2: T° /H%
+bool StateAff = true;	// Etat de l'affichage (M/A par bouton 2)
+bool LastPark = false;	// Dernier état lu de l'entrée "park"
+int EI=0;				// Etat éclairage intérieur (0: eteint, 1: rouge, 2: blanc)
+int EE=0;				// Etat éclairage extérieur
+int ET=0;				// Etat éclairage table
 
-bool LastPark = false;
 //---------------------------------------SETUP-----------------------------------------------
 
 void setup() {
   Serial.begin(9600);
-  mcpE.begin();	// Entrées capteurs
+  mcpE.begin();		// Entrées capteurs
   mcp.begin(4);     // Sorties relais
   // Initialisation des relais
-  pinMode(LEDPARK, OUTPUT);
-  pinMode(LUMIERE, OUTPUT);
   mcp.digitalWrite(ALIM12V, HIGH);
   mcp.pinMode(ALIM12V, OUTPUT);
-  mcp.digitalWrite(ALIM24V, HIGH); mcp.pinMode(ALIM24V, OUTPUT);
+  mcp.digitalWrite(ALIMTEL, HIGH); mcp.pinMode(ALIMTEL, OUTPUT);
   mcp.digitalWrite(ALIMMOT, HIGH); mcp.pinMode(ALIMMOT, OUTPUT);
   mcp.digitalWrite(MOTEUR, HIGH); mcp.pinMode(MOTEUR, OUTPUT);
   mcp.digitalWrite(P11, HIGH); mcp.pinMode(P11, OUTPUT);
   mcp.digitalWrite(P12, HIGH); mcp.pinMode(P12, OUTPUT);
   mcp.digitalWrite(P21, HIGH); mcp.pinMode(P21, OUTPUT);
   mcp.digitalWrite(P22, HIGH); mcp.pinMode(P22, OUTPUT);
-
   mcp.digitalWrite(ALIMMOT, MOTOFF); // Coupure alimentation moteur abri
   // Activation des entrées (capteurs...)
   mcpE.pinMode(AO, INPUT); mcpE.pullUp(AO, HIGH);
@@ -164,13 +178,15 @@ void setup() {
   mcpE.pinMode(Pf1, INPUT); mcpE.pullUp(Pf1, HIGH);
   mcpE.pinMode(Po2, INPUT); mcpE.pullUp(Po2, HIGH);
   mcpE.pinMode(Pf2, INPUT); mcpE.pullUp(Pf2, HIGH);
-  //pinMode(BARU, INPUT);
+  mcpE.pinMode(BARU, INPUT);mcpE.pullUp(BARU, HIGH);
+  mcpE.pinMode(BEclI, INPUT);mcpE.pullUp(BEclI, HIGH);
+  mcpE.pinMode(BEclT, INPUT);mcpE.pullUp(BEclT, HIGH);
+  mcpE.pinMode(BEclE, INPUT);mcpE.pullUp(BEclE, HIGH);
+  mcpE.pinMode(BPark, INPUT);mcpE.pullUp(BPark, HIGH);
   //pinMode(BMA, INPUT);
 
-  //pinMode(PARK, INPUT_PULLUP);
+  //pinMode(PARK, INPUT_PULLDOWN);
   pinMode(PARK, INPUT);
-  pinMode(LEDPARK, OUTPUT);
-  digitalWrite(LEDPARK, TelPark);
 
   // Etat du dome initialisation des interrupteurs
   if ( AbriOuvert) {
@@ -222,7 +238,6 @@ void setup() {
   Serial.println(WiFi.localIP());
   //MDNS.begin("dome");
 
-
   // OTA
   // Port defaults to 3232
   // ArduinoOTA.setPort(3232);
@@ -266,10 +281,11 @@ void setup() {
 
   // Serveur TCP
   Server.begin();
-  module.setDisplayToString("GO   ");
+  
+  // Afficheurs
+  module.setDisplayToString("On      ");
   module.setLED(TM1638_COLOR_RED, 0);
   delay(1000);
-  module.setDisplayToString("     ");
 
   // NTP
   timeClient.begin();
@@ -279,8 +295,8 @@ void setup() {
   timer.setInterval(1000, FuncSec);
 
   // Eteint l'afficheur si les portes sont fermées
-  if (mcpE.digitalRead(Po1)) {
-    //module.setupDisplay(0, 0);
+  if (!PortesOuvert) {
+    module.setupDisplay(0, 0);
   }
   pixels.SetPixelColor(LEDSTATUS, black);
   pixels.Show();
@@ -289,16 +305,14 @@ void setup() {
 
 //---------------------------------------BOUCLE PRINCIPALE------------------------------------
 
-String SerMsg = "";		// Message reçu sur le port série
-
 void loop() {
   timer.run();
   ArduinoOTA.handle();
-  // MQTT
+  // MQTT	TODO
   //WiFiClient mqttClient;
   //PubSubClient mqtt(mqttClient);
 
-  // Lecture des ordres reçus du port série2 (ESP8266)
+  // Lecture des ordres reçus du port série virtuel (port 23)
   WiFiClient client = Server.available();
   if (client) {
     SerMsg = client.readStringUntil(35);
@@ -347,21 +361,49 @@ void loop() {
       ouvrePorte1();
       client.println("0");
     }
-    else if (SerMsg == "C?") {
+    else if (SerMsg == "C?") {	
       client.print(AbriFerme);
       client.print(AbriOuvert);
       client.print(PortesFerme);
       client.print(PortesOuvert);
       client.print(AlimStatus);
       client.println(TelPark ? "p" : "n");
-      client.print(mcpE.digitalRead(Pf1));
+      /*client.print(mcpE.digitalRead(Pf1));
       client.print(mcpE.digitalRead(Pf2));
       client.print(mcpE.digitalRead(Po1));
-      client.println(mcpE.digitalRead(Po2));
+      client.println(mcpE.digitalRead(Po2));*/
     }
     client.stop();
   }
 
+  // Lecture des boutons "eclairage/park..."
+  // Eclairage intérieur
+  if (!mcpE.digitalRead(BEclI) {
+	  EI+=EI;
+	  if (EI>2) {EI=0;}
+	  SetEclairage(LEI,8,EI);
+	  delay(200);
+  }
+  
+  if (!mcpE.digitalRead(BEclT) {
+	  ET+=ET;
+	  if (ET>2) {ET=0;}
+	  SetEclairage(LET,8,ET);
+	  delay(200);
+  }
+  
+  if (!mcpE.digitalRead(BEclE) {
+	  EE+=EE;
+	  if (EE>2) {EE=0;}
+	  SetEclairage(LEE,8,EE);
+	  delay(200);
+  }
+  
+  // Bouton Park
+  if (!mcpE.digitalRead(BPark) {
+	  ParkScope();
+  }
+  
   // Lecture des boutons TM1638
   byte keys = module.getButtons();
   switch (keys) {
@@ -376,29 +418,25 @@ void loop() {
       StateAff = !StateAff;
       module.setupDisplay(StateAff, NiveauAff);
       delay(500);
-    case 128:
+    case 128:	// Bouton 8 Fermeture de l'abri
       deplaceAbri(false);
       break;
   }
   // Lecture du clavier matriciel
   char key = kpd.get_key();
   if (key != '\0') {
-    if (key == 42) {
+    if (key == 42) {	// Touche *
       // Active l'éclairage du clavier
       EclaireClavier();
     }
     else {
       // Clavier locké, lecture du code de déverrouillage
       if (Lock) {
-        // TODO Allume la LED du clavier en mode éclairage
         if (ClavierCode(key)) {
           Lock = false;
         }
       }
       else {
-        Serial.print(key);
-        Serial.print(" ");
-        Serial.println(char(key));
         // Clavier débloqué: commandes autorisées
         switch (char(key)) {
           case 65: // A
@@ -445,7 +483,7 @@ void loop() {
     ARU();
   }
   // Bouton Arret d'urgence
-  //if digitalRead(BARU) {ARU();}
+  if (!digitalRead(BARU)) {ARU();}
 }
 
 //---------------------------------------FONCTIONS--------------------------------------------
@@ -471,30 +509,75 @@ void FuncSec() {
         module.setDisplayToString("T° / H%");
       }
   }
-  //pixels.Show();
-
 }
 
 // Eclairage du clavier
 void EclaireClavier() {
   // Allume la LED
-  module.setLED(TM1638_COLOR_RED, 4);
   pixels.SetPixelColor(LEDCLAVIER, white);
   pixels.Show();
   // Demarre le temporisateur
   if (!Veille) {
-    timerLED = timer.setTimeout(TPSVEILLE * 1000, EteintClavier);
+    timer.setTimeout(TPSVEILLE * 1000, EteintClavier);
     Veille = true;
   }
-  // Eteint la LED du clavier
-
 }
+
+void SetEclairage(int PosLed, int NbLed, int Ncouleur) {
+	RgbColor couleur;
+	switch(Ncouleur) {
+		case 0:	
+			couleur=black;
+			break;
+		case 1:
+			couleur=red;
+			break;
+		case 2:
+			couleur=white;
+			break;
+	}
+	// Couleur: 0: noir, 1: rouge, 2: blanc
+	for (int i=PosLed;i++;i<(PosLed-NbLed)) {
+		pixels.SetPixelColor(i,couleur);
+	}
+	pixels.Show();
+}
+
 void EteintClavier() {
   // Eteint l'éclaraige du clavier
   pixels.SetPixelColor(LEDCLAVIER, black);
   pixels.Show();
-  module.setLED(0, 4);
   Veille = false;
+}
+
+void AfficheErreur() {
+	// Affiche une erreur de manipulation
+	module.setDisplayToString("Error   ");
+	pixels.SetPixelColor(LEDCLAVIER, red);
+	pixels.SetPixelColor(LEDSTATUS, red);
+	pixels.Show();
+	delay(500);
+}
+
+bool ParkScope() {
+	// Tente de parquer le télescope 
+	// Retour: 1: OK 0: erreur
+	WiFiClient onstep;
+	if (!client.connect(OnStepHost,OnStepPort) {
+		// Connexion impossible
+		return false;
+	}
+	//onstep.print(":hP#");
+	onstep.stop();
+	// Envoi de la demande de park
+/*
+	do {	// TODO Commande acceptée ? On attend la fin du park
+		client.connect(OnStepHost,OnStepPort)
+		String line = onstep.readStringUntil('\r');
+		Serial.println(line);
+	}while (line=="0");
+*/	
+	return false;
 }
 
 // Déverrouillage au clavier
@@ -504,6 +587,9 @@ bool ClavierCode(char key) {
   int delai = 10; // Delai pour rentrer le code en secondes
   module.setDisplayToString("Code    ");
   // TODO Allumage de la LED en orange pour éclairer le clavier
+    pixels.SetPixelColor(LEDCLAVIER, red);
+  pixels.Show();
+  delay(1000);
   pixels.SetPixelColor(LEDCLAVIER, white);
   pixels.Show();
   module.setLED(TM1638_COLOR_RED, 7);
@@ -571,7 +657,7 @@ void ouvrePorte1(void) {
 void changePortes(bool etat) {
   // Commande identique à l'état actuel, on sort
   if ((etat && PortesOuvert) || (!etat && PortesFerme)) {
-    module.setDisplayToString("Error   "); delay(500);
+	AfficheErreur();
     return;
   }
   if (etat) {   // Ouverture des portes
@@ -599,14 +685,18 @@ void changePortes(bool etat) {
   else {    // Fermeture des portes
     //if ((AbriOuvert && AbriFerme) || (!AbriOuvert && ! AbriFerme)) {
     if (!AbriFerme) {
-      module.setDisplayToString("Error   "); delay(500);
+      AfficheErreur();
       return;
     }
     if (!TelPark) {
       // Lance la commande de park sur OnStep
-      module.setDisplayToString("Error   "); delay(500);
-      return;
+	  if (!ParkScope()) {
+		AfficheErreur();
+		return;
+	  }
     }
+
+	
     StopMot;
     module.setDisplayToString("P2 F... ");
     mcp.digitalWrite(P21, LOW);
@@ -635,14 +725,16 @@ void changePortes(bool etat) {
 void deplaceAbri(bool etat) {
   // Commande identique à l'état actuel, on sort
   if ((etat && AbriOuvert) || (!etat && AbriFerme)) {
-    module.setDisplayToString("Error   "); delay(500);
+    AfficheErreur();
     return;
   }
   // Test telescope parqué
   if (!TelPark) {
     // Lance la commande de park sur OnStep
-    module.setDisplayToString("Error   "); delay(500);
-    return;
+	if (!ParkScope()) {
+		AfficheErreur();
+		return;
+	}
   }
   StopTel; // Coupure alimentation télescope
   if (!PortesOuvert) {
@@ -675,12 +767,12 @@ void deplaceAbri(bool etat) {
   }
   else {
     // Abri fermé
-    StopTel; // Coupure alimentation télescope
-    delay(500);
+    //StopTel; // Coupure alimentation télescope
+    //delay(500);
     changePortes(false);             // Fermeture des portes
     // Pas nécessaire (déjà fait à la fermeture des portes)
     StopMot; // Coupure alimentation moteur abri
-    StopTel; // Coupure alimentation dome
+    //StopTel; // Coupure alimentation dome
     module.setDisplayToString("Abr CLOS");
     delay(500);
   }
@@ -713,7 +805,7 @@ void attendARU(unsigned long delai, bool park, bool depl) {	// Boucle d'attente 
       }
     }
     // Bouton Arret d'urgence
-    //if digitalRead(BARU) {ARU();}
+    if (!digitalRead(BARU)) {ARU();}
     delay(100);    // Sinon ça plante (delay(1) marche aussi)...
   }
 }
@@ -730,7 +822,7 @@ void ARU() {				// Arret d'urgence
   // Arret de l'alimentation de l'abri
   // Initialisation des relais
   mcp.digitalWrite(ALIM12V, HIGH);
-  mcp.digitalWrite(ALIM24V, HIGH);
+  mcp.digitalWrite(ALIMTEL, HIGH);
   mcp.digitalWrite(ALIMMOT, HIGH);
   mcp.digitalWrite(MOTEUR, HIGH);
   mcp.digitalWrite(P11, HIGH);
@@ -743,7 +835,21 @@ void ARU() {				// Arret d'urgence
   module.setDisplayToString("Aru Aru ");
   // Attente d'un retour a la normale (abri ouvert ou fermé et télescope parqué)
   while ((!AbriFerme && !AbriOuvert) || (AbriFerme && AbriOuvert) || !TelPark) {
-    delay(1000);
+	  // TODO Possibilité d'envoyer des commandes manuelles pour débloquer la situation
+	  /*
+			P1#	Fermeture de la porte 1
+			P2# Fermeture de la porte 2
+			DD#	Deplacement de l'abri
+			TP#	Parquer le télescope
+	  */
+    delay(500);
+	pixels.SetPixelColor(LEDCLAVIER, red);
+	pixels.SetPixelColor(LEDSTATUS, red);
+	pixels.Show();
+	delay(500);
+	pixels.SetPixelColor(LEDCLAVIER, black);
+	pixels.SetPixelColor(LEDSTATUS,black);
+	pixels.Show();
   }
   module.setDisplayToString("reboot..");
   delay(1000);

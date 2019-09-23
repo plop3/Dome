@@ -51,10 +51,12 @@ Entrées:
   - A04:	Porte 1 ouverte
   - A02: Porte 2 fermée
   - A00:	Porte 2 ouverte
-  - B00: Bouton 1
-  - B01: Bouton 2
-  - B02: Bouton 3
-  - B03; Bouton 4
+  - B00: Bouton 1	Eclairage intérieur
+  - B01: Bouton 2	Eclairage table
+  - B02: Bouton 3	Eclairage extérieur
+  - B03; Bouton 4	Park télescope ?
+  - ...
+  - B07: Bouton 8	ARU
   
 E/S ESP32:
 ----------
@@ -136,3 +138,11 @@ Clavier matriciel:
  - 1	Ouvre porte 1
  - 2	Ferme porte 1
  - *	Réactive l'éclairage
+
+LEDs APA106:
+-----------
+ - 0	Status
+ - 1	Clavier
+ - 2-9		Eclairage intérieur
+ - 10-17	Eclairage table
+ - 18-25	Eclairage extérieur

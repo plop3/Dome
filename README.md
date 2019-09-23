@@ -20,3 +20,9 @@ Les principales commandes (liaison série 9600,8,N,1) <br>
   p+# Ouverture de la porte 1 <br>
   p-# Fermeture de la porte 1 <br>
   C?# Informations de l'état des capteurs <br>
+  
+Commande manuelle en mode ARU:<br>
+	P1#	Fermeture de la porte 1<br>
+	P2# Fermeture de la porte 2<br>
+	DD#	Deplacement de l'abri<br>
+	TP#	Parquer le télescope<br>

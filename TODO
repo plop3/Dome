@@ -1,17 +1,23 @@
 TODO:
 -----
-- Bouton ARU    
+- Test du code actuel.
+- Test des sorties relais
+- Cablage maquette éclairages
+- Test éclairages
+- Souder entrée Park + correction code + tests
+- Park du télescope (appel direct à OnStep par WiFi) -> En cours
+- Tests finaux
+- Installation de la carte dans l'abri
 - Commandes par LoRa MQTT/MySensors
-- Remplacement de la LED Park par 1 LED APA106
-- Ajout des éclairages
-- Récupération des infos météo depuis Domoticz
-- Park du télescope (appel direct à OnStep par WiFi)
+- Récupération des infos météo depuis Domoticz (infos à déterminer) et OnStep (T°/H%, T° miroir)
+
 
 Options:
 --------
+- Mode manuel (clavier et TM1638)
 - Ajout de l'afficheur LCD 20x4 
 - Gérer de nouveau la coupure de l'alimentation 12V
-- Mode manuel (clavier et TM1638)
+
 
 
 
