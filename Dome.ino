@@ -163,11 +163,6 @@ void setup() {
   // MCP23017
   mcpE.begin();		// Entrées capteurs
   mcp.begin(4);     // Sorties relais
-  // Résistances pull-up (à tester) TEST
-  mcp.sda_pullup_en = GPIO_PULLUP_ENABLE;
-  mcp.scl_pullup_en = GPIO_PULLUP_ENABLE;	
-  mcpE.sda_pullup_en = GPIO_PULLUP_ENABLE;
-  mcpE.scl_pullup_en = GPIO_PULLUP_ENABLE;
   
   // Initialisation des relais
   mcp.digitalWrite(ALIM12V, HIGH);
@@ -220,7 +215,6 @@ void setup() {
 
   // Connexion WiFi
   WiFi.mode(WIFI_AP_STA);
-  WiFi.hostname("dome");
   //access point part
   Serial.println("Creating Accesspoint");
   WiFi.softAP(assid, asecret, 7, 0, 5);
