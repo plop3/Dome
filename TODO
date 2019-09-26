@@ -1,13 +1,12 @@
 TODO:
 -----
-- Park du télescope (appel direct à OnStep par WiFi) -> En cours
+- Résoudre le problème de plantage !!!
+- AJout buzzer (https://github.com/lbernstone/Tone)
 - Souder entrée Park + correction code + tests
-- Test des sorties relais
-- Installation de la carte dans l'abri
 - Test éclairages
 - Tests finaux
 - Commandes par LoRa MQTT/MySensors
-- Ajout de l'afficheur LCD 20x4 
+- Ajout de l'afficheur LCD 20x4  ?
 - Récupération des infos météo depuis Domoticz (infos à déterminer) et OnStep (T°/H%, T° miroir)
 
 

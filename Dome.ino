@@ -157,9 +157,18 @@ int ET = 0;				// Etat éclairage table
 //---------------------------------------SETUP-----------------------------------------------
 
 void setup() {
-  Serial.begin(9600);
+  // Initialiation du port série
+    Serial.begin(9600);
+  
+  // MCP23017
   mcpE.begin();		// Entrées capteurs
   mcp.begin(4);     // Sorties relais
+  // Résistances pull-up (à tester) TEST
+  mcp.sda_pullup_en = GPIO_PULLUP_ENABLE;
+  mcp.scl_pullup_en = GPIO_PULLUP_ENABLE;	
+  mcpE.sda_pullup_en = GPIO_PULLUP_ENABLE;
+  mcpE.scl_pullup_en = GPIO_PULLUP_ENABLE;
+  
   // Initialisation des relais
   mcp.digitalWrite(ALIM12V, HIGH);
   mcp.pinMode(ALIM12V, OUTPUT);
@@ -185,6 +194,7 @@ void setup() {
   mcpE.pinMode(BPark, INPUT); mcpE.pullUp(BPark, HIGH);
   //pinMode(BMA, INPUT);
 
+  // Entrée Park (TEST pulldown)
   pinMode(PARK, INPUT_PULLDOWN);
   //pinMode(PARK, INPUT);
 
@@ -210,7 +220,7 @@ void setup() {
 
   // Connexion WiFi
   WiFi.mode(WIFI_AP_STA);
-  //WiFi.hostname("dome");
+  WiFi.hostname("dome");
   //access point part
   Serial.println("Creating Accesspoint");
   WiFi.softAP(assid, asecret, 7, 0, 5);
@@ -236,7 +246,7 @@ void setup() {
   Serial.println("WiFi connected");
   Serial.println("IP address: ");
   Serial.println(WiFi.localIP());
-  //MDNS.begin("dome");
+  MDNS.begin("dome"); // Ajout TEST
 
   // OTA
   // Port defaults to 3232
@@ -316,7 +326,6 @@ void loop() {
   WiFiClient client = Server.available();
   if (client) {
     SerMsg = client.readStringUntil(35);
-    client.stop();
     if (SerMsg == "P+") {
       changePortes(true);
       client.println((PortesOuvert) ? "1" : "0");
@@ -374,8 +383,9 @@ void loop() {
         client.print(mcpE.digitalRead(Po1));
         client.println(mcpE.digitalRead(Po2));
     }
+	client.stop();
   }
-
+  // client.stop(); // TEST (Fermer le client ici)
   // Lecture des boutons "eclairage/park..."
   // Eclairage intérieur
   if (!mcpE.digitalRead(BEclI)) {
@@ -482,7 +492,6 @@ void loop() {
     else {
       pixels.SetPixelColor(LEDSTATUS, black);
     }
-    //digitalWrite(LEDPARK, TelPark);
     pixels.Show();
   }
   // TEST DEPLACEMENT INOPINE DU DOME
@@ -575,13 +584,14 @@ void EteintClavier() {
   Veille = false;
 }
 
-void AfficheErreur() {
+void AfficheErreur(String erreur) {
   // Affiche une erreur de manipulation
-  module.setDisplayToString("Error   ");
+  module.setDisplayToString("Err "+erreur);
   pixels.SetPixelColor(LEDCLAVIER, red);
   pixels.SetPixelColor(LEDSTATUS, red);
+  Serial.println("Erreur: "+ erreur);
   pixels.Show();
-  delay(500);
+  delay(2000);
 }
 
 String GetScopeInfo(String cmd) {
@@ -650,6 +660,11 @@ bool ClavierCode(char key) {
     }
     key = kpd.get_key();
     if (key != '\0') {
+	  pixels.SetPixelColor(LEDCLAVIER, green);
+	  pixels.Show();
+	  delay(200);
+	  pixels.SetPixelColor(LEDCLAVIER, white);
+	  pixels.Show();
       // Touche pressée
       code = code + key;
       int lg = 0;
@@ -700,7 +715,7 @@ void ouvrePorte1(void) {
 void changePortes(bool etat) {
   // Commande identique à l'état actuel, on sort
   if ((etat && PortesOuvert) || (!etat && PortesFerme)) {
-    AfficheErreur();
+    AfficheErreur("door");
     return;
   }
   if (etat) {   // Ouverture des portes
@@ -728,30 +743,26 @@ void changePortes(bool etat) {
   else {    // Fermeture des portes
     //if ((AbriOuvert && AbriFerme) || (!AbriOuvert && ! AbriFerme)) {
     if (!AbriFerme) {
-      AfficheErreur();
+      AfficheErreur("Abri");
       return;
     }
     if (!TelPark) {
       // Lance la commande de park sur OnStep
       if (!ParkScope()) {
-        AfficheErreur();
+        AfficheErreur("PArk");
         return;
       }
     }
-
-
     StopMot;
     module.setDisplayToString("P2 F... ");
     mcp.digitalWrite(P21, LOW);
-
     attendARU(5000, true, true);
-
+	// /!\ BUG surement ici
     module.setDisplayToString("P12 F...");
     mcp.digitalWrite(P11, LOW);
     attendARU(DELAIPORTES, true, true);
     mcp.digitalWrite(P11, HIGH);
     mcp.digitalWrite(P21, HIGH);
-
     module.setDisplayToString("P12 CLOS"); delay(500);
     Lock = true;
     // Eteint les affichages
@@ -768,14 +779,14 @@ void changePortes(bool etat) {
 void deplaceAbri(bool etat) {
   // Commande identique à l'état actuel, on sort
   if ((etat && AbriOuvert) || (!etat && AbriFerme)) {
-    AfficheErreur();
+    AfficheErreur("POS ");
     return;
   }
   // Test telescope parqué
   if (!TelPark) {
     // Lance la commande de park sur OnStep
     if (!ParkScope()) {
-      AfficheErreur();
+      AfficheErreur("PArk");
       return;
     }
   }
@@ -877,6 +888,7 @@ void ARU() {				// Arret d'urgence
   mcp.digitalWrite(ALIMMOT, MOTOFF);
   // Ouverture des portes
   changePortes(true);
+  Serial.println("ARRET D'URGENCE !");
   module.setDisplayToString("Aru Aru ");
   // Attente d'un retour a la normale (abri ouvert ou fermé et télescope parqué)
   while ((!AbriFerme && !AbriOuvert) || (AbriFerme && AbriOuvert) || !TelPark) {
@@ -897,6 +909,7 @@ void ARU() {				// Arret d'urgence
     pixels.Show();
   }
   module.setDisplayToString("reboot..");
+  Serial.println("Reboot...");
   delay(1000);
   hard_restart();
 }
