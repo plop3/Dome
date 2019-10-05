@@ -3,16 +3,17 @@
         {
             "name": "Linux",
             "includePath": [
+                "/home/serge/.arduino15/packages/esp32/hardware/esp32/1.0.3/**",
                 "/home/serge/.arduino15/packages/esp32/tools/**",
                 "/home/serge/.arduino15/packages/esp32/hardware/esp32/1.0.0/**",
                 "/home/serge/.arduino15/packages/esp8266/tools/**",
                 "/home/serge/.arduino15/packages/esp8266/hardware/esp8266/**",
                 "/opt/arduino-1.8.9/hardware/arduino/avr/**",
-                "/opt/arduino-1.8.9/tools/**"
+                "/opt/arduino-1.8.9/tools/**",
+                "/opt/arduino-1.8.10/hardware/arduino/avr/**",
+                "/opt/arduino-1.8.10/tools/**"
             ],
-            "forcedInclude": [
-                "/opt/arduino-1.8.9/hardware/arduino/avr/cores/arduino/Arduino.h"
-            ],
+            "forcedInclude": [],
             "intelliSenseMode": "gcc-x64",
             "compilerPath": "/usr/bin/clang",
             "cStandard": "c11",

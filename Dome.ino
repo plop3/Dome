@@ -14,7 +14,6 @@
 #include <Wire.h>
 #include "Adafruit_MCP23017.h"
 Adafruit_MCP23017 mcp;		//MCP externe connecté à la carte 8 relais
-Adafruit_MCP23017 mcpE;		//MCP intégré à la carte pour les entrées capteurs
 
 // WiFi + OTA
 #include <WiFi.h>
@@ -70,14 +69,14 @@ RgbColor black(0);
 // Sorties
 
 // Sorties MCP23017_2	(Carte externe I2c)
-#define ALIM12V 2   // (R3) Alimentation 12V	(Inutilisée)
-#define ALIMTEL 3   // (R4) Alimentation télescope
-#define ALIMMOT 1   // (R2) Alimentation 220V moteur abri
-#define MOTEUR  0   // (R1) Ouverture/fermeture abri
-#define P11     4   // (R5) Relais 1 porte 1
-#define P12     5   // (R6) Relais 2 porte 1
-#define P21     6   // (R7) Relais 1 porte 2
-#define P22     7   // (R8) Relais 2 porte 2
+#define ALIM12V 10   // (R3) Alimentation 12V	(Inutilisée)
+#define ALIMTEL 11   // (R4) Alimentation télescope
+#define ALIMMOT 9   // (R2) Alimentation 220V moteur abri
+#define MOTEUR  8   // (R1) Ouverture/fermeture abri
+#define P11     12   // (R5) Relais 1 porte 1
+#define P12     13   // (R6) Relais 2 porte 1
+#define P21     14   // (R7) Relais 1 porte 2
+#define P22     15   // (R8) Relais 2 porte 2
 
 // Entrées
 #define PARK  33	// Etat du telescope 0: non parqué, 1: parqué
@@ -128,10 +127,10 @@ const char *topicout = "domoticz/out";
 
 //---------------------------------------Macros------------------------------------------------
 #define AlimStatus  (!mcp.digitalRead(ALIMTEL))    // Etat de l'alimentation télescope
-#define PortesOuvert (!mcpE.digitalRead(Po1) && !mcpE.digitalRead(Po2))
-#define PortesFerme (!mcpE.digitalRead(Pf1) && !mcpE.digitalRead(Pf2))
-#define AbriFerme (!mcpE.digitalRead(AF))
-#define AbriOuvert (!mcpE.digitalRead(AO))
+#define PortesOuvert (!mcp.digitalRead(Po1) && !mcp.digitalRead(Po2))
+#define PortesFerme (!mcp.digitalRead(Pf1) && !mcp.digitalRead(Pf2))
+#define AbriFerme (!mcp.digitalRead(AF))
+#define AbriOuvert (!mcp.digitalRead(AO))
 #define MoteurStatus (!mcp.digitalRead(ALIMMOT))
 #define StartTel mcp.digitalWrite(ALIMTEL, LOW)
 #define StopTel mcp.digitalWrite(ALIMTEL, HIGH)
@@ -161,8 +160,8 @@ void setup() {
     Serial.begin(9600);
   
   // MCP23017
-  mcpE.begin();		// Entrées capteurs
-  mcp.begin(4);     // Sorties relais
+  mcp.begin();		// Entrées capteurs
+  //mcp.begin(4);     // Sorties relais
   
   // Initialisation des relais
   mcp.digitalWrite(ALIM12V, HIGH);
@@ -176,17 +175,18 @@ void setup() {
   mcp.digitalWrite(P22, HIGH); mcp.pinMode(P22, OUTPUT);
   mcp.digitalWrite(ALIMMOT, MOTOFF); // Coupure alimentation moteur abri
   // Activation des entrées (capteurs...)
-  mcpE.pinMode(AO, INPUT); mcpE.pullUp(AO, HIGH);
-  mcpE.pinMode(AF, INPUT); mcpE.pullUp(AF, HIGH);
-  mcpE.pinMode(Po1, INPUT); mcpE.pullUp(Po1, HIGH);
-  mcpE.pinMode(Pf1, INPUT); mcpE.pullUp(Pf1, HIGH);
-  mcpE.pinMode(Po2, INPUT); mcpE.pullUp(Po2, HIGH);
-  mcpE.pinMode(Pf2, INPUT); mcpE.pullUp(Pf2, HIGH);
-  mcpE.pinMode(BARU, INPUT); mcpE.pullUp(BARU, HIGH);
-  mcpE.pinMode(BEclI, INPUT); mcpE.pullUp(BEclI, HIGH);
-  mcpE.pinMode(BEclT, INPUT); mcpE.pullUp(BEclT, HIGH);
-  mcpE.pinMode(BEclE, INPUT); mcpE.pullUp(BEclE, HIGH);
-  mcpE.pinMode(BPark, INPUT); mcpE.pullUp(BPark, HIGH);
+  mcp.pinMode(AO, INPUT); mcp.pullUp(AO, HIGH);
+  mcp.pinMode(AF, INPUT); mcp.pullUp(AF, HIGH);
+  mcp.pinMode(Po1, INPUT); mcp.pullUp(Po1, HIGH);
+  mcp.pinMode(Pf1, INPUT); mcp.pullUp(Pf1, HIGH);
+  mcp.pinMode(Po2, INPUT); mcp.pullUp(Po2, HIGH);
+  mcp.pinMode(Pf2, INPUT); mcp.pullUp(Pf2, HIGH);
+  /*mcp.pinMode(BARU, INPUT); mcp.pullUp(BARU, HIGH);
+  mcp.pinMode(BEclI, INPUT); mcp.pullUp(BEclI, HIGH);
+  mcp.pinMode(BEclT, INPUT); mcp.pullUp(BEclT, HIGH);
+  mcp.pinMode(BEclE, INPUT); mcp.pullUp(BEclE, HIGH);
+  mcp.pinMode(BPark, INPUT); mcp.pullUp(BPark, HIGH);
+  */
   //pinMode(BMA, INPUT);
 
   // Entrée Park (TEST pulldown)
@@ -372,17 +372,18 @@ void loop() {
       client.print(PortesOuvert);
       client.print(AlimStatus);
       client.println(TelPark ? "p" : "n");
-      client.print(mcpE.digitalRead(Pf1));
-        client.print(mcpE.digitalRead(Pf2));
-        client.print(mcpE.digitalRead(Po1));
-        client.println(mcpE.digitalRead(Po2));
+      client.print(mcp.digitalRead(Pf1));
+        client.print(mcp.digitalRead(Pf2));
+        client.print(mcp.digitalRead(Po1));
+        client.println(mcp.digitalRead(Po2));
     }
 	client.stop();
   }
+  /*
   // client.stop(); // TEST (Fermer le client ici)
   // Lecture des boutons "eclairage/park..."
   // Eclairage intérieur
-  if (!mcpE.digitalRead(BEclI)) {
+  if (!mcp.digitalRead(BEclI)) {
     EI += EI;
     if (EI > 2) {
       EI = 0;
@@ -391,7 +392,7 @@ void loop() {
     delay(200);
   }
 
-  if (!mcpE.digitalRead(BEclT)) {
+  if (!mcp.digitalRead(BEclT)) {
     ET += ET;
     if (ET > 2) {
       ET = 0;
@@ -400,7 +401,7 @@ void loop() {
     delay(200);
   }
 
-  if (!mcpE.digitalRead(BEclE)) {
+  if (!mcp.digitalRead(BEclE)) {
     EE += EE;
     if (EE > 2) {
       EE = 0;
@@ -410,10 +411,10 @@ void loop() {
   }
 
   // Bouton Park
-  if (!mcpE.digitalRead(BPark)) {
+  if (!mcp.digitalRead(BPark)) {
     ParkScope();
   }
-
+*/
   // Lecture des boutons TM1638
   byte keys = module.getButtons();
   switch (keys) {
