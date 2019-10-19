@@ -10,29 +10,27 @@
 //---------------------------------------CONSTANTES-----------------------------------------------
 
 // Sorties
-#define LEDPARK 13	// LED d'indication du park // TODO Remplacer par 1 led APA106 + éclairages intérieurs
-#define LUMIERE 10  // Eclairage de l'abri
-#define ALIM12V 27   // (R3) Alimentation 12V
-#define ALIM24V 29   // (R4) Alimentation télescope
-#define ALIMMOT 25   // (R2) Alimentation 220V moteur abri
-#define MOTEUR  23   // (R1) Ouverture/fermeture abri
-#define P11     31   // (R5) Relais 1 porte 1
-#define P12     33   // (R6) Relais 2 porte 1
-#define P21     35   // (R7) Relais 1 porte 2
-#define P22     37   // (R8) Relais 2 porte 2
+#define ALIM12V 9   // (R3) Alimentation 12V
+#define ALIM24V 8   // (R4) Alimentation télescope
+#define ALIMMOT 10   // (R2) Alimentation 220V moteur abri
+#define MOTEUR  11   // (R1) Ouverture/fermeture abri
+#define P11     7   // (R5) Relais 1 porte 1
+#define P12     6   // (R6) Relais 2 porte 1
+#define P21     5   // (R7) Relais 1 porte 2
+#define P22     4   // (R8) Relais 2 porte 2
 #define RESET   9    // Reset
 
 // Entrées
-#define PARK  2	// Etat du telescope 0: non parqué, 1: parqué
+#define PARK  A6	// Etat du telescope 0: non parqué, 1: parqué
 /* TODO 
  * entrée ouverture portes
  */
-#define AO 4        // Capteur abri ouvert
-#define AF 3        // Capteur abri fermé
-#define Po1 5       // Capteur portes ouvertes
-#define Po2 6       // Capteur portes fermées
-#define Pf1 7	    // BARU Bouton arret d'urgence
-#define Pf2 8       // BMA Bouton marche/arret
+#define AO A0        // Capteur abri ouvert
+#define AF A1       // Capteur abri fermé
+#define Po1 A2       // Capteur portes ouvertes
+#define Po2 A4      // Capteur portes fermées
+#define Pf1 A3	    // BARU Bouton arret d'urgence
+#define Pf2 A5      // BMA Bouton marche/arret
 
 // Constantes globales
 #define DELAIPORTES 40000L  // Durée d'ouverture/fermeture des portes (40000L)
@@ -54,16 +52,14 @@
 #define StopTel digitalWrite(ALIM24V, HIGH)
 #define StartMot digitalWrite(ALIMMOT, MOTON)
 #define StopMot digitalWrite(ALIMMOT, MOTOFF)
-#define TelPark digitalRead(PARK)
+#define TelPark analogRead(PARK)>300
 //#define TelPark 1
 
 //---------------------------------------SETUP-----------------------------------------------
 
 void setup() {
-  Serial2.begin(9600);
+  Serial.begin(9600);
   // Initialisation des relais
-  pinMode(LEDPARK, OUTPUT);
-  pinMode(LUMIERE, OUTPUT);
   digitalWrite(ALIM12V,HIGH);
   pinMode(ALIM12V, OUTPUT);
   digitalWrite(ALIM24V,HIGH);pinMode(ALIM24V, OUTPUT);
@@ -90,8 +86,6 @@ void setup() {
   
   //pinMode(PARK, INPUT_PULLUP);
   pinMode(PARK, INPUT);
-  pinMode(LEDPARK, OUTPUT);
-  digitalWrite(LEDPARK, TelPark);
 
   // Etat du dome initialisation des interrupteurs
   if ( AbriOuvert) {
@@ -106,68 +100,67 @@ String SerMsg="";		// Message reçu sur le port série
 
 void loop() {
   // Lecture des ordres reçus du port série2 (ESP8266)
-  if (Serial2.available()) {
-    SerMsg=Serial2.readStringUntil(35);
+  if (Serial.available()) {
+    SerMsg=Serial.readStringUntil(35);
 	  if (SerMsg == "P+") {
       changePortes(true);
-      Serial2.println((PortesOuvert) ? "1" : "0");
+      Serial.println((PortesOuvert) ? "1" : "0");
 	  }
     else if (SerMsg == "P-") {
       changePortes(false);
-      Serial2.println((!PortesOuvert) ? "1" : "0");
+      Serial.println((!PortesOuvert) ? "1" : "0");
     }
     else if (SerMsg == "D+") {
       deplaceAbri(true);
-	          Serial2.println((AbriOuvert) ? "1" : "0");
+	          Serial.println((AbriOuvert) ? "1" : "0");
     }
     else if (SerMsg == "D-") {
       deplaceAbri(false);
-	          Serial2.println((AbriFerme)? "1" : "0");
+	          Serial.println((AbriFerme)? "1" : "0");
     }
     else if (SerMsg == "A+") {
 	    StartTel;
-	    Serial2.println("1");
+	    Serial.println("1");
     }
     else if ( SerMsg == "A-") {
 	    StopTel;
-	    Serial2.println("1");
+	    Serial.println("1");
     }
 	  else if (SerMsg == "P?") {
-      Serial2.println((PortesOuvert) ? "1" : "0");
+      Serial.println((PortesOuvert) ? "1" : "0");
     }
     else if (SerMsg == "D?") {
-            Serial2.println((AbriFerme) ? "0" : "1");
+            Serial.println((AbriFerme) ? "0" : "1");
     }
     else if (SerMsg == "A?") {
-            Serial2.println(AlimStatus ? "1" : "0");
+            Serial.println(AlimStatus ? "1" : "0");
     }
     else if (SerMsg == "AU") {
-	    Serial2.println("0");
+	    Serial.println("0");
             ARU();
     }
     else if (SerMsg == "p-") {
 	fermePorte1();
-	Serial2.println("0");
+	Serial.println("0");
     }	  
     else if (SerMsg == "p+") {
 	ouvrePorte1();
-	Serial2.println("0");
+	Serial.println("0");
     }	  
     else if (SerMsg == "C?") {
-      Serial2.print(AbriFerme);
-      Serial2.print(AbriOuvert);
-      Serial2.print(PortesFerme);
-      Serial2.print(PortesOuvert);
-      Serial2.print(AlimStatus);
-      Serial2.println(TelPark ? "p" : "n");
-	Serial2.print(digitalRead(Pf1));
-	Serial2.print(digitalRead(Pf2));
-	Serial2.print(digitalRead(Po1));
-	Serial2.println(digitalRead(Po2));
+      Serial.print(AbriFerme);
+      Serial.print(AbriOuvert);
+      Serial.print(PortesFerme);
+      Serial.print(PortesOuvert);
+      Serial.print(AlimStatus);
+      Serial.println(TelPark ? "p" : "n");
+	Serial.print(digitalRead(Pf1));
+	Serial.print(digitalRead(Pf2));
+	Serial.print(digitalRead(Po1));
+	Serial.println(digitalRead(Po2));
     }
   }
-  digitalWrite(LEDPARK, TelPark);
-    
+ 
   // TEST DEPLACEMENT INOPINE DU DOME
   if (!AbriFerme && !AbriOuvert) {ARU();};
   
@@ -284,10 +277,10 @@ void attendDep(unsigned long delai) {	// Boucle d'attente pendant le déplacemen
   unsigned long Cprevious = millis();
   while ((millis() - Cprevious) < delai) {
     // Lecture des ordres reçus du port série
-    if (Serial2.available()) {
-    	SerMsg=Serial2.readStringUntil(35);
+    if (Serial.available()) {
+    	SerMsg=Serial.readStringUntil(35);
     	if (SerMsg == "AU") {
-	    Serial2.println("0");
+	    Serial.println("0");
             ARU();
     	}
     }
@@ -306,10 +299,10 @@ void attendPorte(unsigned long delai) {	// Boucle d'attente pendant l'ouverture/
   unsigned long Cprevious = millis();
   while ((millis() - Cprevious) < delai) {
     // Lecture des ordres reçus du port série
-    if (Serial2.available()) {
-    	SerMsg=Serial2.readStringUntil(35);
+    if (Serial.available()) {
+    	SerMsg=Serial.readStringUntil(35);
     	if (SerMsg == "AU") {
-	    Serial2.println("0");
+	    Serial.println("0");
             ARU();
     	}
     }
