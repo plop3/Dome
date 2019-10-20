@@ -4,7 +4,7 @@
   # Version 2.6
   # 22/10/2018-19/10/2019
 */
- 
+
 //---------------------------------------PERIPHERIQUES-----------------------------------------------
 #include <SoftwareSerial.h> // Port série 2 pour le module IHM (LCD,clavier...)
 SoftwareSerial Ser2(13, 2); // RX, TX
@@ -15,6 +15,34 @@ SoftwareSerial Ser2(13, 2); // RX, TX
 Adafruit_MCP23017 mcp;		//MCP externe connecté à la carte 8 relais
 
 //#include <avr/wdt.h>
+
+/*
+  // TM1638 LEDs & Keys /!\ Librairie sur Ghitub plop3 (https://github.com/plop3/tm1638-library)
+  #include <TM1638.h>
+  TM1638 module(4, 17, 25);
+*/
+/*
+  // Clavier matriciel I2c
+  #include <i2ckeypad.h>
+  #define ROWS 4
+  #define COLS 4
+  #define PCF8574_ADDR 0x26
+  i2ckeypad kpd = i2ckeypad(PCF8574_ADDR, ROWS, COLS);
+*/
+
+// LCD I2c
+#include <LiquidCrystal_I2C.h>
+LiquidCrystal_I2C lcd(0x27, 20, 4); // set the LCD address to 0x27 for a 16 chars and 2 line display
+
+// LEDs neopixel
+#include <Adafruit_NeoPixel.h>
+#ifdef __AVR__
+#include <avr/power.h> // Required for 16 MHz Adafruit Trinket
+#endif
+#define LEDPIN 4
+#define NBLEDS 8
+Adafruit_NeoPixel pixels(NBLEDS, LEDPIN, NEO_GRB + NEO_KHZ800);
+
 //---------------------------------------CONSTANTES-----------------------------------------------
 
 // Sorties TODO à vérifier !
@@ -50,6 +78,8 @@ Adafruit_MCP23017 mcp;		//MCP externe connecté à la carte 8 relais
 #define MOTOFF HIGH         // Etat pour l'arret du moteur
 #define MOTON !MOTOFF
 
+#define BKLIGHT	3			// Backlight LCD
+
 //---------------------------------------Variables globales------------------------------------
 
 #define AlimStatus  (!digitalRead(ALIMTEL))    // Etat de l'alimentation télescope
@@ -70,7 +100,7 @@ Adafruit_MCP23017 mcp;		//MCP externe connecté à la carte 8 relais
 //#define TelPark 1
 
 bool Manuel = false;
-
+bool LastPark = false;
 //---------------------------------------SETUP-----------------------------------------------
 
 void setup() {
@@ -79,7 +109,7 @@ void setup() {
   Ser2.begin(9600);
 
   mcp.begin();
-  
+
   // Initialisation des relais
   digitalWrite(ALIMPC, HIGH); pinMode(ALIMPC, OUTPUT);
   digitalWrite(ALIMTEL, HIGH); pinMode(ALIMTEL, OUTPUT);
@@ -95,14 +125,28 @@ void setup() {
   mcp.pinMode(AO, INPUT); mcp.pullUp(AO, HIGH);
   mcp.pinMode(AF, INPUT); mcp.pullUp(AF, HIGH);
 
-  
+
   mcp.pinMode(Po1, INPUT); mcp.pullUp(Po1, HIGH);
   mcp.pinMode(Pf1, INPUT); mcp.pullUp(Pf1, HIGH);
   mcp.pinMode(Po2, INPUT); mcp.pullUp(Po2, HIGH);
   mcp.pinMode(Pf2, INPUT); mcp.pullUp(Pf2, HIGH);
   mcp.pinMode(BARU, INPUT); mcp.pullUp(BARU, HIGH);
-  mcp.pinMode(PARK, INPUT); //mcp.pullUp(PARK, LOW); 
+  mcp.pinMode(PARK, INPUT); //mcp.pullUp(PARK, LOW);
   pinMode(BMA, INPUT);
+  pinMode(BKLIGHT, OUTPUT);
+  analogWrite(BKLIGHT, 50);
+
+  // LCD
+  lcd.init();
+  lcd.backlight();
+  lcd.setCursor(0, 0);
+  lcd.print("Demarrage...");
+
+  // LEDs
+  pixels.begin();
+  pixels.clear();
+  pixels.setPixelColor(0, pixels.Color(0, 20, 0));
+  pixels.show();
 
   // Vérification de la position du dome au démarrage
   if (!AbriOuvert && !AbriFerme) {
@@ -114,7 +158,9 @@ void setup() {
     StartTel; // Alimentation télescope
     StartMot; // Alimentation du moteur de l'abri
   }
-
+  lcd.clear();
+  lcd.setCursor(0, 0);
+  lcd.print("Ok");
 }
 
 //---------------------------------------BOUCLE PRINCIPALE------------------------------------
@@ -219,13 +265,21 @@ void loop() {
     }
   }
 
+  // LED état park
+/*
+  if (LastPark != TelPark) {
+    pixels.setPixelColor(1, pixels.Color(0, 10*TelPark, 0));
+    pixels.show();
+    LastPark = TelPark;
+  }
+ */
   // TEST DEPLACEMENT INOPINE DU DOME
   // TODO à décommenter quand installé
   /*
-  if (!Manuel && !AbriFerme && !AbriOuvert) {
+    if (!Manuel && !AbriFerme && !AbriOuvert) {
     ARU();
-  }
-*/
+    }
+  */
 
   // Bouton Arret d'urgence
   if (!mcp.digitalRead(BARU)) {
