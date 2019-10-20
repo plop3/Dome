@@ -4,43 +4,36 @@
   # Version 2.6
   # 22/10/2018-19/10/2019
 */
- 
+
 //---------------------------------------PERIPHERIQUES-----------------------------------------------
 #include <SoftwareSerial.h> // Port série 2 pour le module IHM (LCD,clavier...)
-SoftwareSerial Ser2(13, 2); // RX, TX
-
-// MCP23017
-#include <Wire.h>
-#include "Adafruit_MCP23017.h"
-Adafruit_MCP23017 mcp;		//MCP externe connecté à la carte 8 relais
-
-//#include <avr/wdt.h>
+SoftwareSerial Ser2(2, 3); // RX, TX
 //---------------------------------------CONSTANTES-----------------------------------------------
 
-// Sorties TODO à vérifier !
-#define ALIMPC 	10   // (R3) Alimentation 220V sous le télescope (PC Indi /Raspi) contact NF
-#define ALIMTEL 9   // (R4) Alimentation télescope
-#define ALIMMOT 11   // (R2) Alimentation 220V moteur abri
-#define MOTEUR  12   // (R1) Ouverture/fermeture abri
-#define P11     8   // (R5) Relais 1 porte 1
-#define P12     7   // (R6) Relais 2 porte 1
-#define P21     6   // (R7) Relais 1 porte 2
-#define P22     5   // (R8) Relais 2 porte 2
-
-#define BARU    3	// MCP  // Bouton arret d'urgence
-#define BMA     A6  // Bouton M/A
+// Sorties
+#define ALIMPC 9   // (R3) Alimentation 220V sous le télescope (PC Indi /Raspi) contact NF
+#define ALIMTEL 8   // (R4) Alimentation télescope
+#define ALIMMOT 10   // (R2) Alimentation 220V moteur abri
+#define MOTEUR  11   // (R1) Ouverture/fermeture abri
+#define P11     7   // (R5) Relais 1 porte 1
+#define P12     6   // (R6) Relais 2 porte 1
+#define P21     5   // (R7) Relais 1 porte 2
+#define P22     4   // (R8) Relais 2 porte 2
+#define RESET   13   // Reset
+#define BARU    12  // Bouton arret d'urgence
+#define BMA     A7  // Bouton M/A
 
 // Entrées
-#define PARK  1		//MCP	// Etat du telescope 0: non parqué, 1: parqué
+#define PARK  A6	// Etat du telescope 0: non parqué, 1: parqué
 /* TODO
    entrée ouverture portes
 */
-#define AO 7		// MCP  // Capteur abri ouvert
-#define AF 5       	// MCP	// Capteur abri fermé
-#define Po1 6       // MCP	// Capteur portes ouvertes
-#define Po2 2      	// MCP	// Capteur portes fermées
-#define Pf1 4	    // MCP	// 
-#define Pf2 0      	// MCP	// 
+#define AO A0        // Capteur abri ouvert
+#define AF A1       // Capteur abri fermé
+#define Po1 A2       // Capteur portes ouvertes
+#define Po2 A4      // Capteur portes fermées
+#define Pf1 A3	    // BARU Bouton arret d'urgence
+#define Pf2 A5      // BMA Bouton marche/arret
 
 // Constantes globales
 #define DELAIPORTES 40000L  // Durée d'ouverture/fermeture des portes (40000L)
@@ -53,10 +46,10 @@ Adafruit_MCP23017 mcp;		//MCP externe connecté à la carte 8 relais
 //---------------------------------------Variables globales------------------------------------
 
 #define AlimStatus  (!digitalRead(ALIMTEL))    // Etat de l'alimentation télescope
-#define PortesOuvert (!mcp.digitalRead(Po1) && !mcp.digitalRead(Po2))
-#define PortesFerme (!mcp.digitalRead(Pf1) && !mcp.digitalRead(Pf2))
-#define AbriFerme (!mcp.digitalRead(AF))
-#define AbriOuvert (!mcp.digitalRead(AO))
+#define PortesOuvert (!digitalRead(Po1) && !digitalRead(Po2))
+#define PortesFerme (!digitalRead(Pf1) && !digitalRead(Pf2))
+#define AbriFerme (!digitalRead(AF))
+#define AbriOuvert (!digitalRead(AO))
 #define MoteurStatus (!digitalRead(ALIMMOT))
 #define StartTel digitalWrite(ALIMTEL, LOW)
 #define StopTel digitalWrite(ALIMTEL, HIGH)
@@ -64,8 +57,8 @@ Adafruit_MCP23017 mcp;		//MCP externe connecté à la carte 8 relais
 #define StopMot digitalWrite(ALIMMOT, MOTOFF)
 #define StopPC  digitalWrite(ALIMPC, LOW)
 #define StartPC digitalWrite(ALIMPC, HIGH)
-#define TelPark mcp.digitalRead(PARK)
-#define	BoutonMA (analogRead(BMA)<300)
+#define TelPark analogRead(PARK)>300
+#define	BoutonMA analogRead(BMA)>300
 
 //#define TelPark 1
 
@@ -74,14 +67,12 @@ bool Manuel = false;
 //---------------------------------------SETUP-----------------------------------------------
 
 void setup() {
-
-  Serial.begin(57600);
+  Serial.begin(9600);
   Ser2.begin(9600);
 
-  mcp.begin();
-  
   // Initialisation des relais
-  digitalWrite(ALIMPC, HIGH); pinMode(ALIMPC, OUTPUT);
+  digitalWrite(ALIMPC, HIGH);
+  pinMode(ALIMPC, OUTPUT);
   digitalWrite(ALIMTEL, HIGH); pinMode(ALIMTEL, OUTPUT);
   digitalWrite(ALIMMOT, HIGH); pinMode(ALIMMOT, OUTPUT);
   digitalWrite(MOTEUR, HIGH); pinMode(MOTEUR, OUTPUT);
@@ -89,20 +80,22 @@ void setup() {
   digitalWrite(P12, HIGH); pinMode(P12, OUTPUT);
   digitalWrite(P21, HIGH); pinMode(P21, OUTPUT);
   digitalWrite(P22, HIGH); pinMode(P22, OUTPUT);
+
   digitalWrite(ALIMMOT, MOTOFF); // Coupure alimentation moteur abri
   // Activation des entrées (capteurs...)
-
-  mcp.pinMode(AO, INPUT); mcp.pullUp(AO, HIGH);
-  mcp.pinMode(AF, INPUT); mcp.pullUp(AF, HIGH);
-
-  
-  mcp.pinMode(Po1, INPUT); mcp.pullUp(Po1, HIGH);
-  mcp.pinMode(Pf1, INPUT); mcp.pullUp(Pf1, HIGH);
-  mcp.pinMode(Po2, INPUT); mcp.pullUp(Po2, HIGH);
-  mcp.pinMode(Pf2, INPUT); mcp.pullUp(Pf2, HIGH);
-  mcp.pinMode(BARU, INPUT); mcp.pullUp(BARU, HIGH);
-  mcp.pinMode(PARK, INPUT); //mcp.pullUp(PARK, LOW); 
+  pinMode(AO, INPUT_PULLUP);
+  pinMode(AF, INPUT_PULLUP);
+  pinMode(Po1, INPUT_PULLUP);
+  pinMode(Pf1, INPUT_PULLUP);
+  pinMode(Po2, INPUT_PULLUP);
+  pinMode(Pf2, INPUT_PULLUP);
+  pinMode(BARU, INPUT_PULLUP);
   pinMode(BMA, INPUT);
+
+  digitalWrite(RESET, HIGH);
+  pinMode(RESET, OUTPUT);
+
+  pinMode(PARK, INPUT);
 
   // Vérification de la position du dome au démarrage
   if (!AbriOuvert && !AbriFerme) {
@@ -114,7 +107,6 @@ void setup() {
     StartTel; // Alimentation télescope
     StartMot; // Alimentation du moteur de l'abri
   }
-
 }
 
 //---------------------------------------BOUCLE PRINCIPALE------------------------------------
@@ -212,30 +204,26 @@ void loop() {
       Serial.print(PortesOuvert);
       Serial.print(AlimStatus);
       Serial.println(TelPark ? "p" : "n");
-      Serial.print(mcp.digitalRead(Pf1));
-      Serial.print(mcp.digitalRead(Pf2));
-      Serial.print(mcp.digitalRead(Po1));
-      Serial.println(mcp.digitalRead(Po2));
+      Serial.print(digitalRead(Pf1));
+      Serial.print(digitalRead(Pf2));
+      Serial.print(digitalRead(Po1));
+      Serial.println(digitalRead(Po2));
     }
   }
 
   // TEST DEPLACEMENT INOPINE DU DOME
-  // TODO à décommenter quand installé
-  /*
   if (!Manuel && !AbriFerme && !AbriOuvert) {
     ARU();
   }
-*/
 
   // Bouton Arret d'urgence
-  if (!mcp.digitalRead(BARU)) {
+  if (!digitalRead(BARU)) {
     ARU();
   }
   // Bouton Marche/Arret ? on ouvre la petite porte
   if (BoutonMA) {
-    ouvrePorte1();
+    ouvrePorte1;
   }
-
 }
 
 //---------------------------------------FONCTIONS--------------------------------------------
@@ -420,7 +408,6 @@ void attendPorte(unsigned long delai) {	// Boucle d'attente pendant l'ouverture/
 void ARU() {				// Arret d'urgence
   // Arret de l'alimentation de l'abri
   // Initialisation des relais
-  Serial.println("ARU");
   digitalWrite(ALIMTEL, HIGH);
   digitalWrite(ALIMMOT, HIGH);
   digitalWrite(MOTEUR, HIGH);
@@ -431,4 +418,5 @@ void ARU() {				// Arret d'urgence
   digitalWrite(ALIMMOT, MOTOFF);
   // Ouverture des portes
   changePortes(true);
+  digitalWrite(RESET, LOW);
 }
