@@ -16,11 +16,11 @@ Adafruit_MCP23017 mcp;		//MCP externe connecté à la carte 8 relais
 
 //#include <avr/wdt.h>
 
-/*
-  // TM1638 LEDs & Keys /!\ Librairie sur Ghitub plop3 (https://github.com/plop3/tm1638-library)
-  #include <TM1638.h>
-  TM1638 module(4, 17, 25);
-*/
+
+// TM1638 LEDs & Keys /!\ Librairie sur Ghitub plop3 (https://github.com/plop3/tm1638-library)
+#include <TM1638.h>
+TM1638 module(A0, A1, A2);
+
 /*
   // Clavier matriciel I2c
   #include <i2ckeypad.h>
@@ -30,9 +30,11 @@ Adafruit_MCP23017 mcp;		//MCP externe connecté à la carte 8 relais
   i2ckeypad kpd = i2ckeypad(PCF8574_ADDR, ROWS, COLS);
 */
 
+/*
 // LCD I2c
 #include <LiquidCrystal_I2C.h>
 LiquidCrystal_I2C lcd(0x27, 20, 4); // set the LCD address to 0x27 for a 16 chars and 2 line display
+*/
 
 // LEDs neopixel
 #include <Adafruit_NeoPixel.h>
@@ -66,8 +68,8 @@ Adafruit_NeoPixel pixels(NBLEDS, LEDPIN, NEO_GRB + NEO_KHZ800);
 #define AO 7		// MCP  // Capteur abri ouvert
 #define AF 5       	// MCP	// Capteur abri fermé
 #define Po1 6       // MCP	// Capteur portes ouvertes
-#define Po2 2      	// MCP	// Capteur portes fermées
-#define Pf1 4	    // MCP	// 
+#define Po2 2      	// MCP	// 
+#define Pf1 4	    // MCP	// Capteur portes fermées
 #define Pf2 0      	// MCP	// 
 
 // Constantes globales
@@ -79,6 +81,7 @@ Adafruit_NeoPixel pixels(NBLEDS, LEDPIN, NEO_GRB + NEO_KHZ800);
 #define MOTON !MOTOFF
 
 #define BKLIGHT	3			// Backlight LCD
+#define NiveauAff 0			//TM1638
 
 //---------------------------------------Variables globales------------------------------------
 
@@ -99,8 +102,9 @@ Adafruit_NeoPixel pixels(NBLEDS, LEDPIN, NEO_GRB + NEO_KHZ800);
 
 //#define TelPark 1
 
-bool Manuel = false;
-bool LastPark = false;
+bool Manuel = false;	// Mode manuel
+bool LastPark = false;	// Dernier état de Park
+bool StateAff = true;	// Etat de l'affichage du TM1638 (ON/OFF)
 //---------------------------------------SETUP-----------------------------------------------
 
 void setup() {
@@ -133,17 +137,24 @@ void setup() {
   pinMode(BKLIGHT, OUTPUT);
   analogWrite(BKLIGHT, 50);
 
+/*
   // LCD
   lcd.init();
   lcd.backlight();
   lcd.setCursor(0, 0);
   lcd.print("Demarrage...");
+*/
 
   // LEDs
   pixels.begin();
   pixels.clear();
   pixels.setPixelColor(0, pixels.Color(0, 20, 0));
   pixels.show();
+
+  // Afficheur TM1638
+  module.setupDisplay(1, 0);
+  module.setDisplayToString("Start");
+  module.setLED(TM1638_COLOR_RED, 0);
 
   // Vérification de la position du dome au démarrage
   if (!AbriOuvert && !AbriFerme) {
@@ -155,9 +166,12 @@ void setup() {
     StartTel; // Alimentation télescope
     StartMot; // Alimentation du moteur de l'abri
   }
+/*
   lcd.clear();
   lcd.setCursor(0, 0);
   lcd.print("Ok");
+*/
+
 }
 
 //---------------------------------------BOUCLE PRINCIPALE------------------------------------
@@ -165,6 +179,18 @@ void setup() {
 String SerMsg = "";		// Message reçu sur le port série
 
 void loop() {
+  // Lecture des boutons du TM1638
+  byte keys = module.getButtons();
+  switch (keys) {
+	  case 1:	// M/A affichage
+	    StateAff = !StateAff;
+		module.setupDisplay(StateAff, NiveauAff);
+		break;
+	  case 128:	// Fermeture de l'abri
+		deplaceAbri(false);
+		break;
+  }
+  // Lecture des données des ports série
   SerMsg = LireCmd();
   if (SerMsg != "") {
     if (!Manuel) {
@@ -248,13 +274,17 @@ void loop() {
 		Serial.println("0");
         ARU();
     }
+	else if (SerMsg == "M?") {
+		Serial.println(Manuel ? "m" : "a");
+	}
     else if (SerMsg == "C?") {
       Serial.print(AbriFerme);
       Serial.print(AbriOuvert);
       Serial.print(PortesFerme);
       Serial.print(PortesOuvert);
       Serial.print(AlimStatus);
-      Serial.println(TelPark ? "p" : "n");
+      Serial.print(TelPark ? "p" : "n");
+	  Serial.println(Manuel ? "m" : "a");
       Serial.print(mcp.digitalRead(Pf1));
       Serial.print(mcp.digitalRead(Pf2));
       Serial.print(mcp.digitalRead(Po1));
@@ -304,15 +334,20 @@ String LireCmd(void) {
 
 // Ferme la petite porte
 void fermePorte1(void) {
+  module.setDisplayToString("P1 F... ");
   digitalWrite(P11, LOW);
   delay(DELAIPORTES);
+  module.setupDisplay(0, NiveauAff);
   digitalWrite(P11, HIGH);
 }
 
 // Ouvre la petite porte
 void ouvrePorte1(void) {
+	module.setupDisplay(1, NiveauAff);
+	module.setDisplayToString("P1 O... ");
   digitalWrite(P12, LOW);
   delay(DELAIPORTES);
+  module.setDisplayToString("P1 OPEN ");
   digitalWrite(P12, HIGH);
 }
 
@@ -334,15 +369,19 @@ void ouvrePorte2(void) {
 bool changePortes(bool etat) {
   // Commande identique à l'état actuel, on sort
   if ((etat && PortesOuvert) || (!etat && PortesFerme)) {
+	  module.setDisplayToString("Err POS ");
     return false;
   }
   if (etat) {   // Ouverture des portes
     // Alimentation du moteur
     StartMot; // On allume assez tôt pour laisser le temps de s'initialiser
     // Ouverture des portes
+	 module.setupDisplay(1, NiveauAff);
+	module.setDisplayToString("P1 O... ");
     digitalWrite(P12, LOW);
     if (!attendPorte(5000)) return false;
     digitalWrite(P22, LOW);
+	module.setDisplayToString("P12 O...");
     if (!attendPorte(DELAIPORTESCAPTEUR)) return false; // Délai minimum
     // On attend que les portes sont ouvertes
     while (!PortesOuvert) {
@@ -352,19 +391,26 @@ bool changePortes(bool etat) {
     if (!attendPorte(5000)) return false;
     digitalWrite(P12, HIGH);
     digitalWrite(P22, HIGH);
+	module.setDisplayToString("P12 OPEN");
   }
   else {    // Fermeture des portes
     //if ((AbriOuvert && AbriFerme) || (!AbriOuvert && ! AbriFerme)) {
     if (!AbriFerme) {
+		module.setDisplayToString("Err POS ");
       return false;
     }
     StopMot;
+	module.setDisplayToString("P2 F... ");
     digitalWrite(P21, LOW);
     if (!attendPorte(5000)) return false;
+	module.setDisplayToString("P12 F...");
     digitalWrite(P11, LOW);
     if (!attendPorte(DELAIPORTES)) return false;
     digitalWrite(P11, HIGH);
     digitalWrite(P21, HIGH);
+	//module.setDisplayToString("P12 CLOS");
+	module.setupDisplay(0, NiveauAff);
+	module.setLED(0, 7);
   }
   return true;
 }
@@ -380,10 +426,12 @@ void DeplaceDomeARU(void) {
 bool deplaceAbri(bool etat) {
   // Commande identique à l'état actuel, on sort
   if ((etat && AbriOuvert) || (!etat && AbriFerme)) {
+	  module.setDisplayToString("Err POS ");
     return false;
   }
   // Test telescope parqué
   if (!TelPark) {
+	  module.setDisplayToString("Err PArk");
     return false;
   }
   StopTel; // Coupure alimentation télescope
@@ -398,6 +446,7 @@ bool deplaceAbri(bool etat) {
     if (!attendPorte(DELAIMOTEUR)) return false; // Protection contre les déplacements intempestifs
   }
   // Deplacement de l'abri
+  module.setDisplayToString("Abri d..");
   digitalWrite(MOTEUR, LOW);
   delay(600);
   digitalWrite(MOTEUR, HIGH);
@@ -410,11 +459,13 @@ bool deplaceAbri(bool etat) {
   etat = AbriOuvert;
   if (etat) {
     // Abri ouvert
+	module.setDisplayToString("Abr OPEN");
     StartTel; // Alimentation télescope
   }
   else {
     // Abri fermé
     StopTel; // Coupure alimentation télescope
+	module.setDisplayToString("Abr CLOS");
     delay(500);
     changePortes(false);             // Fermeture des portes
     // Pas nécessaire (déjà fait à la fermeture des portes)
@@ -501,6 +552,7 @@ void ARU() {				// Arret d'urgence
   digitalWrite(ALIMMOT, MOTOFF);
   // Passage en mode manuel
   Manuel=true;
+  module.setDisplayToString("Aru Aru ");
   // Ouverture des portes
   //changePortes(true);
   // ouvrePorte1();

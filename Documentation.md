@@ -28,6 +28,7 @@
 	C?#	Etat des capteurs et du télescope (park)
 	TP#	Parque le télescope (TODO)
 	PC#	Démarre le PC (ON/OFF/ON de la prise 220V)
+	M?# Mode actuel (m Manuel, a Auto)
 
 ### Alimentation:
 - 220V:
