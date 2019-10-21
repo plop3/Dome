@@ -401,7 +401,7 @@ bool deplaceAbri(bool etat) {
   digitalWrite(MOTEUR, LOW);
   delay(600);
   digitalWrite(MOTEUR, HIGH);
-  if (!attendDep(DELAIABRI) return false;
+  if (!attendDep(DELAIABRI)) return false;
   while (!AbriFerme && !AbriOuvert) {
     if (!attendDep(1000)) return false;
   }
