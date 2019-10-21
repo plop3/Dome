@@ -1,15 +1,14 @@
 TODO:
 -----
-- Bouton ARU    
+- Gestion des arrets d'urgence/mode manuel
+- Ajout d'une résistance pulldown (10k) sur entrée "Park"
+- Pilotage de l'alimentation 220V Télescope (alim PC astro) par relais restant sur la carte en NF
 - Schéma de cablage de la carte
-- Gestion de l'entrée "Park"
-- Gestion du capteur ports fermées
-- Remplacement de la LED Park par 2 LEDS APA106
+- Getion des LEDS APA106
 - Ajout des éclairages
-
-Options:
---------
-- Gérer de nouveau la coupure de l'alimentation 12V
+- Gestion de l'afficheur LCD 20x4
+- Gestion du clavier 4x4
+- Gestion du TM1638
 
 
 

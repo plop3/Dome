@@ -121,11 +121,8 @@ void setup() {
   digitalWrite(P22, HIGH); pinMode(P22, OUTPUT);
   digitalWrite(ALIMMOT, MOTOFF); // Coupure alimentation moteur abri
   // Activation des entrées (capteurs...)
-
   mcp.pinMode(AO, INPUT); mcp.pullUp(AO, HIGH);
   mcp.pinMode(AF, INPUT); mcp.pullUp(AF, HIGH);
-
-
   mcp.pinMode(Po1, INPUT); mcp.pullUp(Po1, HIGH);
   mcp.pinMode(Pf1, INPUT); mcp.pullUp(Pf1, HIGH);
   mcp.pinMode(Po2, INPUT); mcp.pullUp(Po2, HIGH);
@@ -188,10 +185,6 @@ void loop() {
         deplaceAbri(false);
         Serial.println((AbriFerme) ? "1" : "0");
       }
-      else if (SerMsg == "AU") {
-        Serial.println("0");
-        ARU();
-      }
       else if (SerMsg == "MA") {
         Manuel = true;
       }
@@ -250,6 +243,10 @@ void loop() {
       StopPC;
       delay(1000);
       StartPC;
+    }
+   else if (SerMsg == "AU") {
+		Serial.println("0");
+        ARU();
     }
     else if (SerMsg == "C?") {
       Serial.print(AbriFerme);
@@ -334,41 +331,42 @@ void ouvrePorte2(void) {
 }
 
 // Change la position des portes 0: ouverture 1 fermeture
-void changePortes(bool etat) {
+bool changePortes(bool etat) {
   // Commande identique à l'état actuel, on sort
   if ((etat && PortesOuvert) || (!etat && PortesFerme)) {
-    return;
+    return false;
   }
   if (etat) {   // Ouverture des portes
     // Alimentation du moteur
     StartMot; // On allume assez tôt pour laisser le temps de s'initialiser
     // Ouverture des portes
     digitalWrite(P12, LOW);
-    attendPorte(5000);
+    if (!attendPorte(5000)) return false;
     digitalWrite(P22, LOW);
-    attendPorte(DELAIPORTESCAPTEUR); // Délai minimum
+    if (!attendPorte(DELAIPORTESCAPTEUR)) return false; // Délai minimum
     // On attend que les portes sont ouvertes
     while (!PortesOuvert) {
-      attendPorte(100);
+      if (!attendPorte(100)) return false;
     }
     // Délai pour finir le mouvement
-    attendPorte(5000);
+    if (!attendPorte(5000)) return false;
     digitalWrite(P12, HIGH);
     digitalWrite(P22, HIGH);
   }
   else {    // Fermeture des portes
     //if ((AbriOuvert && AbriFerme) || (!AbriOuvert && ! AbriFerme)) {
     if (!AbriFerme) {
-      return;
+      return false;
     }
     StopMot;
     digitalWrite(P21, LOW);
-    attendPorte(5000);
+    if (!attendPorte(5000)) return false;
     digitalWrite(P11, LOW);
-    attendPorte(DELAIPORTES);
+    if (!attendPorte(DELAIPORTES)) return false;
     digitalWrite(P11, HIGH);
     digitalWrite(P21, HIGH);
   }
+  return true;
 }
 
 void DeplaceDomeARU(void) {
@@ -379,14 +377,14 @@ void DeplaceDomeARU(void) {
 }
 
 // Déplacement de l'abri 1: ouverture 0: fermeture
-void deplaceAbri(bool etat) {
+bool deplaceAbri(bool etat) {
   // Commande identique à l'état actuel, on sort
   if ((etat && AbriOuvert) || (!etat && AbriFerme)) {
-    return;
+    return false;
   }
   // Test telescope parqué
   if (!TelPark) {
-    return;
+    return false;
   }
   StopTel; // Coupure alimentation télescope
   if (!PortesOuvert) {
@@ -397,17 +395,17 @@ void deplaceAbri(bool etat) {
     // Attente d'initialisation du moteur de l'abri
     StartMot;
     //Attente pour l'initialisation du moteur
-    attendPorte(DELAIMOTEUR); // Protection contre les déplacements intempestifs
+    if (!attendPorte(DELAIMOTEUR)) return false; // Protection contre les déplacements intempestifs
   }
   // Deplacement de l'abri
   digitalWrite(MOTEUR, LOW);
   delay(600);
   digitalWrite(MOTEUR, HIGH);
-  attendDep(DELAIABRI);
+  if (!attendDep(DELAIABRI) return false;
   while (!AbriFerme && !AbriOuvert) {
-    attendDep(1000);
+    if (!attendDep(1000)) return false;
   }
-  attendDep(2000);		   // Finir le déplacement
+  if (!attendDep(2000)) return false;		   // Finir le déplacement
   // Etat réel de l'abri au cas ou le déplacement soit inversé
   etat = AbriOuvert;
   if (etat) {
@@ -423,10 +421,11 @@ void deplaceAbri(bool etat) {
     StopMot; // Coupure alimentation moteur abri
     StopTel; // Coupure alimentation dome
   }
+	return true;
 }
 
 // Boucle d'attente lors du déplacement
-void attendDep(unsigned long delai) {	// Boucle d'attente pendant le déplacement de l'abri
+bool attendDep(unsigned long delai) {	// Boucle d'attente pendant le déplacement de l'abri
   int ERRMAX = 2;
   int nbpark = 0;
   unsigned long Cprevious = millis();
@@ -436,17 +435,25 @@ void attendDep(unsigned long delai) {	// Boucle d'attente pendant le déplacemen
     if (SerMsg == "AU") {
       Serial.println("0");
       ARU();
+	  return false;
     }
     // Si le telescope n'est plus parqué pendant le déplacement -> ARU
     if (!TelPark) nbpark++;
-    if (nbpark >= ERRMAX) ARU();
-    // Bouton Arret d'urgence
-    //if digitalRead(BARU) {ARU();}
+    if (nbpark >= ERRMAX) {
+		ARU();
+		return false;
+	}
+  // Bouton Arret d'urgence
+  if (!mcp.digitalRead(BARU)) {
+    ARU();
+	return false;
+  }
     delay(100);    // Sinon ça plante (delay(1) marche aussi)...
   }
+  return true;
 }
 
-void attendPorte(unsigned long delai) {	// Boucle d'attente pendant l'ouverture/fermeture des portes
+bool attendPorte(unsigned long delai) {	// Boucle d'attente pendant l'ouverture/fermeture des portes
   int ERRMAX = 2;
   int nbpark = 0;
   unsigned long Cprevious = millis();
@@ -456,18 +463,27 @@ void attendPorte(unsigned long delai) {	// Boucle d'attente pendant l'ouverture/
     if (SerMsg == "AU") {
       Serial.println("0");
       ARU();
+	  return false;
     }
     // Si le telescope n'est plus parqué pendant le déplacement -> ARU
     if (!TelPark) nbpark++;
-    if (nbpark >= ERRMAX) ARU();
+    if (nbpark >= ERRMAX) {
+		ARU();
+		return false;
+	}
     // Si le dome se déplace pendant le mouvement des portes: ARU
     if (!AbriFerme && !AbriOuvert) {
       ARU();
+	  return false;
     }
-    // Bouton Arret d'urgence
-    //if digitalRead(BARU) {ARU();}
+  // Bouton Arret d'urgence
+  if (!mcp.digitalRead(BARU)) {
+    ARU();
+	return false;
+  }
     delay(100);    // Sinon ça plante (delay(1) marche aussi)...
   }
+  return true;
 }
 
 // Commande d'arret d'urgence
@@ -483,6 +499,14 @@ void ARU() {				// Arret d'urgence
   digitalWrite(P21, HIGH);
   digitalWrite(P22, HIGH);
   digitalWrite(ALIMMOT, MOTOFF);
+  // Passage en mode manuel
+  Manuel=true;
   // Ouverture des portes
-  changePortes(true);
+  //changePortes(true);
+  // ouvrePorte1();
+  
+  // Attente tant que le bouton Arret d'urgence est appuyé
+  while (!mcp.digitalRead(BARU)) {
+	  delay(100);
+  }
 }
