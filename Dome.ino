@@ -187,6 +187,7 @@ void loop() {
 
   if (key != '\0') {
     tone(BUZZER,440,100);
+    analogWrite(BKLIGHT, BKLEVEL);
     //Serial.print(key);
     if (key == 'A') {
       deplaceAbri(true);
