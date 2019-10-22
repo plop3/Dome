@@ -59,7 +59,8 @@
 	A6		Bouton M/A (résistance Pullup 10k).
 	D4		LEDs Neopixel.
 	D3		Backlight écran LCD.
-	A3		??? TODO
+ #### Sorties:
+	A3		Buzzer
 #### E/S
 	D2/D13		Port série 2 (connecté à l'ESP32)
 	A4/A5		I2c (LCD, Clavier, MCP23017)
@@ -154,7 +155,7 @@
 - 123	Eclairages (abri, table, extérieur) en rouge.
 - 456	Eclairages -> eteint
 - 789	Eclairages en blanc
-- 0		Coupe tous les éclairages
-- #
-- *
+- 0	Coupe tous les éclairages
+- #	Ferme porte 1
+- *	Ouvre porte 1
 	
