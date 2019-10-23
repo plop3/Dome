@@ -24,7 +24,6 @@ L'ouverture/fermeture de l'abri est commandée par une motorisation de porte de 
 	ESP32 TTGO LoRa
 - 1 carte 8 relais.
 - 1 détecteur de pluie.
-- 1 TM1638
 - 2 claviers matriciels 4x4 + PCF8574.
 - 1 afficheur LCD 20x4
 - 4 barrettes de 8 LEDs Neopixel.
