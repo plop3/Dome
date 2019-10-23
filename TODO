@@ -1,6 +1,5 @@
 TODO:
 -----
-- Gestion des arrets d'urgence/mode manuel
 - Ajout d'une résistance pulldown (10k) sur entrée "Park"
 - Pilotage de l'alimentation 220V Télescope (alim PC astro) par relais restant sur la carte en NF
 - Schéma de cablage de la carte
@@ -8,7 +7,5 @@ TODO:
 - Ajout des éclairages
 - Gestion de l'afficheur LCD 20x4
 - Gestion du clavier 4x4
-- Gestion du TM1638
-
 
 
