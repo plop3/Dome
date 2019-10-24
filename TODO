@@ -20,20 +20,20 @@ Extérieur:
 	- Allumer / etéindre intérieur  2,5,8
 	
 Intérieur:
-	- Ouvrir portes										B6
-	- Ouvrir porte 1									B6
-	- Allumer / eteindre extérieur						B3
-	- Allumer / eteindre intérieur						B2
-	- Allumer / eteindre table							B1
+	- Ouvrir portes						B6
+	- Ouvrir porte 1					B6
+	- Allumer / eteindre extérieur				B3
+	- Allumer / eteindre intérieur				B2
+	- Allumer / eteindre table				B1
 	- Choix type d'éclairages (rouge/blanc, niveau)		B4/B5	
 	- Choix Eclairage LCD (eteint / allumé, niveaux)	B4/B5
-	- Parquer le télescope (via ESP32)					B5
+	- Parquer le télescope (via ESP32)			B5
 	
 	
 Boutons:
 B1, B2, B3: M/A Eclairages
-B4, B5:		Sélection/Validation
-B6:			Commande sélectionnée (Ouvrir porte(s), Park,...)
+B4, B5:	Sélection/Validation
+B6:	Commande sélectionnée (Ouvrir porte(s), Park,...)
 		
 	LCD:
 PO DO Auto   111111P
