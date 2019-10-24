@@ -9,3 +9,35 @@ TODO:
 - Gestion du clavier 4x4
 
 
+Commandes utiles:
+-----------------
+Extérieur:
+	- Déverrouiller dome 			(code)
+	- Ouvrir / fermer dome			A / B
+	- Ouvrir / fermer portes		C / D
+	- Ouvrir / fermer porte 1		* / # 
+	- Allumer / éteindre extérieur  3,6,9
+	- Allumer / etéindre intérieur  2,5,8
+	
+Intérieur:
+	- Ouvrir portes										B6
+	- Ouvrir porte 1									B6
+	- Allumer / eteindre extérieur						B3
+	- Allumer / eteindre intérieur						B2
+	- Allumer / eteindre table							B1
+	- Choix type d'éclairages (rouge/blanc, niveau)		B4/B5	
+	- Choix Eclairage LCD (eteint / allumé, niveaux)	B4/B5
+	- Parquer le télescope (via ESP32)					B5
+	
+	
+Boutons:
+B1, B2, B3: M/A Eclairages
+B4, B5:		Sélection/Validation
+B6:			Commande sélectionnée (Ouvrir porte(s), Park,...)
+		
+	LCD:
+PO DO Auto   111111P
+Dome ouvert    22:33
+22° 77%
+ T2b A3r E1b L3<PAR>
+	
