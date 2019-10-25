@@ -145,8 +145,7 @@ void setup() {
   // LCD
   lcd.init();
   lcd.backlight();
-  lcd.setCursor(0, 0);
-  lcd.print("Demarrage...");
+  msgInfo("Demarrage...   ");
 
   // LEDs
   pixels.begin();
@@ -171,8 +170,7 @@ void setup() {
   }
 
   lcd.clear();
-  lcd.setCursor(0, 0);
-  lcd.print("Ok");
+  msgInfo("Ok");
 }
 
 //---------------------------------------BOUCLE PRINCIPALE------------------------------------
@@ -181,12 +179,12 @@ String SerMsg = "";		// Message reçu sur le port série
 
 void loop() {
   // Lecture des boutons du clavier
-  //analogWrite(BKLIGHT, BKLEVEL);
   //byte keys = module.getButtons();
   char key = kpd.get_key();
 
   if (key != '\0') {
     tone(BUZZER,440,100);
+	// Tone désactive le pwm sur la sortie 3
     analogWrite(BKLIGHT, BKLEVEL);
     //Serial.print(key);
     if (key == 'A') {
@@ -351,9 +349,15 @@ String LireCmd(void) {
   return "";
 }
 
+void msgInfo(String texte) {
+	texte+="                    ";
+	texte=texte.substring(0,15);
+	lcd.setCursor(0,1);
+	lcd.print(texte);
+}
 // Ferme la petite porte
 void fermePorte1(void) {
-  lcd.setCursor(0, 0); lcd.print("P1 F...");
+  msgInfo("P1 F...");
   digitalWrite(P11, LOW);
   delay(DELAIPORTES);
   //  module.setupDisplay(0, NiveauAff);
@@ -365,11 +369,11 @@ void ouvrePorte1(void) {
 
 
   //module.setupDisplay(1, NiveauAff);
-  lcd.setCursor(0, 0); lcd.print("P1 O...");
+  msgInfo("P1 O...");
 
   digitalWrite(P12, LOW);
   delay(DELAIPORTES);
-  lcd.setCursor(0, 0); lcd.print("P1 OPEN");
+  msgInfo("P1 OPEN");
   digitalWrite(P12, HIGH);
 }
 
@@ -391,7 +395,7 @@ void ouvrePorte2(void) {
 bool changePortes(bool etat) {
   // Commande identique à l'état actuel, on sort
   if ((etat && PortesOuvert) || (!etat && PortesFerme)) {
-    lcd.setCursor(0, 0); lcd.print("Reeur position");
+    msgInfo("Erreur position");
 
     return false;
   }
@@ -401,12 +405,12 @@ bool changePortes(bool etat) {
     // Ouverture des portes
     //	 module.setupDisplay(1, NiveauAff);
     //	module.setDisplayToString("P1 O... ");
-    lcd.setCursor(0, 0); lcd.print("P1 O...");
+    msgInfo("P1 O...");
 
     digitalWrite(P12, LOW);
     if (!attendPorte(5000)) return false;
     digitalWrite(P22, LOW);
-    lcd.setCursor(0, 0); lcd.print("P12 O...");
+    msgInfo("P12 O...");
     if (!attendPorte(DELAIPORTESCAPTEUR)) return false; // Délai minimum
     // On attend que les portes sont ouvertes
     while (!PortesOuvert) {
@@ -416,21 +420,21 @@ bool changePortes(bool etat) {
     if (!attendPorte(5000)) return false;
     digitalWrite(P12, HIGH);
     digitalWrite(P22, HIGH);
-    lcd.setCursor(0, 0); lcd.print("P12 Open");
+    msgInfo("P12 Open");
 
   }
   else {    // Fermeture des portes
     //if ((AbriOuvert && AbriFerme) || (!AbriOuvert && ! AbriFerme)) {
     if (!AbriFerme) {
 
-      lcd.setCursor(0, 0); lcd.print("Err POs");
+      msgInfo("Err POs");
       return false;
     }
     StopMot;
-    lcd.setCursor(0, 0); lcd.print("P2 F...");
+    msgInfo("P2 F...");
     digitalWrite(P21, LOW);
     if (!attendPorte(5000)) return false;
-    lcd.setCursor(0, 0); lcd.print("P12 F...");
+    msgInfo("P12 F...");
     digitalWrite(P11, LOW);
     if (!attendPorte(DELAIPORTES)) return false;
     digitalWrite(P11, HIGH);
@@ -453,12 +457,12 @@ void DeplaceDomeARU(void) {
 bool deplaceAbri(bool etat) {
   // Commande identique à l'état actuel, on sort
   if ((etat && AbriOuvert) || (!etat && AbriFerme)) {
-    lcd.setCursor(0, 0); lcd.print("Err POS");
+    msgInfo("Err POS");
     return false;
   }
   // Test telescope parqué
   if (!TelPark) {
-    lcd.setCursor(0, 0); lcd.print("Err PArk");
+    msgInfo("Err PArk");
     return false;
   }
   StopTel; // Coupure alimentation télescope
@@ -473,7 +477,7 @@ bool deplaceAbri(bool etat) {
     if (!attendPorte(DELAIMOTEUR)) return false; // Protection contre les déplacements intempestifs
   }
   // Deplacement de l'abri
-  lcd.setCursor(0, 0); lcd.print("Deplacement abri...");
+  msgInfo("Deplacement abri...");
   digitalWrite(MOTEUR, LOW);
   delay(600);
   digitalWrite(MOTEUR, HIGH);
@@ -486,13 +490,13 @@ bool deplaceAbri(bool etat) {
   etat = AbriOuvert;
   if (etat) {
     // Abri ouvert
-    lcd.setCursor(0, 0); lcd.print("Abri ouvert");
+    msgInfo("Abri ouvert");
     StartTel; // Alimentation télescope
   }
   else {
     // Abri fermé
     StopTel; // Coupure alimentation télescope
-    lcd.setCursor(0, 0); lcd.print("Abri fermé");
+    msgInfo("Abri fermé");
     delay(500);
     changePortes(false);             // Fermeture des portes
     // Pas nécessaire (déjà fait à la fermeture des portes)
@@ -579,7 +583,7 @@ void ARU() {				// Arret d'urgence
   digitalWrite(ALIMMOT, MOTOFF);
   // Passage en mode manuel
   Manuel = true;
-  lcd.setCursor(0, 0); lcd.print("ARU !");
+  msgInfo("ARU !");
   // Ouverture des portes
   //changePortes(true);
   // ouvrePorte1();
