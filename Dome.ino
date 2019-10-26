@@ -185,6 +185,7 @@ void loop() {
   if (key != '\0') {
     tone(BUZZER,440,100);
 	// Tone désactive le pwm sur la sortie 3
+  delay(200);
     analogWrite(BKLIGHT, BKLEVEL);
     //Serial.print(key);
     if (key == 'A') {
@@ -360,6 +361,7 @@ void fermePorte1(void) {
   msgInfo("P1 F...");
   digitalWrite(P11, LOW);
   delay(DELAIPORTES);
+  msgInfo("P1 Close");
   //  module.setupDisplay(0, NiveauAff);
   digitalWrite(P11, HIGH);
 }
