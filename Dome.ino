@@ -41,7 +41,7 @@ LiquidCrystal_I2C lcd(0x27, 20, 4); // set the LCD address to 0x27 for a 16 char
 #include <avr/power.h> // Required for 16 MHz Adafruit Trinket
 #endif
 #define LEDPIN 4
-#define NBLEDS 8
+#define NBLEDS 3
 Adafruit_NeoPixel pixels(NBLEDS, LEDPIN, NEO_GRB + NEO_KHZ800);
 
 //---------------------------------------CONSTANTES-----------------------------------------------
@@ -150,7 +150,9 @@ void setup() {
   // LEDs
   pixels.begin();
   pixels.clear();
-  pixels.setPixelColor(0, pixels.Color(0, 20, 0));
+  pixels.setPixelColor(0, pixels.Color(20, 0, 0));
+  pixels.setPixelColor(1, pixels.Color(0, 20, 0));
+  //pixels.setPixelColor(2, pixels.Color(0, 0, 20));
   pixels.show();
 
   // Afficheur TM1638
@@ -310,21 +312,20 @@ void loop() {
   }
 
   // LED état park
-  /*
+  
     if (LastPark != TelPark) {
-      pixels.setPixelColor(1, pixels.Color(0, 10*TelPark, 0));
+      pixels.setPixelColor(1, pixels.Color( 10*TelPark, 0, 0));
       pixels.show();
       LastPark = TelPark;
     }
-  */
+  
   // TEST DEPLACEMENT INOPINE DU DOME
   // TODO à décommenter quand installé
-  /*
+  
     if (!Manuel && !AbriFerme && !AbriOuvert) {
     ARU();
     }
-  */
-
+  
   // Bouton Arret d'urgence
   if (!mcp.digitalRead(BARU)) {
     ARU();
