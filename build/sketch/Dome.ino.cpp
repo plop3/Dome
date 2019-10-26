@@ -1,3 +1,5 @@
+#include <Arduino.h>
+#line 1 "/home/serge/Documents/Projets/Astro/Dome/Dome.ino"
 /* 
 Pilotage automatique de l'abri du telescope
 Serge CLAUS
@@ -99,6 +101,35 @@ int LEDLEVEL = 15;  // Intensité des LEDs du coffret
 
 //---------------------------------------SETUP-----------------------------------------------
 
+#line 102 "/home/serge/Documents/Projets/Astro/Dome/Dome.ino"
+void setup();
+#line 174 "/home/serge/Documents/Projets/Astro/Dome/Dome.ino"
+void loop();
+#line 333 "/home/serge/Documents/Projets/Astro/Dome/Dome.ino"
+String LireCmd(void);
+#line 346 "/home/serge/Documents/Projets/Astro/Dome/Dome.ino"
+void msgInfo(String texte);
+#line 353 "/home/serge/Documents/Projets/Astro/Dome/Dome.ino"
+void fermePorte1(void);
+#line 363 "/home/serge/Documents/Projets/Astro/Dome/Dome.ino"
+void ouvrePorte1(void);
+#line 376 "/home/serge/Documents/Projets/Astro/Dome/Dome.ino"
+void fermePorte2(void);
+#line 383 "/home/serge/Documents/Projets/Astro/Dome/Dome.ino"
+void ouvrePorte2(void);
+#line 390 "/home/serge/Documents/Projets/Astro/Dome/Dome.ino"
+bool changePortes(bool etat);
+#line 452 "/home/serge/Documents/Projets/Astro/Dome/Dome.ino"
+void DeplaceDomeARU(void);
+#line 460 "/home/serge/Documents/Projets/Astro/Dome/Dome.ino"
+bool deplaceAbri(bool etat);
+#line 517 "/home/serge/Documents/Projets/Astro/Dome/Dome.ino"
+bool attendDep(unsigned long delai);
+#line 545 "/home/serge/Documents/Projets/Astro/Dome/Dome.ino"
+bool attendPorte(unsigned long delai);
+#line 579 "/home/serge/Documents/Projets/Astro/Dome/Dome.ino"
+void ARU();
+#line 102 "/home/serge/Documents/Projets/Astro/Dome/Dome.ino"
 void setup() {
   Serial.begin(57600);
   Ser2.begin(9600);
@@ -601,3 +632,4 @@ void ARU() {				// Arret d'urgence
     delay(100);
   }
 }
+

@@ -1,7 +1,8 @@
 {
     "board": "arduino:avr:nano",
-    "configuration": "cpu=atmega328",
+    "configuration": "cpu=atmega328old",
     "sketch": "Dome.ino",
     "port": "/dev/ttyUSB0",
-    "programmer": "AVRISP mkII"
+    "output": "build",
+    "programmer": "AVR ISP"
 }
