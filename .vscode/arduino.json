@@ -3,6 +3,6 @@
     "configuration": "cpu=atmega328old",
     "sketch": "Dome.ino",
     "port": "/dev/ttyUSB0",
-    "output": "build",
+    "output": "../buildDome",
     "programmer": "AVR ISP"
 }
