@@ -9,10 +9,19 @@
 #include <SoftwareSerial.h> // Port série 2 pour le module IHM (LCD,clavier...)
 SoftwareSerial Ser2(13, 2); // RX, TX
 
+
+
+
+// TM1638 LEDs & Keys /!\ Librairie sur Ghitub plop3 (https://github.com/plop3/tm1638-library)
+//#include <TM1638.h>
+//TM1638 module(A2, A1, A0);
+
 // MCP23017
 #include <Wire.h>
 #include "Adafruit_MCP23017.h"
 Adafruit_MCP23017 mcp;    //MCP externe connecté à la carte 8 relais
+
+//#include <avr/wdt.h>
 
 // Clavier matriciel I2c
 #include <i2ckeypad.h>
@@ -25,18 +34,19 @@ i2ckeypad kpd = i2ckeypad(PCF8574_ADDR, ROWS, COLS);
 #include <LiquidCrystal_I2C.h>
 LiquidCrystal_I2C lcd(0x27, 20, 4); // set the LCD address to 0x27 for a 16 chars and 2 line display
 
+
 // LEDs neopixel
 #include <Adafruit_NeoPixel.h>
 #ifdef __AVR__
 #include <avr/power.h> // Required for 16 MHz Adafruit Trinket
 #endif
 #define LEDPIN 4
-#define NBLEDS 3
+#define NBLEDS 8
 Adafruit_NeoPixel pixels(NBLEDS, LEDPIN, NEO_GRB + NEO_KHZ800);
 
 //---------------------------------------CONSTANTES-----------------------------------------------
 
-// Sorties
+// Sorties TODO à vérifier !
 #define ALIMPC 	10   // (R3) Alimentation 220V sous le télescope (PC Indi /Raspi) contact NF
 #define ALIMTEL 9   // (R4) Alimentation télescope
 #define ALIMMOT 11   // (R2) Alimentation 220V moteur abri
@@ -51,12 +61,14 @@ Adafruit_NeoPixel pixels(NBLEDS, LEDPIN, NEO_GRB + NEO_KHZ800);
 
 // Entrées
 #define PARK  1		//MCP	// Etat du telescope 0: non parqué, 1: parqué
-
-#define AO 7		    // MCP  // Capteur abri ouvert
+/* TODO
+   entrée ouverture portes
+*/
+#define AO 7		// MCP  // Capteur abri ouvert
 #define AF 5       	// MCP	// Capteur abri fermé
 #define Po1 6       // MCP	// Capteur portes ouvertes
 #define Po2 2      	// MCP	// 
-#define Pf1 4	      // MCP	// Capteur portes fermées
+#define Pf1 4	    // MCP	// Capteur portes fermées
 #define Pf2 0      	// MCP	// 
 
 // Constantes globales
@@ -94,7 +106,6 @@ bool Manuel = false;	// Mode manuel
 bool LastPark = false;	// Dernier état de Park
 bool StateAff = true;	// Etat de l'affichage du TM1638 (ON/OFF)
 int BKLEVEL = 20;  // PWM LCD
-int LEDLEVEL = 15;  // Intensité des LEDs du coffret
 
 //---------------------------------------SETUP-----------------------------------------------
 
@@ -133,23 +144,20 @@ void setup() {
 
   // LCD
   lcd.init();
-  if (PortesOuvert) {
-    lcd.backlight();
-  }
-  msgInfo("Demarrage...   ");
+  lcd.backlight();
+  lcd.setCursor(0, 0);
+  lcd.print("Demarrage...");
 
   // LEDs
   pixels.begin();
   pixels.clear();
-  if (PortesOuvert) {
-    pixels.setPixelColor(0, pixels.Color(LEDLEVEL, 0, 0));
-    pixels.setPixelColor(1, pixels.Color(0, LEDLEVEL, 0));
-    //pixels.setPixelColor(2, pixels.Color(0, 0, LEDLEVEL));
-  }
-  else {
-    LastPark = true; // Empêche la LED de park de s'allumer
-  }
+  pixels.setPixelColor(0, pixels.Color(0, 20, 0));
   pixels.show();
+
+  // Afficheur TM1638
+  //  module.setupDisplay(1, 0);
+  //  module.setDisplayToString("Start");
+  //  module.setLED(TM1638_COLOR_RED, 0);
 
   // Vérification de la position du dome au démarrage
   if (!AbriOuvert && !AbriFerme) {
@@ -163,7 +171,8 @@ void setup() {
   }
 
   lcd.clear();
-  msgInfo("Ok");
+  lcd.setCursor(0, 0);
+  lcd.print("Ok");
 }
 
 //---------------------------------------BOUCLE PRINCIPALE------------------------------------
@@ -172,13 +181,12 @@ String SerMsg = "";		// Message reçu sur le port série
 
 void loop() {
   // Lecture des boutons du clavier
+  //analogWrite(BKLIGHT, BKLEVEL);
   //byte keys = module.getButtons();
   char key = kpd.get_key();
 
   if (key != '\0') {
-    tone(BUZZER, 440, 100);
-    // Tone désactive le pwm sur la sortie 3
-    delay(200);
+    tone(BUZZER,440,100);
     analogWrite(BKLIGHT, BKLEVEL);
     //Serial.print(key);
     if (key == 'A') {
@@ -303,19 +311,20 @@ void loop() {
   }
 
   // LED état park
-
-  if (LastPark != TelPark) {
-    pixels.setPixelColor(1, pixels.Color( LEDLEVEL * TelPark, 0, 0));
-    pixels.show();
-    LastPark = TelPark;
-  }
-
+  /*
+    if (LastPark != TelPark) {
+      pixels.setPixelColor(1, pixels.Color(0, 10*TelPark, 0));
+      pixels.show();
+      LastPark = TelPark;
+    }
+  */
   // TEST DEPLACEMENT INOPINE DU DOME
   // TODO à décommenter quand installé
-
-  if (!Manuel && !AbriFerme && !AbriOuvert) {
+  /*
+    if (!Manuel && !AbriFerme && !AbriOuvert) {
     ARU();
-  }
+    }
+  */
 
   // Bouton Arret d'urgence
   if (!mcp.digitalRead(BARU)) {
@@ -342,18 +351,11 @@ String LireCmd(void) {
   return "";
 }
 
-void msgInfo(String texte) {
-  texte += "                    ";
-  texte = texte.substring(0, 15);
-  lcd.setCursor(0, 1);
-  lcd.print(texte);
-}
 // Ferme la petite porte
 void fermePorte1(void) {
-  msgInfo("P1 F...");
+  lcd.setCursor(0, 0); lcd.print("P1 F...");
   digitalWrite(P11, LOW);
   delay(DELAIPORTES);
-  msgInfo("P1 Close");
   //  module.setupDisplay(0, NiveauAff);
   digitalWrite(P11, HIGH);
 }
@@ -363,11 +365,11 @@ void ouvrePorte1(void) {
 
 
   //module.setupDisplay(1, NiveauAff);
-  msgInfo("P1 O...");
+  lcd.setCursor(0, 0); lcd.print("P1 O...");
 
   digitalWrite(P12, LOW);
   delay(DELAIPORTES);
-  msgInfo("P1 OPEN");
+  lcd.setCursor(0, 0); lcd.print("P1 OPEN");
   digitalWrite(P12, HIGH);
 }
 
@@ -389,7 +391,7 @@ void ouvrePorte2(void) {
 bool changePortes(bool etat) {
   // Commande identique à l'état actuel, on sort
   if ((etat && PortesOuvert) || (!etat && PortesFerme)) {
-    msgInfo("Erreur position");
+    lcd.setCursor(0, 0); lcd.print("Reeur position");
 
     return false;
   }
@@ -399,15 +401,12 @@ bool changePortes(bool etat) {
     // Ouverture des portes
     //	 module.setupDisplay(1, NiveauAff);
     //	module.setDisplayToString("P1 O... ");
-    pixels.setPixelColor(0, pixels.Color(LEDLEVEL, LEDLEVEL, 0));
-    pixels.show();
-    lcd.backlight();
-    msgInfo("P1 O...");
+    lcd.setCursor(0, 0); lcd.print("P1 O...");
 
     digitalWrite(P12, LOW);
     if (!attendPorte(5000)) return false;
     digitalWrite(P22, LOW);
-    msgInfo("P12 O...");
+    lcd.setCursor(0, 0); lcd.print("P12 O...");
     if (!attendPorte(DELAIPORTESCAPTEUR)) return false; // Délai minimum
     // On attend que les portes sont ouvertes
     while (!PortesOuvert) {
@@ -417,33 +416,28 @@ bool changePortes(bool etat) {
     if (!attendPorte(5000)) return false;
     digitalWrite(P12, HIGH);
     digitalWrite(P22, HIGH);
-    msgInfo("P12 Open");
-    LastPark = !TelPark;  // Réactive la LED park
-    pixels.setPixelColor(0, pixels.Color(LEDLEVEL, 0, 0));
-    pixels.show();
+    lcd.setCursor(0, 0); lcd.print("P12 Open");
+
   }
   else {    // Fermeture des portes
     //if ((AbriOuvert && AbriFerme) || (!AbriOuvert && ! AbriFerme)) {
     if (!AbriFerme) {
 
-      msgInfo("Err POs");
+      lcd.setCursor(0, 0); lcd.print("Err POs");
       return false;
     }
-    pixels.setPixelColor(0, pixels.Color(LEDLEVEL, LEDLEVEL, 0));
-    pixels.show();
     StopMot;
-    msgInfo("P2 F...");
+    lcd.setCursor(0, 0); lcd.print("P2 F...");
     digitalWrite(P21, LOW);
     if (!attendPorte(5000)) return false;
-    msgInfo("P12 F...");
+    lcd.setCursor(0, 0); lcd.print("P12 F...");
     digitalWrite(P11, LOW);
     if (!attendPorte(DELAIPORTES)) return false;
     digitalWrite(P11, HIGH);
     digitalWrite(P21, HIGH);
-    // Arret des éclairages
-    lcd.noBacklight();
-    pixels.clear();
-    pixels.show();
+    //module.setDisplayToString("P12 CLOS");
+    //module.setupDisplay(0, NiveauAff);
+    //module.setLED(0, 7);
   }
   return true;
 }
@@ -459,17 +453,15 @@ void DeplaceDomeARU(void) {
 bool deplaceAbri(bool etat) {
   // Commande identique à l'état actuel, on sort
   if ((etat && AbriOuvert) || (!etat && AbriFerme)) {
-    msgInfo("Err POS");
+    lcd.setCursor(0, 0); lcd.print("Err POS");
     return false;
   }
   // Test telescope parqué
   if (!TelPark) {
-    msgInfo("Err PArk");
+    lcd.setCursor(0, 0); lcd.print("Err PArk");
     return false;
   }
   StopTel; // Coupure alimentation télescope
-  pixels.setPixelColor(0, pixels.Color(LEDLEVEL, LEDLEVEL, 0));
-  pixels.show();
   if (!PortesOuvert) {
     if (!MoteurStatus) StartMot; // Alimentation du moteur
     changePortes(true);    //Ouverture des portes
@@ -481,7 +473,7 @@ bool deplaceAbri(bool etat) {
     if (!attendPorte(DELAIMOTEUR)) return false; // Protection contre les déplacements intempestifs
   }
   // Deplacement de l'abri
-  msgInfo("Deplacement abri...");
+  lcd.setCursor(0, 0); lcd.print("Deplacement abri...");
   digitalWrite(MOTEUR, LOW);
   delay(600);
   digitalWrite(MOTEUR, HIGH);
@@ -494,15 +486,13 @@ bool deplaceAbri(bool etat) {
   etat = AbriOuvert;
   if (etat) {
     // Abri ouvert
-    msgInfo("Abri ouvert");
+    lcd.setCursor(0, 0); lcd.print("Abri ouvert");
     StartTel; // Alimentation télescope
-    pixels.setPixelColor(0, pixels.Color(LEDLEVEL, 0, 0));
-    pixels.show();
   }
   else {
     // Abri fermé
     StopTel; // Coupure alimentation télescope
-    msgInfo("Abri fermé");
+    lcd.setCursor(0, 0); lcd.print("Abri fermé");
     delay(500);
     changePortes(false);             // Fermeture des portes
     // Pas nécessaire (déjà fait à la fermeture des portes)
@@ -589,8 +579,7 @@ void ARU() {				// Arret d'urgence
   digitalWrite(ALIMMOT, MOTOFF);
   // Passage en mode manuel
   Manuel = true;
-  msgInfo("ARU !");
-  pixels.setPixelColor(0, pixels.Color(0, LEDLEVEL, 0));
+  lcd.setCursor(0, 0); lcd.print("ARU !");
   // Ouverture des portes
   //changePortes(true);
   // ouvrePorte1();
