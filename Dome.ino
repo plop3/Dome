@@ -1,9 +1,9 @@
-/* 
-Pilotage automatique de l'abri du telescope
-Serge CLAUS
-GPL V3
-Version 2.6
-22/10/2018-19/10/2019
+/*
+  Pilotage automatique de l'abri du telescope
+  Serge CLAUS
+  GPL V3
+  Version 2.6
+  22/10/2018-19/10/2019
 */
 
 //---------------------------------------PERIPHERIQUES-----------------------------------------------
@@ -32,8 +32,8 @@ LiquidCrystal_I2C lcd(0x27, 20, 4); // set the LCD address to 0x27 for a 16 char
 #include <avr/power.h> // Required for 16 MHz Adafruit Trinket
 #endif
 #define LEDPIN 4
-#define NBLEDS 3
-Adafruit_NeoPixel pixels(NBLEDS, LEDPIN, NEO_GRB + NEO_KHZ800);
+#define NBLEDS 27
+Adafruit_NeoPixel pixels(NBLEDS, LEDPIN, NEO_GRB + NEO_KHZ400);
 
 //---------------------------------------CONSTANTES-----------------------------------------------
 
@@ -72,6 +72,11 @@ Adafruit_NeoPixel pixels(NBLEDS, LEDPIN, NEO_GRB + NEO_KHZ800);
 #define BUZZER 17 //A3
 #define NiveauAff 0      //TM1638
 
+// Boutons poussoirs
+#define BEXT 11 //11
+#define BINT 13  //12
+#define BTAB 14  //13
+
 //---------------------------------------Variables globales------------------------------------
 
 #define AlimStatus  (!digitalRead(ALIMTEL))    // Etat de l'alimentation télescope
@@ -97,6 +102,9 @@ bool StateAff = true;	// Etat de l'affichage du TM1638 (ON/OFF)
 int BKLEVEL = 20;  // PWM LCD
 int LEDLEVEL = 15;  // Intensité des LEDs du coffret
 
+bool ECLINT = false;
+bool ECLEXT = false;
+bool ECLTAB = false;
 //---------------------------------------SETUP-----------------------------------------------
 
 void setup() {
@@ -132,6 +140,10 @@ void setup() {
   pinMode(BKLIGHT, OUTPUT);
   analogWrite(BKLIGHT, BKLEVEL);
 
+  // Boutons poussoirs
+  mcp.pinMode(BINT, INPUT); mcp.pullUp(BINT, HIGH);
+  mcp.pinMode(BEXT, INPUT); mcp.pullUp(BEXT, HIGH);
+  mcp.pinMode(BTAB, INPUT); mcp.pullUp(BTAB, HIGH);
   // LCD
   lcd.init();
   if (PortesOuvert) {
@@ -146,6 +158,7 @@ void setup() {
     pixels.setPixelColor(0, pixels.Color(LEDLEVEL, 0, 0));
     pixels.setPixelColor(1, pixels.Color(0, LEDLEVEL, 0));
     //pixels.setPixelColor(2, pixels.Color(0, 0, LEDLEVEL));
+
   }
   else {
     LastPark = true; // Empêche la LED de park de s'allumer
@@ -172,6 +185,42 @@ void setup() {
 String SerMsg = "";		// Message reçu sur le port série
 
 void loop() {
+  // Lecture des boutons poussoirs
+  if (!mcp.digitalRead(BINT)) {
+    ECLINT = !ECLINT;
+    tone(BUZZER, 440, 100);
+    for (int i = 11; i < 19; i++) {
+      pixels.setPixelColor(i, pixels.Color(100 * ECLINT, 100 * ECLINT, 100 * ECLINT));
+      pixels.show();
+    }
+    delay(200);
+    analogWrite(BKLIGHT, BKLEVEL);
+    delay(300);
+  }
+  if (!mcp.digitalRead(BTAB)) {
+    ECLTAB = !ECLTAB;
+    tone(BUZZER, 440, 100);
+    for (int i = 19; i < 27; i++) {
+      pixels.setPixelColor(i, pixels.Color(LEDLEVEL * 2 * ECLTAB, 0 , 0));
+      pixels.show();
+    }
+    delay(200);
+    analogWrite(BKLIGHT, BKLEVEL);
+    delay(300);
+  }
+
+  if (!mcp.digitalRead(BEXT)) {
+    ECLEXT = !ECLEXT;
+    tone(BUZZER, 440, 100);
+    for (int i = 3; i < 11; i++) {
+      pixels.setPixelColor(i, pixels.Color(100 * ECLEXT, 100 * ECLEXT, 100 * ECLEXT));
+      pixels.show();
+    }
+    delay(200);
+    analogWrite(BKLIGHT, BKLEVEL);
+    delay(300);
+  }
+
   // Lecture des boutons du clavier
   //byte keys = module.getButtons();
   char key = kpd.get_key();
