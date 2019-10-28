@@ -32,7 +32,7 @@ LiquidCrystal_I2C lcd(0x27, 20, 4); // set the LCD address to 0x27 for a 16 char
 #include <avr/power.h> // Required for 16 MHz Adafruit Trinket
 #endif
 #define LEDPIN 4
-#define NBLEDS 27
+#define NBLEDS 28
 Adafruit_NeoPixel pixels(NBLEDS, LEDPIN, NEO_GRB + NEO_KHZ400);
 
 //---------------------------------------CONSTANTES-----------------------------------------------
@@ -155,14 +155,15 @@ void setup() {
   pixels.begin();
   pixels.clear();
   if (PortesOuvert) {
-    pixels.setPixelColor(0, pixels.Color(LEDLEVEL, 0, 0));
-    pixels.setPixelColor(1, pixels.Color(0, LEDLEVEL, 0));
-    //pixels.setPixelColor(2, pixels.Color(0, 0, LEDLEVEL));
+    pixels.setPixelColor(1, pixels.Color(LEDLEVEL, 0, 0));
+    pixels.setPixelColor(2, pixels.Color(0, LEDLEVEL, 0));
+
 
   }
   else {
     LastPark = true; // Empêche la LED de park de s'allumer
   }
+  pixels.setPixelColor(0, pixels.Color(LEDLEVEL, LEDLEVEL, LEDLEVEL));
   pixels.show();
 
   // Vérification de la position du dome au démarrage
@@ -188,36 +189,21 @@ void loop() {
   // Lecture des boutons poussoirs
   if (!mcp.digitalRead(BINT)) {
     ECLINT = !ECLINT;
-    tone(BUZZER, 440, 100);
-    for (int i = 11; i < 19; i++) {
-      pixels.setPixelColor(i, pixels.Color(100 * ECLINT, 100 * ECLINT, 100 * ECLINT));
-      pixels.show();
-    }
-    delay(200);
-    analogWrite(BKLIGHT, BKLEVEL);
+    bip(BUZZER, 440, 100);
+    Eclaire(1, 100 * ECLINT, 100 * ECLINT, 100 * ECLINT);
     delay(300);
   }
   if (!mcp.digitalRead(BTAB)) {
     ECLTAB = !ECLTAB;
-    tone(BUZZER, 440, 100);
-    for (int i = 19; i < 27; i++) {
-      pixels.setPixelColor(i, pixels.Color(LEDLEVEL * 2 * ECLTAB, 0 , 0));
-      pixels.show();
-    }
-    delay(200);
-    analogWrite(BKLIGHT, BKLEVEL);
+    bip(BUZZER, 440, 100);
+    Eclaire(2, LEDLEVEL * 2 * ECLTAB, 0 , 0);
     delay(300);
   }
 
   if (!mcp.digitalRead(BEXT)) {
     ECLEXT = !ECLEXT;
-    tone(BUZZER, 440, 100);
-    for (int i = 3; i < 11; i++) {
-      pixels.setPixelColor(i, pixels.Color(100 * ECLEXT, 100 * ECLEXT, 100 * ECLEXT));
-      pixels.show();
-    }
-    delay(200);
-    analogWrite(BKLIGHT, BKLEVEL);
+    bip(BUZZER, 440, 100);
+    Eclaire(0, 100 * ECLEXT, 100 * ECLEXT, 100 * ECLEXT);
     delay(300);
   }
 
@@ -226,10 +212,9 @@ void loop() {
   char key = kpd.get_key();
 
   if (key != '\0') {
-    tone(BUZZER, 440, 100);
+    bip(BUZZER, 440, 100);
     // Tone désactive le pwm sur la sortie 3
-    delay(200);
-    analogWrite(BKLIGHT, BKLEVEL);
+
     //Serial.print(key);
     if (key == 'A') {
       deplaceAbri(true);
@@ -337,6 +322,23 @@ void loop() {
     else if (SerMsg == "M?") {
       Serial.println(Manuel ? "m" : "a");
     }
+    else if (SerMsg == "E+") {
+      Eclaire(0, 100, 100, 100);
+      Serial.println("1");
+    }
+    else if (SerMsg == "E-") {
+      Eclaire(0, 0, 0, 0);
+      Serial.println("0");
+    }
+
+    else if (SerMsg == "I+") {
+      Eclaire(1, 100, 100, 100);
+      Serial.println("1");
+    }
+    else if (SerMsg == "I-") {
+      Eclaire(1, 0, 0, 0);
+      Serial.println("0");
+    }
     else if (SerMsg == "C?") {
       Serial.print(AbriFerme);
       Serial.print(AbriOuvert);
@@ -355,7 +357,7 @@ void loop() {
   // LED état park
 
   if (LastPark != TelPark) {
-    pixels.setPixelColor(1, pixels.Color( LEDLEVEL * TelPark, 0, 0));
+    pixels.setPixelColor(2, pixels.Color( LEDLEVEL * TelPark, 0, 0));
     pixels.show();
     LastPark = TelPark;
   }
@@ -379,6 +381,21 @@ void loop() {
 }
 
 //---------------------------------------FONCTIONS--------------------------------------------
+void Eclaire(int barre, int R, int V, int B) {
+  for (int i = 4 + 8 * barre; i < (12 + 8 * barre); i++) {
+    Serial.println(i);
+    pixels.setPixelColor(i, pixels.Color(R, V, B));
+    pixels.show();
+  }
+  delay(200);
+  analogWrite(BKLIGHT, BKLEVEL);
+}
+
+void bip(int pin, int freq, int delai) {
+  tone(pin, freq, delai);
+  delay(200);
+  analogWrite(BKLIGHT, BKLEVEL);
+}
 String LireCmd(void) {
   if (Serial.available()) {
     SerMsg = Serial.readStringUntil(35);
@@ -449,7 +466,7 @@ bool changePortes(bool etat) {
     // Ouverture des portes
     //	 module.setupDisplay(1, NiveauAff);
     //	module.setDisplayToString("P1 O... ");
-    pixels.setPixelColor(0, pixels.Color(LEDLEVEL, LEDLEVEL, 0));
+    pixels.setPixelColor(1, pixels.Color(LEDLEVEL, LEDLEVEL, 0));
     pixels.show();
     lcd.backlight();
     msgInfo("P1 O...");
@@ -469,7 +486,7 @@ bool changePortes(bool etat) {
     digitalWrite(P22, HIGH);
     msgInfo("P12 Open");
     LastPark = !TelPark;  // Réactive la LED park
-    pixels.setPixelColor(0, pixels.Color(LEDLEVEL, 0, 0));
+    pixels.setPixelColor(1, pixels.Color(LEDLEVEL, 0, 0));
     pixels.show();
   }
   else {    // Fermeture des portes
@@ -479,7 +496,7 @@ bool changePortes(bool etat) {
       msgInfo("Err POs");
       return false;
     }
-    pixels.setPixelColor(0, pixels.Color(LEDLEVEL, LEDLEVEL, 0));
+    pixels.setPixelColor(1, pixels.Color(LEDLEVEL, LEDLEVEL, 0));
     pixels.show();
     StopMot;
     msgInfo("P2 F...");
@@ -518,7 +535,7 @@ bool deplaceAbri(bool etat) {
     return false;
   }
   StopTel; // Coupure alimentation télescope
-  pixels.setPixelColor(0, pixels.Color(LEDLEVEL, LEDLEVEL, 0));
+  pixels.setPixelColor(1, pixels.Color(LEDLEVEL, LEDLEVEL, 0));
   pixels.show();
   if (!PortesOuvert) {
     if (!MoteurStatus) StartMot; // Alimentation du moteur
@@ -546,7 +563,7 @@ bool deplaceAbri(bool etat) {
     // Abri ouvert
     msgInfo("Abri ouvert");
     StartTel; // Alimentation télescope
-    pixels.setPixelColor(0, pixels.Color(LEDLEVEL, 0, 0));
+    pixels.setPixelColor(1, pixels.Color(LEDLEVEL, 0, 0));
     pixels.show();
   }
   else {
@@ -640,7 +657,7 @@ void ARU() {				// Arret d'urgence
   // Passage en mode manuel
   Manuel = true;
   msgInfo("ARU !");
-  pixels.setPixelColor(0, pixels.Color(0, LEDLEVEL, 0));
+  pixels.setPixelColor(1, pixels.Color(0, LEDLEVEL, 0));
   // Ouverture des portes
   //changePortes(true);
   // ouvrePorte1();
