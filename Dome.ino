@@ -35,6 +35,12 @@ LiquidCrystal_I2C lcd(0x27, 20, 4); // set the LCD address to 0x27 for a 16 char
 #define NBLEDS 28
 Adafruit_NeoPixel pixels(NBLEDS, LEDPIN, NEO_GRB + NEO_KHZ400);
 
+// Client REST
+#include <ELClient.h>
+#include <ELClientRest.h>
+ELClient esp(&Serial, &Serial);
+ELClientRest rest(&esp);
+
 //---------------------------------------CONSTANTES-----------------------------------------------
 
 // Sorties
