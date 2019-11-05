@@ -145,14 +145,14 @@ void loop() {
     }
   }
   // Touche de déplacement (2)
-  if (!digitalRead(BSEL)) {
+  if (!mcp.digitalRead(BSEL)) {
     POS = POS + 1;
     if (POS > 5) POS = 0;
     lcd.setCursor(POS * 3, 3);
     delay(200);
   }
   // Changement de valeur (3)
-  if (!digitalRead(BCHOIX)) {
+  if (!mcp.digitalRead(BCHOIX)) {
     niveau[POS]++;
     if (niveau[POS] > 5 && POS > 2 && POS < 5) niveau[POS] = 1;
     if (niveau[POS] > 6 && POS == 5) niveau[POS] = 0;
