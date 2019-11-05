@@ -26,8 +26,8 @@ L'ouverture/fermeture de l'abri est commandée par une motorisation de porte de 
 - 1 détecteur de pluie.
 - 2 claviers matriciels 4x4 + PCF8574.
 - 1 afficheur LCD 20x4
-- 4 barrettes de 8 LEDs Neopixel.
-- 3 LEDs Neopixel.
+- 3 barrettes de 8 LEDs Neopixel.
+- 4 LEDs Neopixel.
 - 1 alimentation 220V/12V 15A
 - 1 régulateur 12V -> 5V 3A
 
