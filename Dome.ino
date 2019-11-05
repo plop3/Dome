@@ -2,8 +2,8 @@
   Pilotage automatique de l'abri du telescope
   Serge CLAUS
   GPL V3
-  Version 2.6
-  22/10/2018-19/10/2019
+  Version 2.7
+  22/10/2018-05/11/2019
 */
 
 #include "Config.h"
@@ -11,12 +11,14 @@
 //---------------------------------------SETUP-----------------------------------------------
 
 void setup() {
-  Serial.begin(57600);
-  Ser2.begin(9600);
-  // MCP23017
+  // Initialisation des ports série
+  Serial.begin(57600);	// Connexion à ESP-Link (ESP8266)
+  Ser2.begin(9600);		// Connexion à ESP32 LoRa
+
+  // MCP23017 Gestion des entrées capteurs, park...
   mcp.begin();
 
-  // Clavier matriciel
+  // Clavier matriciel 4x4
   kpd.init();
 
   // Initialisation des relais
@@ -38,46 +40,45 @@ void setup() {
   mcp.pinMode(Po2, INPUT); mcp.pullUp(Po2, HIGH);
   mcp.pinMode(Pf2, INPUT); mcp.pullUp(Pf2, HIGH);
   mcp.pinMode(BARU, INPUT); mcp.pullUp(BARU, HIGH);
-  mcp.pinMode(PARK, INPUT); //mcp.pullUp(PARK, LOW);
-  pinMode(BMA, INPUT);
-  pinMode(BKLIGHT, OUTPUT);
-  analogWrite(BKLIGHT, BKLEVEL);
+  mcp.pinMode(PARK, INPUT); 		//Résistance pulldown de 10k
+  pinMode(BMA, INPUT);				//Bouton Marche/arret (pour l'instant non cablé)
+  pinMode(BKLIGHT, OUTPUT);			//Sortie rétro-éclairage LCD
+  analogWrite(BKLIGHT, LEVEL[3]);
 
   // Boutons poussoirs
   mcp.pinMode(BINT, INPUT); mcp.pullUp(BINT, HIGH);
   mcp.pinMode(BEXT, INPUT); mcp.pullUp(BEXT, HIGH);
   mcp.pinMode(BTAB, INPUT); mcp.pullUp(BTAB, HIGH);
-  // LCD
-  lcd.init();
-  if (PortesOuvert) {
-    lcd.backlight();
-  }
-  msgInfo("Demarrage...   ");
-
+  mcp.pinMode(BVALID, INPUT); mcp.pullUp(BVALID, HIGH);
+  mcp.pinMode(BCHOIX, INPUT); mcp.pullUp(BCHOIX, HIGH);
+  mcp.pinMode(BSEL, INPUT); mcp.pullUp(BSEL, HIGH);
   // LEDs
   pixels.begin();
   pixels.clear();
+
+  // LCD
+  lcd.init();
+  lcd.setCursor(0, 2);
+  lcd.print("TA IN EX LC LD CMD");
+  lcd.setCursor(0, 3);
+  lcd.print("2R 3B 5B 2  2  PARK");
+  lcd.setCursor(POS * 3, 3);
+  lcd.blink();
+
+  // Timer
+  timer.setInterval(1000, FuncSec);
+
   if (PortesOuvert) {
-    Led(LedStatus, LEDLEVEL, 0, 0, false);
-    Led(LedPark, LEDLEVEL, 0, 0, false);
+    DomeStart();
   }
   else {
-    LastPark = true; // Empêche la LED de park de s'allumer
+    DomeStop();
   }
-  Led(LedClavier, LEDLEVEL, LEDLEVEL, LEDLEVEL, true);
   // Vérification de la position du dome au démarrage
   if (!AbriOuvert && !AbriFerme) {
     // Position incorrecte on passe en mode manuel
     Manuel = true;
   }
-  // Etat du dome initialisation des interrupteurs
-  if ( AbriOuvert) {
-    StartTel; // Alimentation télescope
-    StartMot; // Alimentation du moteur de l'abri
-  }
-
-  lcd.clear();
-  msgInfo("Ok");
 }
 
 //---------------------------------------BOUCLE PRINCIPALE------------------------------------
@@ -85,53 +86,164 @@ void setup() {
 String SerMsg = "";		// Message reçu sur le port série
 
 void loop() {
+  timer.run(); // Timer pour la LED clavier
   // Lecture des boutons poussoirs
   if (!mcp.digitalRead(BINT)) {
     ECLINT = !ECLINT;
     bip(BUZZER, 440, 100);
-    Eclaire(1, 100 * ECLINT, 100 * ECLINT, 100 * ECLINT);
+    Eclaire(1, LEVEL[1] * ECLINT, REDLED[1]);
     delay(300);
   }
   if (!mcp.digitalRead(BTAB)) {
     ECLTAB = !ECLTAB;
     bip(BUZZER, 440, 100);
-    Eclaire(2, LEDLEVEL * 2 * ECLTAB, 0 , 0);
+    Eclaire(2, LEVEL[0] * ECLTAB, REDLED[0]);
     delay(300);
   }
 
   if (!mcp.digitalRead(BEXT)) {
     ECLEXT = !ECLEXT;
     bip(BUZZER, 440, 100);
-    Eclaire(0, 100 * ECLEXT, 100 * ECLEXT, 100 * ECLEXT);
+    Eclaire(0, 100 * LEVEL[2], REDLED[2]);
     delay(300);
+  }
+  // IHM
+  if (!mcp.digitalRead(BVALID)) {
+    if (Lock) {
+      // Active l'afficheur LCD
+      lcd.backlight();
+      Lock = false;
+      delay(200);
+    }
+    else if (POS == 5) {
+      // Lance la commande demandée
+      switch (niveau[5]) {
+        case 0:
+          Serial.println("Park");
+          Ser2.write("PA#");
+          break;
+        case 1:
+          changePortes(true);
+          break;
+        case 2:
+          changePortes(false);
+          break;
+        case 3:
+          deplaceAbri(true);
+          break;
+        case 4:
+          deplaceAbri(false);
+          break;
+        case 5:
+          changePortes(true);
+          break;
+        case 6:
+          changePortes(false);
+          break;
+      }
+      delay(200);
+    }
+  }
+  // Touche de déplacement (2)
+  if (!digitalRead(BSEL)) {
+    POS = POS + 1;
+    if (POS > 5) POS = 0;
+    lcd.setCursor(POS * 3, 3);
+    delay(200);
+  }
+  // Changement de valeur (3)
+  if (!digitalRead(BCHOIX)) {
+    niveau[POS]++;
+    if (niveau[POS] > 5 && POS > 2 && POS < 5) niveau[POS] = 1;
+    if (niveau[POS] > 6 && POS == 5) niveau[POS] = 0;
+    if (niveau[POS] > 10 ) niveau[POS] = 1;
+    lcd.setCursor(POS * 3, 3);
+    if (POS < 3) {
+      if (niveau[POS] > 5) {
+        lcd.print(niveau[POS] - 5);
+        lcd.print("B");
+        REDLED[niveau[POS]] = true;
+        Eclaire(2 - POS, LEVEL[1] * ECLINT, REDLED[1]);
+        // TODO
+      }
+      else {
+        lcd.print(niveau[POS]);
+        lcd.print("R");
+        REDLED[niveau[POS]] = false;
+        Eclaire(2 - POS, LEVEL[1] * ECLINT, REDLED[1]);
+        // TODO changement d'intensité des éclairages
+      }
+    }
+    else if (POS < 5) {
+      lcd.print(niveau[POS]);
+      if (POS == 3) analogWrite(BKLIGHT, LEVEL[3]);
+      else {
+        Led(LedStatus, LEVEL[4], 0, 0, false);
+      }
+    }
+    else {
+      // Commande
+      switch (niveau[POS]) {
+        case 0:
+          lcd.print("PARK ");
+          break;
+        case 1:
+          lcd.print("OU P1");
+          break;
+        case 2:
+          lcd.print("FE P1");
+          break;
+        case 3:
+          lcd.print("OU AB");
+          break;
+        case 4:
+          lcd.print("FE AB");
+          break;
+        case 5:
+          lcd.print("OU PO");
+          break;
+        case 6:
+          lcd.print("FE PO");
+          break;
+      }
+    }
+
+    lcd.setCursor(POS * 3, 3);
+    delay(200);
   }
 
   // Lecture des boutons du clavier
   //byte keys = module.getButtons();
   char key = kpd.get_key();
-
   if (key != '\0') {
     bip(BUZZER, 440, 100);
     // Tone désactive le pwm sur la sortie 3
+    if (Lock) {
+      if (ClavierCode(key)) {
+        Lock = false;
+      }
+    }
+    else {
 
-    //Serial.print(key);
-    if (key == 'A') {
-      deplaceAbri(true);
-    }
-    else if (key == 'B') {
-      deplaceAbri(false);
-    }
-    else if (key == 'C') {
-      changePortes(true);
-    }
-    else if (key == 'D') {
-      changePortes(false);
-    }
-    else if (key == '*') {
-      ouvrePorte1();
-    }
-    else if (key == '#') {
-      fermePorte1();
+      //Serial.print(key);
+      if (key == 'A') {
+        deplaceAbri(true);
+      }
+      else if (key == 'B') {
+        deplaceAbri(false);
+      }
+      else if (key == 'C') {
+        changePortes(true);
+      }
+      else if (key == 'D') {
+        changePortes(false);
+      }
+      else if (key == '*') {
+        ouvrePorte1();
+      }
+      else if (key == '#') {
+        fermePorte1();
+      }
     }
   }
   // Lecture des données des ports série
@@ -222,21 +334,34 @@ void loop() {
       Serial.println(Manuel ? "m" : "a");
     }
     else if (SerMsg == "E+") {
-      Eclaire(0, 100, 100, 100);
+      Eclaire(0, LEVEL[2], REDLED[2]);
       Serial.println("1");
     }
     else if (SerMsg == "E-") {
-      Eclaire(0, 0, 0, 0);
+      Eclaire(0, 0, false);
       Serial.println("0");
     }
 
     else if (SerMsg == "I+") {
-      Eclaire(1, 100, 100, 100);
+      Eclaire(1, LEVEL[1], REDLED[1]);
       Serial.println("1");
     }
     else if (SerMsg == "I-") {
-      Eclaire(1, 0, 0, 0);
+      Eclaire(1, 0, false);
       Serial.println("0");
+    }
+    else if (SerMsg == "PA") {
+      Ser2.print("PA#");
+      Serial.println(Ser2.readStringUntil('\r'));
+
+    }
+    else if (SerMsg == "HO") {
+      Ser2.write("HO#");
+      Serial.println(Ser2.readStringUntil('\r'));
+    }
+    else if (SerMsg == "FN") {
+      Ser2.write("FN#");
+      Serial.println(Ser2.readStringUntil('\r'));
     }
     else if (SerMsg == "C?") {
       Serial.print(AbriFerme);
@@ -256,7 +381,7 @@ void loop() {
   // LED état park
 
   if (LastPark != TelPark) {
-    Led(LedPark, LEDLEVEL * TelPark, 0, 0, true);
+    Led(LedPark, LEVEL[4] * TelPark, 0, 0, true);
     LastPark = TelPark;
   }
 

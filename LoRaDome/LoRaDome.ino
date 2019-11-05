@@ -83,7 +83,6 @@ TM1638 module(4, 17, 25); // (4, 17, 25)
 
 //#define MY_WITH_LEDS_BLINKING_INVERSE  // At the time of Error, Receive, Transmit the pin is at a high level
 
-#include <ArduinoOTA.h>
 #include <MySensors.h>
 
 // TM1638
@@ -95,7 +94,7 @@ void setup()
   //module.setupDisplay(1, 3);
   //module.setDisplayToString("Start");
   //module.setLED(TM1638_COLOR_RED, 0);
-  
+
   // WiFi
   Serial.begin(9600);
   Serial.println("Booting");
@@ -150,7 +149,41 @@ void presentation()
 
 void loop()
 {
+  String SerMsg;
+  String ret;
   // Send locally attached sensors data here
-
   ArduinoOTA.handle();
+  Serial.println("C?#");
+  delay(1000);
+  if (Serial.available()) {
+    SerMsg = Serial.readStringUntil(35);
+    if (SerMsg == "PA") {
+      ret = GetScopeInfo(":hP#");
+      Serial.println(ret);
+    }
+    else if (SerMsg == "HO") {
+      GetScopeInfo(":hC#");
+      Serial.println("0");
+    }
+    else if (SerMsg == "FN") {
+      ret = GetScopeInfo(":GVN#");
+    }
+  }
+}
+
+String GetScopeInfo(String msg) {
+  String ret;
+  WiFiClient client;
+  if (!client.connect("192.168.0.103", 9999)) {
+    delay(1000);
+    return "Error";
+  }
+  client.print(msg);
+  while (client.available()) {
+    ret = client.readStringUntil('\r');
+    //ret=client.readString();
+  }
+  client.stop();
+  return ret;
+
 }

@@ -1,11 +1,11 @@
-//---------------------------------------PERIPHERIQUES-----------------------------------------------
-#include <SoftwareSerial.h> // Port série 2 pour le module IHM (LCD,clavier...)
+//---------------------------------------PERIPHERIQUES--------------------------
+#include <SoftwareSerial.h> // Port série 2 pour le module LoRa (TM1638...)
 SoftwareSerial Ser2(13, 2); // RX, TX
 
 // MCP23017
 #include <Wire.h>
 #include "Adafruit_MCP23017.h"
-Adafruit_MCP23017 mcp;    //MCP externe connecté à la carte 8 relais
+Adafruit_MCP23017 mcp;    //MCP Entrées capteurs
 
 // Clavier matriciel I2c
 #include <i2ckeypad.h>
@@ -16,7 +16,7 @@ i2ckeypad kpd = i2ckeypad(PCF8574_ADDR, ROWS, COLS);
 
 // LCD I2c
 #include <LiquidCrystal_I2C.h>
-LiquidCrystal_I2C lcd(0x27, 20, 4); // set the LCD address to 0x27 for a 16 chars and 2 line display
+LiquidCrystal_I2C lcd(0x27, 20, 4); // set the LCD address to 0x27 for a 20 chars and 4 line display
 
 // LEDs neopixel
 #include <Adafruit_NeoPixel.h>
@@ -24,16 +24,28 @@ LiquidCrystal_I2C lcd(0x27, 20, 4); // set the LCD address to 0x27 for a 16 char
 #include <avr/power.h> // Required for 16 MHz Adafruit Trinket
 #endif
 #define LEDPIN 4
-#define NBLEDS 28
+#define NBLEDS 28	// Nombre total de LEDs
 Adafruit_NeoPixel pixels(NBLEDS, LEDPIN, NEO_GRB + NEO_KHZ400);
-
-// Client REST
+/* 0:		Eclairage clavier
+   1:		Status dome
+   2:		Status park
+   3:		Option (N/A)
+   4-11:	Eclairage table
+   12-19:	Eclairage intérieur
+   20-28:	Eclairage extérieur
+*/
+// Client REST: Lecture de l'heure/date, Demande de park vers OnStepESP
 #include <ELClient.h>
-#include <ELClientRest.h>
+#include <ELClientSocket.h>
 ELClient esp(&Serial, &Serial);
-ELClientRest rest(&esp);
+ELClientSocket tcp(&esp);
+char * const tcpServer PROGMEM = "192.168.0.103";
+uint16_t const tcpPort PROGMEM = 9999;
 
-//---------------------------------------CONSTANTES-----------------------------------------------
+// Timer
+#include <SimpleTimer.h>
+SimpleTimer timer;
+//---------------------------------------CONSTANTES-----------------------------
 
 // Sorties
 #define ALIMPC   10   // (R3) Alimentation 220V sous le télescope (PC Indi /Raspi) contact NF
@@ -61,8 +73,8 @@ ELClientRest rest(&esp);
 // Constantes globales
 #define DELAIPORTES 40000L  // Durée d'ouverture/fermeture des portes (40000L)
 #define DELAIPORTESCAPTEUR  30000L  // Durée d'ouverture/fermeture des portes (40000L)
-#define DELAIMOTEUR 40000L  // Durée d'initialisation du moteur
-#define DELAIABRI   15000L  // Durée de déplacement de l'abri (25000L)
+#define DELAIMOTEUR 10000L  // Durée d'initialisation du moteur (40000L)
+#define DELAIABRI   11000L  // Durée de déplacement de l'abri (15000L)
 #define MOTOFF HIGH         // Etat pour l'arret du moteur
 #define MOTON !MOTOFF
 
@@ -71,12 +83,20 @@ ELClientRest rest(&esp);
 #define NiveauAff 0      //TM1638
 
 // Boutons poussoirs
-#define BEXT 11 //11
-#define BINT 13  //12
-#define BTAB 14  //13
+#define BEXT 11  //Eclairage extérieur
+#define BINT 13  //Eclairage intérieur
+#define BTAB 14  //Eclairage table
+#define BSEL 10  // Bouton de sélection -->
+#define BCHOIX	9	// Bouton de choix
+#define BVALID	8	// Bouton de validation
 
-//---------------------------------------Variables globales------------------------------------
+// PCF8574
+#define TPSVEILLE 30  //Delai avant la mise en veille du clavier (s)
 
+// LEDs
+#define LEDLVLCLAV 15	// Intensité de la led du clavier
+
+//---------------------------------------Macros---------------------------------
 #define AlimStatus  (!digitalRead(ALIMTEL))    // Etat de l'alimentation télescope
 #define PortesOuvert (!mcp.digitalRead(Po1) && !mcp.digitalRead(Po2))
 #define PortesFerme (!mcp.digitalRead(Pf1) && !mcp.digitalRead(Pf2))
@@ -96,15 +116,23 @@ ELClientRest rest(&esp);
 #define LedStatus   1
 #define LedPark     2
 #define LedOpt      3
-
 //#define TelPark 1
 
+//---------------------------------------Variables globales---------------------
 bool Manuel = false;  // Mode manuel
 bool LastPark = false;  // Dernier état de Park
 bool StateAff = true; // Etat de l'affichage du TM1638 (ON/OFF)
-int BKLEVEL = 20;  // PWM LCD
-int LEDLEVEL = 15;  // Intensité des LEDs du coffret
+byte LEVEL[] = {100, 100, 100, 20, 10}; // Intensités Table, Intérieur, Extérieur, LCD, LEDs
+bool REDLED[] = {true, false, false}; // Eclairage rouge (false), blanc (true) Table, Intérieur, Extérieur
 
 bool ECLINT = false;
 bool ECLEXT = false;
 bool ECLTAB = false;
+
+bool Lock = true; // Dome locké
+bool Veille = false; // Clavier matriciel en veille
+String SECRET = "1234"; // Code de déverrouillage
+
+// IHM
+byte POS = 5;
+byte niveau[] = {2, 8, 10, 2, 2, 0};
