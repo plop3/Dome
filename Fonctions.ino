@@ -52,7 +52,7 @@ void msgInfo(String texte, byte type) {
   lcd.setCursor(0, 1);
   lcd.print(texte);
   lcd.setCursor(POS * 3, 3);
-  Led(
+  //Led(
 }
 
 // Ferme la petite porte
@@ -245,7 +245,7 @@ bool attendARU(unsigned long delai, bool park, bool depl, bool portes) {
 	if (portes) {
 		// Vérifie si les portes ne bougent pas
 		if (!PortesOuvert) {
-			ARU("Portes")
+			ARU("Portes");
 			return false;
 		}
 	}

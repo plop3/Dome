@@ -62,7 +62,11 @@ TM1638 module(4, 17, 25); // (4, 17, 25)
 
 //#define MY_WITH_LEDS_BLINKING_INVERSE  // At the time of Error, Receive, Transmit the pin is at a high level
 
+// MySensors
 #include <MySensors.h>
+MyMessage msgD(2, V_TRIPPED);  // Dome
+MyMessage msgP(3, V_TRIPPED); // Portes
+MyMessage msgT(4, V_STATUS);  // Télescope parqué
 
 // NTP
 #include <NTPClient.h>
@@ -80,12 +84,12 @@ SimpleTimer timer;
 //---------------------------------------VARIABLES GLOBALES---------------------------------------
 
 // TM1638
-byte NiveauAff=1;		// Intensité de l'affichage
+byte NiveauAff = 1;		// Intensité de l'affichage
 String formattedDate;	// Client NTP
 int TypeAff = 1; 		// 0: Eteint, 1: Heure GMT, 2: T° /H%
 bool StateAff = true;	// Etat de l'affichage (M/A par bouton 2)
-int compte10=0;			// Compteur pour exécuter des commandes toutes les 10s
-int compte5=0;			// Compteur pour exécuter des commandes toutes les 5s
+int compte10 = 0;			// Compteur pour exécuter des commandes toutes les 10s
+int compte5 = 0;			// Compteur pour exécuter des commandes toutes les 5s
 
 //---------------------------------------SETUP-----------------------------------------------
 
@@ -138,7 +142,7 @@ void setup()
   Serial.print("IP address: ");
   Serial.println(WiFi.localIP());
 
-// NTP
+  // NTP
   timeClient.begin();
   //timeClient.setTimeOffset(3600); On reste en GMT
 
@@ -146,13 +150,8 @@ void setup()
   timer.setInterval(1000, FuncSec);
 
   // TODO Eteint l'afficheur si les portes sont fermées
-  
+
   // Setup locally attached sensors
-  MyMessage msgD(2, V_TRIPPED);	// Dome
-  MyMessage msgP(3, V_TRIPPED);	// Portes
-  MyMessage msgT(4, V_STATUS);	// Télescope parqué
-  
-  
 }
 
 //---------------------------------------BOUCLE PRINCIPALE------------------------------------
@@ -166,7 +165,7 @@ void loop()
   ArduinoOTA.handle();
   //Serial.println("C?#");
   //delay(1000);
-  
+
   // Lecture des infos provenant de l'Arduino Nano
   if (Serial.available()) {
     SerMsg = Serial.readStringUntil(35);
@@ -181,55 +180,55 @@ void loop()
     else if (SerMsg == "FN") {
       ret = GetScopeInfo(":GVN#");
     }
-	else if (SerMsg=="DO") {
-		send(msgD.set(1));
-	}
-	else if (SerMsg=="DF") {
-		send(msgD.set(0));
-	}
-	else if (SerMsg=="PO") {
-		send(msgP.set(1));
-	}
-	else if (SerMsg=="PF") {
-		send(msgP.set(0));
-	}
-	else if (SerMsg=="TP") {
-		send(msgT.set(1));
-	}
-	else if (SerMsg=="TN") {
-		send(msgT.set(0));
-	}
+    else if (SerMsg == "DO") {
+      send(msgD.set(1));
+    }
+    else if (SerMsg == "DF") {
+      send(msgD.set(0));
+    }
+    else if (SerMsg == "PO") {
+      send(msgP.set(1));
+    }
+    else if (SerMsg == "PF") {
+      send(msgP.set(0));
+    }
+    else if (SerMsg == "TP") {
+      send(msgT.set(1));
+    }
+    else if (SerMsg == "TN") {
+      send(msgT.set(0));
+    }
   }
   // Lecture des boutons TM1638
   byte keys = module.getButtons();
   switch (keys) {
-	case 1:	//T1 Affiche l'heure
-		TypeAff=1;
-		break;
-	case 2:	// T2 T° H%
-		TypeAff=2;
-		break;
-	case 4:	// T3 T° miroir, point de rosée
-		TypeAff=3;
-		break;
-	case 8:	// T4
-		break;
-	case 16:	// T5
-		break;
-	case 32:	// T6 Augmente l'intensité de l'éclairage
-		if (NiveauAff<7) NiveauAff++;
-		module.setupDisplay(StateAff, NiveauAff);
-		delay(300);
-		break;
-	case 64:	// T7 Diminue l'intensité de l'éclairage
-		if (NiveauAff>0) NiveauAff--;
-		module.setupDisplay(StateAff, NiveauAff);
-		delay(300);
-		break;
-	case 128:	// T8	Allume/Eteint l'affichage
-		StateAff = !StateAff;
-		module.setupDisplay(StateAff, NiveauAff);
-		delay(300);
+    case 1:	//T1 Affiche l'heure
+      TypeAff = 1;
+      break;
+    case 2:	// T2 T° H%
+      TypeAff = 2;
+      break;
+    case 4:	// T3 T° miroir, point de rosée
+      TypeAff = 3;
+      break;
+    case 8:	// T4
+      break;
+    case 16:	// T5
+      break;
+    case 32:	// T6 Augmente l'intensité de l'éclairage
+      if (NiveauAff < 7) NiveauAff++;
+      module.setupDisplay(StateAff, NiveauAff);
+      delay(300);
+      break;
+    case 64:	// T7 Diminue l'intensité de l'éclairage
+      if (NiveauAff > 0) NiveauAff--;
+      module.setupDisplay(StateAff, NiveauAff);
+      delay(300);
+      break;
+    case 128:	// T8	Allume/Eteint l'affichage
+      StateAff = !StateAff;
+      module.setupDisplay(StateAff, NiveauAff);
+      delay(300);
   }
 }
 
@@ -244,58 +243,58 @@ void presentation()
   present(4, S_BINARY);
 }
 
-void before {
+void before() {
 }
 
 void receive(const MyMessage &message) {
-	// TODO Lecture des demandes MySensors (D'abord problème RX/Nano à régler)
+  // TODO Lecture des demandes MySensors (D'abord problème RX/Nano à régler)
   /*
-	Ouvrir dome
-	Fermer dome
-	Ouvrir portes
-	Fermer portes
-	Bouton ARU
+    Ouvrir dome
+    Fermer dome
+    Ouvrir portes
+    Fermer portes
+    Bouton ARU
   */
-	if (message.type==V_STATUS) {
-		switch (message.sensor) {
-			case 2:
-				Serial.println(message.getBool()?"D-":"D+");
-				break;
-			case 3:
-				Serial.println(message.getBool()?"P-":"P+");
-				break;
-			case 4:
-				GetScopeInfo(":hP#");
-				break;
-		}
-		Serial.println(message.getBool()?"P-":"P+");
-	}
+  if (message.type == V_STATUS) {
+    switch (message.sensor) {
+      case 2:
+        Serial.println(message.getBool() ? "D-" : "D+");
+        break;
+      case 3:
+        Serial.println(message.getBool() ? "P-" : "P+");
+        break;
+      case 4:
+        GetScopeInfo(":hP#");
+        break;
+    }
+    Serial.println(message.getBool() ? "P-" : "P+");
+  }
 }
 
 //---------------------------------------FONCTIONS--------------------------------------------
 
 // Fonction executée toutes les secondes
 void FuncSec() {
-	compte5++;
-	compte10++;
-	// Toutes les 5s
-	if (compte5==5) {
-		compte5=0;
-		// TODO Lecture de l'état de chauffe du miroir
-	}
-	// Toutes les 10s
-	if (compte10==10) {
-		// Fonctions exécutées toutes les 10s
-		compte10=0;
-		switch (TypeAff) {
-			case 2:
-				break;
-			case 3:
-				break;
-		}
-		// TODO Lecture de l'état du télescope: Park, Tracking...
-	}
-// Toutes les 1s
+  compte5++;
+  compte10++;
+  // Toutes les 5s
+  if (compte5 == 5) {
+    compte5 = 0;
+    // TODO Lecture de l'état de chauffe du miroir
+  }
+  // Toutes les 10s
+  if (compte10 == 10) {
+    // Fonctions exécutées toutes les 10s
+    compte10 = 0;
+    switch (TypeAff) {
+      case 2:
+        break;
+      case 3:
+        break;
+    }
+    // TODO Lecture de l'état du télescope: Park, Tracking...
+  }
+  // Toutes les 1s
   switch (TypeAff) {
     case 0: // Pas d'affichage
       module.setDisplayToString("        ");
