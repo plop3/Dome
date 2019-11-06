@@ -139,8 +139,9 @@ void setup()
 
 
   // Setup locally attached sensors
-  MyMessage msgD(2, V_TRIPPED);
-  MyMessage msgP(3, V_TRIPPED);
+  MyMessage msgD(2, V_TRIPPED);	// Dome
+  MyMessage msgP(3, V_TRIPPED);	// Portes
+  MyMessage msgT(4, V_STATUS);	// Télescope parqué
 }
 
 void presentation()
@@ -148,7 +149,8 @@ void presentation()
   // Present locally attached sensors here
   sendSketchInfo("Passerelle dome", "1.1");
   present(2, S_DOOR);
-  present(3, S_MOTION);
+  present(3, S_DOOR);
+  present(4, S_BINARY);
 }
 
 void before {
@@ -163,9 +165,20 @@ void receive(const MyMessage &message) {
 	Fermer portes
 	Bouton ARU
   */
-	//	if (message.type==V_STATUS) {
-	//		Serial.println(message.getBool()?"P-":"P+");
-	//}
+	if (message.type==V_STATUS) {
+		switch (message.sensor) {
+			case 2:
+				Serial.println(message.getBool()?"D-":"D+");
+				break;
+			case 3:
+				Serial.println(message.getBool()?"P-":"P+");
+				break;
+			case 4:
+				GetScopeInfo(":hP#");
+				break;
+		}
+		Serial.println(message.getBool()?"P-":"P+");
+	}
 }
 
 void loop()
@@ -200,6 +213,12 @@ void loop()
 	}
 	else if (SerMsg=="PF") {
 		send(msgP.set(0));
+	}
+	else if (SerMsg=="TP") {
+		send(msgT.set(1));
+	}
+	else if (SerMsg=="TN") {
+		send(msgT.set(0));
 	}
   }
 }

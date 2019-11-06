@@ -349,6 +349,7 @@ void loop() {
   if (LastPark != TelPark) {
     Led(LedPark, LEVEL[4] * TelPark, 0, 0, true);
     LastPark = TelPark;
+	Ser2.println(TelPark?"TN":"TP");
   }
 
   // TEST DEPLACEMENT INOPINE DU DOME
