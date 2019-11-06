@@ -34,6 +34,8 @@ Adafruit_NeoPixel pixels(NBLEDS, LEDPIN, NEO_GRB + NEO_KHZ400);
    12-19:	Eclairage intérieur
    20-28:	Eclairage extérieur
 */
+
+/*
 // Client REST: Lecture de l'heure/date, Demande de park vers OnStepESP
 #include <ELClient.h>
 #include <ELClientSocket.h>
@@ -41,6 +43,7 @@ ELClient esp(&Serial, &Serial);
 ELClientSocket tcp(&esp);
 char * const tcpServer PROGMEM = "192.168.0.103";
 uint16_t const tcpPort PROGMEM = 9999;
+*/
 
 // Timer
 #include <SimpleTimer.h>
@@ -61,7 +64,7 @@ SimpleTimer timer;
 #define BMA     A6  // Bouton M/A
 
 // Entrées
-#define PARK  1   //MCP // Etat du telescope 0: non parqué, 1: parqué
+#define PARK  1   	//MCP // Etat du telescope 0: non parqué, 1: parqué
 
 #define AO 7        // MCP  // Capteur abri ouvert
 #define AF 5        // MCP  // Capteur abri fermé
@@ -78,17 +81,16 @@ SimpleTimer timer;
 #define MOTOFF HIGH         // Etat pour l'arret du moteur
 #define MOTON !MOTOFF
 
-#define BKLIGHT 3     // Backlight LCD
-#define BUZZER 17 //A3
-#define NiveauAff 0      //TM1638
+#define BKLIGHT 3     	// PIN Backlight LCD
+#define BUZZER 17 		//A3
 
 // Boutons poussoirs
-#define BEXT 11  //Eclairage extérieur
-#define BINT 13  //Eclairage intérieur
-#define BTAB 14  //Eclairage table
-#define BSEL 10  // Bouton de sélection -->
-#define BCHOIX	9	// Bouton de choix
-#define BVALID	8	// Bouton de validation
+#define BEXT 11  //MCP	Eclairage extérieur
+#define BINT 13  //MCP	Eclairage intérieur
+#define BTAB 14  //MCP	Eclairage table
+#define BSEL 10  //MCP	Bouton de sélection -->
+#define BCHOIX	9	//MCP	Bouton de choix
+#define BVALID	8	//MCP Bouton de validation
 
 // PCF8574
 #define TPSVEILLE 30  //Delai avant la mise en veille du clavier (s)
@@ -121,7 +123,6 @@ SimpleTimer timer;
 //---------------------------------------Variables globales---------------------
 bool Manuel = false;  // Mode manuel
 bool LastPark = false;  // Dernier état de Park
-bool StateAff = true; // Etat de l'affichage du TM1638 (ON/OFF)
 byte LEVEL[] = {100, 100, 100, 20, 10}; // Intensités Table, Intérieur, Extérieur, LCD, LEDs
 bool REDLED[] = {true, false, false}; // Eclairage rouge (false), blanc (true) Table, Intérieur, Extérieur
 

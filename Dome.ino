@@ -2,8 +2,8 @@
   Pilotage automatique de l'abri du telescope
   Serge CLAUS
   GPL V3
-  Version 2.7
-  22/10/2018-05/11/2019
+  Version 2.8
+  22/10/2018-06/11/2019
 */
 
 #include "Config.h"
@@ -55,6 +55,7 @@ void setup() {
   // LEDs
   pixels.begin();
   pixels.clear();
+  pixels.show();
 
   // LCD
   lcd.init();
@@ -104,7 +105,7 @@ void loop() {
   if (!mcp.digitalRead(BEXT)) {
     ECLEXT = !ECLEXT;
     bip(BUZZER, 440, 100);
-    Eclaire(0, 100 * LEVEL[2], REDLED[2]);
+    Eclaire(0, LEVEL[2] * ECLEXT, REDLED[2]);
     delay(300);
   }
   // IHM
@@ -123,10 +124,10 @@ void loop() {
           Ser2.write("PA#");
           break;
         case 1:
-          changePortes(true);
+          ouvrePorte1();
           break;
         case 2:
-          changePortes(false);
+          fermePorte1();
           break;
         case 3:
           deplaceAbri(true);
@@ -143,10 +144,17 @@ void loop() {
       }
       delay(200);
     }
+	else {
+		// Commande -
+		if (niveau[POS]>0) {
+			niveau[POS]--;
+			MajLCD();
+		}
+	}
   }
   // Touche de déplacement (2)
   if (!mcp.digitalRead(BSEL)) {
-    POS = POS + 1;
+    POS++;
     if (POS > 5) POS = 0;
     lcd.setCursor(POS * 3, 3);
     delay(200);
@@ -157,59 +165,7 @@ void loop() {
     if (niveau[POS] > 5 && POS > 2 && POS < 5) niveau[POS] = 1;
     if (niveau[POS] > 6 && POS == 5) niveau[POS] = 0;
     if (niveau[POS] > 10 ) niveau[POS] = 1;
-    lcd.setCursor(POS * 3, 3);
-    if (POS < 3) {
-      if (niveau[POS] > 5) {
-        lcd.print(niveau[POS] - 5);
-        lcd.print("B");
-        REDLED[niveau[POS]] = true;
-        Eclaire(2 - POS, LEVEL[1] * ECLINT, REDLED[1]);
-        // TODO
-      }
-      else {
-        lcd.print(niveau[POS]);
-        lcd.print("R");
-        REDLED[niveau[POS]] = false;
-        Eclaire(2 - POS, LEVEL[1] * ECLINT, REDLED[1]);
-        // TODO changement d'intensité des éclairages
-      }
-    }
-    else if (POS < 5) {
-      lcd.print(niveau[POS]);
-      if (POS == 3) analogWrite(BKLIGHT, LEVEL[3]);
-      else {
-        Led(LedStatus, LEVEL[4], 0, 0, false);
-      }
-    }
-    else {
-      // Commande
-      switch (niveau[POS]) {
-        case 0:
-          lcd.print("PARK ");
-          break;
-        case 1:
-          lcd.print("OU P1");
-          break;
-        case 2:
-          lcd.print("FE P1");
-          break;
-        case 3:
-          lcd.print("OU AB");
-          break;
-        case 4:
-          lcd.print("FE AB");
-          break;
-        case 5:
-          lcd.print("OU PO");
-          break;
-        case 6:
-          lcd.print("FE PO");
-          break;
-      }
-    }
-
-    lcd.setCursor(POS * 3, 3);
-    delay(200);
+	MajLCD();
   }
 
   // Lecture des boutons du clavier
@@ -244,6 +200,16 @@ void loop() {
       else if (key == '#') {
         fermePorte1();
       }
+	  else if (key == "1") {
+	      ECLEXT = !ECLEXT;
+		Eclaire(0, LEVEL[2] * ECLEXT, REDLED[2]);
+		delay(300);
+	  }
+	  else if (key =="2") {
+		ECLINT = !ECLINT;
+		Eclaire(1, LEVEL[1] * ECLINT, REDLED[1]);
+		delay(300);
+	  }
     }
   }
   // Lecture des données des ports série
@@ -328,7 +294,7 @@ void loop() {
     }
     else if (SerMsg == "AU") {
       Serial.println("0");
-      ARU();
+      ARU("Série");
     }
     else if (SerMsg == "M?") {
       Serial.println(Manuel ? "m" : "a");
@@ -389,12 +355,12 @@ void loop() {
   // TODO à décommenter quand installé
 
   if (!Manuel && !AbriFerme && !AbriOuvert) {
-    ARU();
+    ARU("Position");
   }
 
   // Bouton Arret d'urgence
   if (!mcp.digitalRead(BARU)) {
-    ARU();
+    ARU("Bouton");
   }
   // Bouton Marche/Arret ? on ouvre la petite porte
   if (BoutonMA) {

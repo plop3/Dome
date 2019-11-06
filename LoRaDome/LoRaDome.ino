@@ -139,12 +139,33 @@ void setup()
 
 
   // Setup locally attached sensors
+  MyMessage msgD(2, V_TRIPPED);
+  MyMessage msgP(3, V_TRIPPED);
 }
 
 void presentation()
 {
   // Present locally attached sensors here
   sendSketchInfo("Passerelle dome", "1.1");
+  present(2, S_DOOR);
+  present(3, S_MOTION);
+}
+
+void before {
+}
+
+void receive(const MyMessage &message) {
+	// TODO Lecture des demandes MySensors (D'abord problème RX/Nano à régler)
+  /*
+	Ouvrir dome
+	Fermer dome
+	Ouvrir portes
+	Fermer portes
+	Bouton ARU
+  */
+	//	if (message.type==V_STATUS) {
+	//		Serial.println(message.getBool()?"P-":"P+");
+	//}
 }
 
 void loop()
@@ -168,13 +189,25 @@ void loop()
     else if (SerMsg == "FN") {
       ret = GetScopeInfo(":GVN#");
     }
+	else if (SerMsg=="DO") {
+		send(msgD.set(1));
+	}
+	else if (SerMsg=="DF") {
+		send(msgD.set(0));
+	}
+	else if (SerMsg=="PO") {
+		send(msgP.set(1));
+	}
+	else if (SerMsg=="PF") {
+		send(msgP.set(0));
+	}
   }
 }
 
 String GetScopeInfo(String msg) {
   String ret;
   WiFiClient client;
-  if (!client.connect("192.168.0.103", 9999)) {
+  if (!client.connect("192.168.0.15", 9999)) {
     delay(1000);
     return "Error";
   }

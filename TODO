@@ -1,13 +1,14 @@
 TODO:
 -----
-- Ajout d'une résistance pulldown (10k) sur entrée "Park"
-- Pilotage de l'alimentation 220V Télescope (alim PC astro) par relais restant sur la carte en NF
+- Résoudre problème RX2 sur Nano (D13): vérifier connexion (Nano, ESP32), changer de pin si besoin.
 - Schéma de cablage de la carte
-- Getion des LEDS APA106
-- Ajout des éclairages
-- Gestion de l'afficheur LCD 20x4
-- Gestion du clavier 4x4
+- Eclairage extérieur rouge clignotant pendant le déplacement du dome.
+- Ajout commande éclairages extérieur/intérieur depuis le clavier extérieur.
+- Status du dome sur l'afficheur LCD (voir dessous)
+- Mode Manuel/Auto depuis le clavier interne
 
+TESTS:
+------
 
 Commandes utiles:
 -----------------
@@ -33,11 +34,38 @@ Intérieur:
 Boutons:
 B1, B2, B3: M/A Eclairages
 B4, B5:	Sélection/Validation
-B6:	Commande sélectionnée (Ouvrir porte(s), Park,...)
+B6:	Commande sélectionnée (Ouvrir porte(s), Park,...) / Sélection inverse
 		
 	LCD:
-PO DO Auto   111111P
-Dome ouvert    22:33
-22° 77%
- T2b A3r E1b L3<PAR>
+PO DO Auto c 111111P	(PF DF Manu/ARU 000000n) (c: connecté à l'ESP32, sinon n)
+Dome ouvert    
+TA IN EX LC LD CMD 
+2R 3B 5B 2  2 <PARK>
 	
+LoRaDOME
+--------
+Boutons TM1638:
+B1	Heure
+B2	T° H%
+B3	T° miroir
+B4
+B5
+B6	Intensité +
+B7	Intensité -
+B8	Eteint afficheur
+
+Afficheur:
+Heure GMT
+T° / H%
+T° miroir / Pt rosée
+
+LEDs:
+1	Tracking
+2	Park
+3
+4
+5
+6
+7	Connecté à OnStepESPServer
+8	Chauffe miroir
+
