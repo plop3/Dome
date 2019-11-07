@@ -147,12 +147,15 @@ void loop() {
 			if (Manuel) ouvrePorte2();
 			break;
 		case 9:
-			if (Manuel) DeplaceDomeARU();
+			if (Manuel) fermePorte2();
 			break;
 		case 10:
-			if (Manuel) StartMot;
+			if (Manuel) DeplaceDomeARU();
 			break;
 		case 11:
+			if (Manuel) StartMot;
+			break;
+		case 12:
 			Manuel=false;
       delay(200);
 	  }
@@ -179,7 +182,7 @@ void loop() {
     niveau[POS]++;
     if (niveau[POS] > 5 && POS > 2 && POS < 5) niveau[POS] = 1;
 	if (niveau[POS] > 7 && POS ==5 && !Manuel) niveau[POS] = 0;
-    if (niveau[POS] > 11 && POS == 5) niveau[POS] = 0;
+    if (niveau[POS] > 12 && POS == 5) niveau[POS] = 0;
     if (niveau[POS] > 10 && POS < 5) niveau[POS] = 1;
 	MajLCD();
   }
