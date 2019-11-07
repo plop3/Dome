@@ -155,12 +155,15 @@ void loop() {
 		case 11:
 			Manuel=false;
       delay(200);
+	  }
     }
 	else {
 		// Commande -
 		if (niveau[POS]>0) {
 			niveau[POS]--;
 			MajLCD();
+			delay(200);
+		
 		}
 	}
   }
