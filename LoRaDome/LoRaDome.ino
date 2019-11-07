@@ -68,7 +68,7 @@ MyMessage msgD(2, V_TRIPPED);  // Dome
 MyMessage msgP(3, V_TRIPPED); // Portes
 MyMessage msgT(4, V_STATUS);  // Télescope parqué
 MyMessage msgC(5, V_TEMP);		// Température
-MyMessage msgH(6, H_HUM);		// Humidité
+MyMessage msgH(6, V_HUM);		// Humidité
 
 // NTP
 #include <NTPClient.h>
@@ -258,7 +258,7 @@ void presentation()
   present(3, S_DOOR);
   present(4, S_BINARY);
   present(5, S_TEMP);
-  present(6, H_HUM);
+  present(6, V_HUM);
 }
 
 void before() {
