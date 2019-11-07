@@ -442,6 +442,23 @@ void MajLCD() {
         case 6:
           lcd.print("FE PO");
           break;
+		case 7:
+			lcd.print("MANU ");
+			break;
+		 case 7:
+			lcd.print("OU P2");
+			break;
+		case 8:
+			lcd.print("FE P2");
+		case 9:
+			lcd.print("DEPLA");
+			break;
+		case 10:
+			lcd.print("MOTON");
+			break;
+		case 11:
+			lcd.print("AUTO ");
+			break;
       }
     }
     lcd.setCursor(POS * 3, 3);

@@ -141,7 +141,19 @@ void loop() {
         case 6:
           changePortes(false);
           break;
-      }
+		case 7:
+			Manuel=true;
+		 case 8:
+			if (Manuel) ouvrePorte2();
+			break;
+		case 9:
+			if (Manuel) DeplaceDomeARU();
+			break;
+		case 10:
+			if (Manuel) StartMot;
+			break;
+		case 11:
+			Manuel=false;
       delay(200);
     }
 	else {
@@ -163,8 +175,9 @@ void loop() {
   if (!mcp.digitalRead(BCHOIX)) {
     niveau[POS]++;
     if (niveau[POS] > 5 && POS > 2 && POS < 5) niveau[POS] = 1;
-    if (niveau[POS] > 6 && POS == 5) niveau[POS] = 0;
-    if (niveau[POS] > 10 ) niveau[POS] = 1;
+	if (niveau[POS] > 7 && POS ==5 && !Manuel) niveau[POS] = 0;
+    if (niveau[POS] > 11 && POS == 5) niveau[POS] = 0;
+    if (niveau[POS] > 10 && POS < 5) niveau[POS] = 1;
 	MajLCD();
   }
 
