@@ -253,7 +253,7 @@ void loop()
 void presentation()
 {
   // Present locally attached sensors here
-  sendSketchInfo("Passerelle dome", "1.1");
+  sendSketchInfo("Passerelle dome", "1.2");
   present(2, S_DOOR);
   present(3, S_DOOR);
   present(4, S_BINARY);
