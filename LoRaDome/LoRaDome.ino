@@ -321,6 +321,7 @@ void FuncSec() {
         break;
       case 3:
 		String Tmirror=GetScopeInfo(":GX9F#"); // Modif de OnStep pour retourner la T° miroir
+		if (Tmirror=="-100") Tmirror="----";
 		String PtRosee=GetScopeInfo(":GX9E#"); // Pt de rosée
 		AffTM2(Temp,Hum);
         break;
