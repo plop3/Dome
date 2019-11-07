@@ -182,6 +182,7 @@ bool deplaceAbri(bool etat) {
   }
   // Deplacement de l'abri
   msgInfo("Deplacement abri...",0);
+  Eclaire(2,100,1);
   while (AbriFerme || AbriOuvert) {
     digitalWrite(MOTEUR, LOW);
     delay(600);
@@ -193,6 +194,7 @@ bool deplaceAbri(bool etat) {
     if (!attendARU(1000,true,false,true)) return false;
   }
   if (!attendARU(2000,true,false,true)) return false;      // Finir le déplacement
+  Eclaire(2,0,1);
   // Etat réel de l'abri au cas ou le déplacement soit inversé
   etat = AbriOuvert;
   if (!etat) {

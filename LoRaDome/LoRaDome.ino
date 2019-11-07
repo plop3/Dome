@@ -67,6 +67,8 @@ TM1638 module(4, 17, 25); // (4, 17, 25)
 MyMessage msgD(2, V_TRIPPED);  // Dome
 MyMessage msgP(3, V_TRIPPED); // Portes
 MyMessage msgT(4, V_STATUS);  // Télescope parqué
+MyMessage msgC(5, V_TEMP);		// Température
+MyMessage msgH(6, H_HUM);		// Humidité
 
 // NTP
 #include <NTPClient.h>
@@ -88,15 +90,15 @@ byte NiveauAff = 1;		// Intensité de l'affichage
 String formattedDate;	// Client NTP
 int TypeAff = 1; 		// 0: Eteint, 1: Heure GMT, 2: T° /H%
 bool StateAff = true;	// Etat de l'affichage (M/A par bouton 2)
-int compte10 = 0;			// Compteur pour exécuter des commandes toutes les 10s
-int compte5 = 0;			// Compteur pour exécuter des commandes toutes les 5s
+int compte60 = 0;		// Compteur pour exécuter des commandes toutes les 10s
+int compte10 = 0;		// Compteur pour exécuter des commandes toutes les 5s
 
 //---------------------------------------SETUP-----------------------------------------------
 
 void setup()
 {
   // Afficheur TM1638
-  module.setupDisplay(1, 3);
+  module.setupDisplay(0, NiveauAff);
   module.setDisplayToString("Start");
   module.setLED(TM1638_COLOR_RED, 0);
 
@@ -147,7 +149,8 @@ void setup()
   //timeClient.setTimeOffset(3600); On reste en GMT
 
   // Timer
-  timer.setInterval(1000, FuncSec);
+  timer.setInterval(1000, FuncSec);	// Toutes les secondes
+  //timer.setInterval(300000L, FuncMin);	// Toutes les 5mn
 
   // TODO Eteint l'afficheur si les portes sont fermées
 
@@ -188,9 +191,13 @@ void loop()
     }
     else if (SerMsg == "PO") {
       send(msgP.set(1));
+	  // Allume les afficheurs
+	  module.setupDisplay(StateAff,NiveauAff);
     }
     else if (SerMsg == "PF") {
       send(msgP.set(0));
+	  // Eteint les afficheurs
+	  module.setupDisplay(0,0);
     }
     else if (SerMsg == "TP") {
       send(msgT.set(1));
@@ -204,12 +211,21 @@ void loop()
   switch (keys) {
     case 1:	//T1 Affiche l'heure
       TypeAff = 1;
-      break;
+	  module.setLED(TM1638_COLOR_RED,0);
+	  module.setLED(TM1638_COLOR_NONE,1);
+	  module.setLED(TM1638_COLOR_NONE,2);
+	        break;
     case 2:	// T2 T° H%
       TypeAff = 2;
+	  module.setLED(TM1638_COLOR_RED,1);
+	  module.setLED(TM1638_COLOR_NONE,0);
+	  module.setLED(TM1638_COLOR_NONE,2);
       break;
     case 4:	// T3 T° miroir, point de rosée
       TypeAff = 3;
+	  module.setLED(TM1638_COLOR_RED,2);
+	  module.setLED(TM1638_COLOR_NONE,1);
+	  module.setLED(TM1638_COLOR_NONE,0);
       break;
     case 8:	// T4
       break;
@@ -241,6 +257,8 @@ void presentation()
   present(2, S_DOOR);
   present(3, S_DOOR);
   present(4, S_BINARY);
+  present(5, S_TEMP);
+  present(6, H_HUM);
 }
 
 void before() {
@@ -275,26 +293,35 @@ void receive(const MyMessage &message) {
 
 // Fonction executée toutes les secondes
 void FuncSec() {
-  compte5++;
   compte10++;
-  // Toutes les 5s
-  if (compte5 == 5) {
-    compte5 = 0;
-    // TODO Lecture de l'état de chauffe du miroir
-  }
+  compte60++;
   // Toutes les 10s
   if (compte10 == 10) {
-    // Fonctions exécutées toutes les 10s
     compte10 = 0;
+    // TODO Lecture de l'état de chauffe du miroir
+	String Chauffe=GetScopeInfo(":GX06#");
+	if (Chauffe<>"0") {
+		module.setLED(TM1638_COLOR_RED, 7);
+	}
+	else {
+		module.setLED(TM1638_COLOR_NONE,7);
+	}
+  }
+  // Toutes les 60s
+  if (compte60 == 60) {
+    // Fonctions exécutées toutes les 60s
+    compte60 = 0;
+	String Temp=GetScopeInfo(":GX9A#");	// T°
+	String Hum=GetScopeInfo(":GX9C#");	// H%
+	send(msgC.set(Temp,1));
+	send(msgH.set(Hum,1));
     switch (TypeAff) {
       case 2:
-		String Temp=GetScopeInfo(":GX9A#");
-		String Hum=GetScopeInfo(":GX9C#");
 		AffTM2(Temp,Hum);
         break;
       case 3:
 		String Tmirror=GetScopeInfo(":GX9F#"); // Modif de OnStep pour retourner la T° miroir
-		String PtRosee=GetScopeInfo(":GX9E#");
+		String PtRosee=GetScopeInfo(":GX9E#"); // Pt de rosée
 		AffTM2(Temp,Hum);
         break;
     }

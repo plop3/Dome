@@ -3,7 +3,6 @@ TODO:
 - Résoudre problème RX2 sur Nano (D13): vérifier connexion (Nano, ESP32), changer de pin si besoin.
 - Schéma de cablage de la carte
 - Eclairage extérieur rouge clignotant pendant le déplacement du dome.
-- Status du dome sur l'afficheur LCD (voir dessous)
 - Mode Manuel/Auto depuis le clavier interne
 
 TESTS:
@@ -46,12 +45,12 @@ LoRaDOME
 Boutons TM1638:
 B1	Heure
 B2	T° H%
-B3	T° miroir
+B3	T° miroir / Pt rosée
 B4
 B5
-B6	Intensité +
-B7	Intensité -
-B8	Eteint afficheur
+B6	Intensité -
+B7	Intensité +
+B8	Eteint/allume afficheur
 
 Afficheur:
 Heure GMT
@@ -64,7 +63,7 @@ LEDs:
 3	Affichage T° miroir / Pt de rosée
 4
 5	(Tracking)
-6	Park
-7	Connecté à OnStepESPServer
+6	(Park)
+7
 8	Chauffe miroir
 
