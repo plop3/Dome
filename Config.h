@@ -99,7 +99,7 @@ SimpleTimer timer;
 #define LEDLVLCLAV 15	// Intensité de la led du clavier
 
 const byte LEDLEV[] = {3,5,10,20,40}; 		// Intensités possibles des LEDs
-const byte APALEV[] = {10,25,50,100,200);		// Intensités des barreaux de LEDs
+const byte APALEV[] = {10,25,50,100,200};		// Intensités des barreaux de LEDs
 const byte LCDLEV[] = {5,10,15,20,40};		// Intensité du rétro-éclairage LCD
 
 //---------------------------------------Macros---------------------------------
