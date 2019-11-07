@@ -445,18 +445,19 @@ void MajLCD() {
 		case 7:
 			lcd.print("MANU ");
 			break;
-		 case 7:
+		 case 8:
 			lcd.print("OU P2");
 			break;
-		case 8:
-			lcd.print("FE P2");
 		case 9:
-			lcd.print("DEPLA");
+			lcd.print("FE P2");
 			break;
 		case 10:
-			lcd.print("MOTON");
+			lcd.print("DEPLA");
 			break;
 		case 11:
+			lcd.print("MOTON");
+			break;
+		case 12:
 			lcd.print("AUTO ");
 			break;
       }
