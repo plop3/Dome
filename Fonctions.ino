@@ -305,6 +305,8 @@ void DomeStart() {
   StartMot; // Alimentation du moteur de l'abri
   LastPark = !TelPark;  // Réactive la LED park
   Lock = false; // Clavier activé
+  Veille=false;	// Le clavier reste éclairé tant que le dome est ouvert
+
 }
 // Arret du dome
 void DomeStop() {
@@ -318,6 +320,7 @@ void DomeStop() {
   StopTel;
   LastPark = true;	// Désactive l'affichage de l'état du park
   Lock = true;	// Clavier locké
+  Veille=false;
 }
 // Fonction executée toutes les secondes
 void FuncSec() {
@@ -326,18 +329,21 @@ void FuncSec() {
 }
 // Eclairage du clavier
 void EclaireClavier() {
-  // Allume la LED
+  // Allume la LED pendant 5mn
   Led(LedClavier, LEDLVLCLAV, LEDLVLCLAV, LEDLVLCLAV, true);
   // Demarre le temporisateur
   if (!Veille) {
-    timer.setTimeout(TPSVEILLE * 1000, EteintClavier);
+    timer.setTimeout(TPSVEILLE, EteintClavier);
     Veille = true;
   }
 }
 // Eteint l'éclairage du clavier
 void EteintClavier() {
-	if (Veille) Led(LedClavier, 0, 0, 0, true);
-  Veille = false;
+	if (Veille) {
+		Led(LedClavier, 0, 0, 0, true);
+		Lock=true;
+		Veille = false;
+	}
 }
 // Déverrouillage au clavier
 bool ClavierCode(char key) {
@@ -375,14 +381,12 @@ bool ClavierCode(char key) {
         bip(BUZZER, 440, 300);
         Led(LedClavier, 0, LEDLVLCLAV, 0, true);
         delay(2000);
-        EclaireClavier();
-		Veille=false;	// Le clavier reste éclairé tant que le dome est ouvert
         return true;
       }
     }
   }
 }
-// Mise à jour de l'affichage LCD
+// Mise à jour de l'affichage LCD, des LEDs
 void MajLCD() {
 	    lcd.setCursor(POS * 3, 3);
     if (POS < 3) {
@@ -390,24 +394,28 @@ void MajLCD() {
         lcd.print(niveau[POS] - 5);
         lcd.print("B");
         REDLED[niveau[POS]] = true;
-        Eclaire(2 - POS, LEVEL[1] * ECLINT, REDLED[1]);
+		LEVEL[POS]=APALEV[niveau[POS]-5];
+        Eclaire(2 - POS, LEVEL[POS] * ECLSTAT[POS], REDLED[POS]);
         // TODO
       }
       else {
         lcd.print(niveau[POS]);
         lcd.print("R");
         REDLED[niveau[POS]] = false;
-        Eclaire(2 - POS, LEVEL[1] * ECLINT, REDLED[1]);
+		LEVEL[POS]=APALEV[niveau[POS]];
+        Eclaire(2 - POS, LEVEL[POS] * ECLSTAT[POS], REDLED[POS]);
         // TODO changement d'intensité des éclairages
       }
     }
-    else if (POS < 5) {
-      lcd.print(niveau[POS]);
-      if (POS == 3) analogWrite(BKLIGHT, LEVEL[3]);
-      else {
-        Led(LedStatus, LEVEL[4], 0, 0, false);
-      }
-    }
+    else if (POS == 4) {
+		LEVEL[4]=LEDLEV[POS];
+        Led(LedStatus, LEVEL[4], 0, 0, true);
+	}
+	else if (POS == 3) {
+		lcd.print(niveau[POS]);
+		LEVEL[3]=LCDLEV[POS];
+		analogWrite(BKLIGHT, LEVEL[3]);
+	}
     else {
       // Commande
       switch (niveau[POS]) {

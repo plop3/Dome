@@ -90,22 +90,22 @@ void loop() {
   timer.run(); // Timer pour la LED clavier
   // Lecture des boutons poussoirs
   if (!mcp.digitalRead(BINT)) {
-    ECLINT = !ECLINT;
+    ECLSTAT[1] = !ECLSTAT[1];
     bip(BUZZER, 440, 100);
-    Eclaire(1, LEVEL[1] * ECLINT, REDLED[1]);
+    Eclaire(1, LEVEL[1] * ECLSTAT[1], REDLED[1]);
     delay(300);
   }
   if (!mcp.digitalRead(BTAB)) {
-    ECLTAB = !ECLTAB;
+    ECLSTAT[0] = !ECLSTAT[0];
     bip(BUZZER, 440, 100);
-    Eclaire(2, LEVEL[0] * ECLTAB, REDLED[0]);
+    Eclaire(2, LEVEL[0] * ECLSTAT[0], REDLED[0]);
     delay(300);
   }
 
   if (!mcp.digitalRead(BEXT)) {
-    ECLEXT = !ECLEXT;
+    ECLSTAT[2] = !ECLSTAT[2];
     bip(BUZZER, 440, 100);
-    Eclaire(0, LEVEL[2] * ECLEXT, REDLED[2]);
+    Eclaire(0, LEVEL[2] * ECLSTAT[2], REDLED[2]);
     delay(300);
   }
   // IHM
@@ -201,13 +201,13 @@ void loop() {
         fermePorte1();
       }
 	  else if (key == "1") {
-	      ECLEXT = !ECLEXT;
-		Eclaire(0, LEVEL[2] * ECLEXT, REDLED[2]);
+	      ECLSTAT[2] = !ECLSTAT[2];
+		Eclaire(0, LEVEL[2] * ECLSTAT[2], REDLED[2]);
 		delay(300);
 	  }
 	  else if (key =="2") {
-		ECLINT = !ECLINT;
-		Eclaire(1, LEVEL[1] * ECLINT, REDLED[1]);
+		ECLSTAT[1] = !ECLSTAT[1];
+		Eclaire(1, LEVEL[1] * ECLSTAT[1], REDLED[1]);
 		delay(300);
 	  }
     }

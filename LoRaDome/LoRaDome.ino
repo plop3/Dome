@@ -215,12 +215,12 @@ void loop()
       break;
     case 16:	// T5
       break;
-    case 32:	// T6 Augmente l'intensité de l'éclairage
+    case 64:	// T7 Augmente l'intensité de l'éclairage
       if (NiveauAff < 7) NiveauAff++;
       module.setupDisplay(StateAff, NiveauAff);
       delay(300);
       break;
-    case 64:	// T7 Diminue l'intensité de l'éclairage
+    case 32:	// T6 Diminue l'intensité de l'éclairage
       if (NiveauAff > 0) NiveauAff--;
       module.setupDisplay(StateAff, NiveauAff);
       delay(300);
@@ -288,8 +288,14 @@ void FuncSec() {
     compte10 = 0;
     switch (TypeAff) {
       case 2:
+		String Temp=GetScopeInfo(":GX9A#");
+		String Hum=GetScopeInfo(":GX9C#");
+		AffTM2(Temp,Hum);
         break;
       case 3:
+		String Tmirror=GetScopeInfo(":GX9F#"); // Modif de OnStep pour retourner la T° miroir
+		String PtRosee=GetScopeInfo(":GX9E#");
+		AffTM2(Temp,Hum);
         break;
     }
     // TODO Lecture de l'état du télescope: Park, Tracking...

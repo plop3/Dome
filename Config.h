@@ -93,10 +93,14 @@ SimpleTimer timer;
 #define BVALID	8	//MCP Bouton de validation
 
 // PCF8574
-#define TPSVEILLE 30  //Delai avant la mise en veille du clavier (s)
+#define TPSVEILLE 300000L  //Delai avant la mise en veille du clavier (ms)
 
 // LEDs
 #define LEDLVLCLAV 15	// Intensité de la led du clavier
+
+const byte LEDLEV[] = {3,5,10,20,40}; 		// Intensités possibles des LEDs
+const byte APALEV[] = {10,25,50,100,200);		// Intensités des barreaux de LEDs
+const byte LCDLEV[] = {5,10,15,20,40};		// Intensité du rétro-éclairage LCD
 
 //---------------------------------------Macros---------------------------------
 #define AlimStatus  (!digitalRead(ALIMTEL))    // Etat de l'alimentation télescope
@@ -125,6 +129,7 @@ bool Manuel = false;  // Mode manuel
 bool LastPark = false;  // Dernier état de Park
 byte LEVEL[] = {100, 100, 100, 20, 10}; // Intensités Table, Intérieur, Extérieur, LCD, LEDs
 bool REDLED[] = {true, false, false}; // Eclairage rouge (false), blanc (true) Table, Intérieur, Extérieur
+bool ECLSTAT[] = { false, false, false}; //Etat des éclairages 
 
 bool ECLINT = false;
 bool ECLEXT = false;
@@ -136,4 +141,4 @@ String SECRET = "1234"; // Code de déverrouillage
 
 // IHM
 byte POS = 5;
-byte niveau[] = {2, 8, 10, 2, 2, 0};
+byte niveau[] = {2, 8, 10, 2, 2, 0};	// Choix de niveaux d'éclairage au démarrage

@@ -59,12 +59,12 @@ T° / H%
 T° miroir / Pt rosée
 
 LEDs:
-1	Tracking
-2	Park
-3
+1	Affichage heure
+2	Affichage T°/H%
+3	Affichage T° miroir / Pt de rosée
 4
-5
-6
+5	(Tracking)
+6	Park
 7	Connecté à OnStepESPServer
 8	Chauffe miroir
 
