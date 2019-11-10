@@ -392,8 +392,8 @@ void AffTM2(String ch1, String ch2) {
   int dot2=ch2.indexOf(".");
   ch1.remove(dot1,1);
   ch2.remove(dot2,1);
-  ch1 = ch1.substring(0, 4);
-  ch2 = ch2.substring(0, 4);
+  ch1 = ch1.substring(0, 3);
+  ch2 = ch2.substring(0, 3);
   int pos1=1<<(8-dot1);
   if (pos1>255) pos1=0;
   int pos2=2<<(8-dot2);
