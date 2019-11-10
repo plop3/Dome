@@ -182,22 +182,24 @@ void loop()
     }
     else if (SerMsg == "FN") {
       ret = GetScopeInfo(":GVN#");
+      Serial.println(ret);
     }
     else if (SerMsg == "DO") {
-      send(msgD.set(1));
-    }
-    else if (SerMsg == "DF") {
       send(msgD.set(0));
     }
+    else if (SerMsg == "DF") {
+      send(msgD.set(1));
+    }
     else if (SerMsg == "PO") {
-      send(msgP.set(1));
-	  // Allume les afficheurs
-	  module.setupDisplay(StateAff,NiveauAff);
+      send(msgP.set(0));
+      // Allume les afficheurs
+      StateAff=true;
+      module.setupDisplay(StateAff, NiveauAff);
     }
     else if (SerMsg == "PF") {
-      send(msgP.set(0));
-	  // Eteint les afficheurs
-	  module.setupDisplay(0,0);
+      send(msgP.set(1));
+      // Eteint les afficheurs
+      module.setupDisplay(0, 0);
     }
     else if (SerMsg == "TP") {
       send(msgT.set(1));
@@ -205,27 +207,35 @@ void loop()
     else if (SerMsg == "TN") {
       send(msgT.set(0));
     }
+    else if (SerMsg == "EC") {
+      StateAff = !StateAff;
+      module.setupDisplay(StateAff, NiveauAff);
+      Serial.println((StateAff)?"0":"1");
+
+    }
   }
   // Lecture des boutons TM1638
   byte keys = module.getButtons();
   switch (keys) {
     case 1:	//T1 Affiche l'heure
       TypeAff = 1;
-	  module.setLED(TM1638_COLOR_RED,0);
-	  module.setLED(TM1638_COLOR_NONE,1);
-	  module.setLED(TM1638_COLOR_NONE,2);
-	        break;
+      module.setLED(TM1638_COLOR_RED, 0);
+      module.setLED(TM1638_COLOR_NONE, 1);
+      module.setLED(TM1638_COLOR_NONE, 2);
+      break;
     case 2:	// T2 T° H%
       TypeAff = 2;
-	  module.setLED(TM1638_COLOR_RED,1);
-	  module.setLED(TM1638_COLOR_NONE,0);
-	  module.setLED(TM1638_COLOR_NONE,2);
+      module.setLED(TM1638_COLOR_RED, 1);
+      module.setLED(TM1638_COLOR_NONE, 0);
+      module.setLED(TM1638_COLOR_NONE, 2);
+      compte60 = 58;
       break;
     case 4:	// T3 T° miroir, point de rosée
       TypeAff = 3;
-	  module.setLED(TM1638_COLOR_RED,2);
-	  module.setLED(TM1638_COLOR_NONE,1);
-	  module.setLED(TM1638_COLOR_NONE,0);
+      module.setLED(TM1638_COLOR_RED, 2);
+      module.setLED(TM1638_COLOR_NONE, 1);
+      module.setLED(TM1638_COLOR_NONE, 0);
+      compte60 = 58;
       break;
     case 8:	// T4
       break;
@@ -258,7 +268,7 @@ void presentation()
   present(3, S_DOOR);
   present(4, S_BINARY);
   present(5, S_TEMP);
-  present(6, V_HUM);
+  present(6, S_HUM);
 }
 
 void before() {
@@ -276,16 +286,16 @@ void receive(const MyMessage &message) {
   if (message.type == V_STATUS) {
     switch (message.sensor) {
       case 2:
-        Serial.println(message.getBool() ? "D-" : "D+");
+        Serial.println(message.getBool() ? "D+#" : "D-#");
         break;
       case 3:
-        Serial.println(message.getBool() ? "P-" : "P+");
+        Serial.println(message.getBool() ? "P+#" : "P-#");
         break;
       case 4:
         GetScopeInfo(":hP#");
         break;
     }
-    Serial.println(message.getBool() ? "P-" : "P+");
+    //Serial.println(message.getBool() ? "P-" : "P+");
   }
 }
 
@@ -299,31 +309,31 @@ void FuncSec() {
   if (compte10 == 10) {
     compte10 = 0;
     // TODO Lecture de l'état de chauffe du miroir
-	String Chauffe=GetScopeInfo(":GX06#");
-	if (Chauffe<>"0") {
-		module.setLED(TM1638_COLOR_RED, 7);
-	}
-	else {
-		module.setLED(TM1638_COLOR_NONE,7);
-	}
+    String Chauffe = GetScopeInfo(":GX06#");
+    if (Chauffe != "0") {
+      module.setLED(TM1638_COLOR_RED, 7);
+    }
+    else {
+      module.setLED(TM1638_COLOR_NONE, 7);
+    }
   }
   // Toutes les 60s
   if (compte60 == 60) {
     // Fonctions exécutées toutes les 60s
     compte60 = 0;
-	String Temp=GetScopeInfo(":GX9A#");	// T°
-	String Hum=GetScopeInfo(":GX9C#");	// H%
-	send(msgC.set(Temp,1));
-	send(msgH.set(Hum,1));
+    String Temp = GetScopeInfo(":GX9A#");	// T°
+    String Hum = GetScopeInfo(":GX9C#");	// H%
+    send(msgC.set(Temp.toFloat(), 1));
+    send(msgH.set(Hum.toFloat(), 1));
     switch (TypeAff) {
       case 2:
-		AffTM2(Temp,Hum);
+        AffTM2(Temp, Hum);
         break;
       case 3:
-		String Tmirror=GetScopeInfo(":GX9F#"); // Modif de OnStep pour retourner la T° miroir
-		if (Tmirror=="-100") Tmirror="----";
-		String PtRosee=GetScopeInfo(":GX9E#"); // Pt de rosée
-		AffTM2(Temp,Hum);
+        String Tmirror = GetScopeInfo(":GX9F#"); // Modif de OnStep pour retourner la T° miroir
+        if (Tmirror == "-100") Tmirror = "----";
+        String PtRosee = GetScopeInfo(":GX9E#"); // Pt de rosée
+        AffTM2(Tmirror, PtRosee);
         break;
     }
     // TODO Lecture de l'état du télescope: Park, Tracking...
@@ -354,13 +364,17 @@ String GetScopeInfo(String msg) {
   WiFiClient client;
   if (!client.connect("192.168.0.15", 9999)) {
     delay(1000);
-    return "Error";
+    return "Err ";
   }
   client.print(msg);
-  while (client.available()) {
-    ret = client.readStringUntil('\r');
-    //ret=client.readString();
+  unsigned long currentMillis = millis();
+  unsigned long previousMillis = millis();
+  while ((currentMillis - previousMillis < 1000) && !client.available())
+  {
+    currentMillis=millis();
   }
+  ret = client.readStringUntil('\r');
+  //ret = client.readString();
   client.stop();
   return ret;
 }
@@ -370,11 +384,20 @@ void AffTM(String ch) {
   ch = ch.substring(0, 8);
   module.setDisplayToString(ch);
 }
-// Affiche 2 champs formattés sur le TM1638
+// Affiche 2 champs numériques formattés sur le TM1638
 void AffTM2(String ch1, String ch2) {
   ch1 = ch1 + "    ";
+  int dot1=ch1.indexOf(".");
   ch2 = ch2 + "    ";
+  int dot2=ch2.indexOf(".");
+  ch1.remove(dot1,1);
+  ch2.remove(dot2,1);
   ch1 = ch1.substring(0, 4);
   ch2 = ch2.substring(0, 4);
-  module.setDisplayToString(ch1 + ch2);
+  int pos1=1<<(8-dot1);
+  if (pos1>255) pos1=0;
+  int pos2=2<<(8-dot2);
+  if (pos2>255) pos2=0;
+  module.setDisplayToString(ch1,pos1,0);
+  module.setDisplayToString(ch2,pos2,4);
 }

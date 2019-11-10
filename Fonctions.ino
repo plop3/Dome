@@ -32,21 +32,21 @@ String LireCmd(void) {
 }
 // Affichage d'un message d'info sur l'écran LCD
 void msgInfo(String texte, byte type) {
-	// Type: 0 mouvement en cours, 1 info, 2 erreur, 3 alerte
-	switch (type) {
-		case 0:	// Mouvement: LED bleue
-		Led(LedStatus,0 ,0 , LEVEL[4], true);
-			break;
-		case 1:	//	Ok: LED verte
-		Led(LedStatus, LEVEL[4], 0, 0, true);
-			break;
-		case 2:	// Alerte: LED jaune
-		Led(LedStatus, LEVEL[4], LEVEL[4],0, true);
-			break;
-		case 3:	// Alarme (ARU) LED rouge
-		Led(LedStatus, 0, LEVEL[4], 0, true);
-			break;
-	}
+  // Type: 0 mouvement en cours, 1 info, 2 erreur, 3 alerte
+  switch (type) {
+    case 0:	// Mouvement: LED bleue
+      Led(LedStatus, 0 , 0 , LEVEL[4], true);
+      break;
+    case 1:	//	Ok: LED verte
+      Led(LedStatus, LEVEL[4], 0, 0, true);
+      break;
+    case 2:	// Alerte: LED jaune
+      Led(LedStatus, LEVEL[4], LEVEL[4], 0, true);
+      break;
+    case 3:	// Alarme (ARU) LED rouge
+      Led(LedStatus, 0, LEVEL[4], 0, true);
+      break;
+  }
   texte += "                    ";
   texte = texte.substring(0, 15);
   lcd.setCursor(0, 1);
@@ -57,19 +57,19 @@ void msgInfo(String texte, byte type) {
 
 // Ferme la petite porte
 void fermePorte1(void) {
-  msgInfo("P1 F...",0);
+  msgInfo("P1 F...", 0);
   digitalWrite(P11, LOW);
   delay(DELAIPORTES);
-  msgInfo("P1 Close",1);
+  msgInfo("P1 Close", 1);
   digitalWrite(P11, HIGH);
 }
 
 // Ouvre la petite porte
 void ouvrePorte1(void) {
-  msgInfo("P1 O...",0);
+  msgInfo("P1 O...", 0);
   digitalWrite(P12, LOW);
   delay(DELAIPORTES);
-  msgInfo("P1 OPEN",1);
+  msgInfo("P1 OPEN", 1);
   digitalWrite(P12, HIGH);
 }
 
@@ -91,7 +91,7 @@ void ouvrePorte2(void) {
 bool changePortes(bool etat) {
   // Commande identique à l'état actuel, on sort
   if ((etat && PortesOuvert) || (!etat && PortesFerme)) {
-    msgInfo("Erreur position",2);
+    msgInfo("Erreur position", 2);
     return false;
   }
   if (etat) {   // Ouverture des portes
@@ -99,42 +99,42 @@ bool changePortes(bool etat) {
     StartMot; // On allume assez tôt pour laisser le temps de s'initialiser
     // Ouverture des portes
     lcd.backlight();
-    msgInfo("P1 O...",0);
+    msgInfo("P1 O...", 0);
     digitalWrite(P12, LOW);
-    if (!attendARU(5000,true,true,false)) return false;
+    if (!attendARU(5000, true, true, false)) return false;
     digitalWrite(P22, LOW);
-    msgInfo("P12 O...",0);
-    if (!attendARU(DELAIPORTESCAPTEUR,true,true,false)) return false; // Délai minimum
+    msgInfo("P12 O...", 0);
+    if (!attendARU(DELAIPORTESCAPTEUR, true, true, false)) return false; // Délai minimum
     // On attend que les portes sont ouvertes
     while (!PortesOuvert) {
-      if (!attendARU(100,true,true,false)) return false;
+      if (!attendARU(100, true, true, false)) return false;
     }
     // Délai pour finir le mouvement
-    if (!attendARU(5000,true,true,false)) return false;
+    if (!attendARU(5000, true, true, false)) return false;
     digitalWrite(P12, HIGH);
     digitalWrite(P22, HIGH);
-    msgInfo("P12 Open",1);
-	Ser2.println("PO");
+    msgInfo("P12 Open", 1);
+    Ser2.println("PO#");
     DomeStart();
   }
   else {    // Fermeture des portes
     //if ((AbriOuvert && AbriFerme) || (!AbriOuvert && ! AbriFerme)) {
     if (!AbriFerme) {
-      msgInfo("Erreur position",2);
+      msgInfo("Erreur position", 2);
       return false;
     }
     Led(LedStatus, LEVEL[4], LEVEL[4], 0, true);
     StopMot;
-    msgInfo("P2 F...",1);
+    msgInfo("P2 F...", 1);
     digitalWrite(P21, LOW);
-    if (!attendARU(5000,true,true,false)) return false;
-    msgInfo("P12 F...",0);
+    if (!attendARU(5000, true, true, false)) return false;
+    msgInfo("P12 F...", 0);
     digitalWrite(P11, LOW);
-    if (!attendARU(DELAIPORTES,true,true,false)) return false;
+    if (!attendARU(DELAIPORTES, true, true, false)) return false;
     digitalWrite(P11, HIGH);
     digitalWrite(P21, HIGH);
     // Arret des éclairages
-	Ser2.println("PF");
+    Ser2.println("PF#");
     DomeStop();
   }
   return true;
@@ -150,12 +150,12 @@ void DeplaceDomeARU(void) {
 bool deplaceAbri(bool etat) {
   // Commande identique à l'état actuel, on sort
   if ((etat && AbriOuvert) || (!etat && AbriFerme)) {
-    msgInfo("Erreur position",2);
+    msgInfo("Erreur position", 2);
     return false;
   }
   // Test telescope parqué
   if (!TelPark) {
-    msgInfo("Erreur Park",2);
+    msgInfo("Erreur Park", 2);
     // Tentative de parquer le télescope
     Ser2.write("PA#");
     Serial.println(Ser2.readStringUntil('\r'));
@@ -178,46 +178,46 @@ bool deplaceAbri(bool etat) {
     // Attente d'initialisation du moteur de l'abri
     StartMot;
     //Attente pour l'initialisation du moteur
-    if (!attendARU(DELAIMOTEUR,true,true,false)) return false; // Protection contre les déplacements intempestifs
+    if (!attendARU(DELAIMOTEUR, true, true, false)) return false; // Protection contre les déplacements intempestifs
   }
   // Deplacement de l'abri
-  msgInfo("Deplacement abri...",0);
-  Eclaire(2,100,1);
+  msgInfo("Deplacement abri...", 0);
+  Eclaire(2, 100, 1);
   while (AbriFerme || AbriOuvert) {
     digitalWrite(MOTEUR, LOW);
     delay(600);
     digitalWrite(MOTEUR, HIGH);
-    attendARU(4000,true,false,true);	// Attente pour voir si la commande est bien passée
+    attendARU(4000, true, false, true);	// Attente pour voir si la commande est bien passée
   }
-  if (!attendARU(DELAIABRI,true,false,true)) return false;
+  if (!attendARU(DELAIABRI, true, false, true)) return false;
   while (!AbriFerme && !AbriOuvert) {
-    if (!attendARU(1000,true,false,true)) return false;
+    if (!attendARU(1000, true, false, true)) return false;
   }
-  if (!attendARU(2000,true,false,true)) return false;      // Finir le déplacement
-  Eclaire(2,0,1);
+  if (!attendARU(2000, true, false, true)) return false;   // Finir le déplacement
+  Eclaire(2, 0, 1);
   // Etat réel de l'abri au cas ou le déplacement soit inversé
   etat = AbriOuvert;
   if (!etat) {
     // Abri fermé
     StopTel; // Coupure alimentation télescope
-    msgInfo("Abri fermé",1);
+    msgInfo("Abri fermé", 1);
     delay(500);
     changePortes(false);             // Fermeture des portes
-	Ser2.println("DF");
+    Ser2.println("DF#");
     // Pas nécessaire (déjà fait à la fermeture des portes)
     //StopMot; // Coupure alimentation moteur abri
     //StopTel; // Coupure alimentation dome
   }
   else {
-	  Ser2.println("DO");
-	msgInfo("Abri ouvert",1);
+    Ser2.println("DO#");
+    msgInfo("Abri ouvert", 1);
   }
   bip(BUZZER, 440, 1000);
   return true;
 }
 
 // Boucle d'attente pendant le déplacement de l'abri
-bool attendARU(unsigned long delai, bool park, bool depl, bool portes) { 
+bool attendARU(unsigned long delai, bool park, bool depl, bool portes) {
   byte ERRMAX = 2;
   byte nbpark = 0;
   unsigned long Cprevious = millis();
@@ -230,27 +230,27 @@ bool attendARU(unsigned long delai, bool park, bool depl, bool portes) {
       return false;
     }
     // Si le telescope n'est plus parqué pendant le déplacement -> ARU
-	if (park) {
-		if (!TelPark) nbpark++;
-		if (nbpark >= ERRMAX) {
-		  ARU("Park");
-		  return false;
-		}
-	}
-	if (depl) {
-	    // Si le dome se déplace pendant le mouvement des portes: ARU
-		if (!AbriFerme && !AbriOuvert) {
-			ARU("Position");
-			return false;
-		}
-	}
-	if (portes) {
-		// Vérifie si les portes ne bougent pas
-		if (!PortesOuvert) {
-			ARU("Portes");
-			return false;
-		}
-	}
+    if (park) {
+      if (!TelPark) nbpark++;
+      if (nbpark >= ERRMAX) {
+        ARU("Park");
+        return false;
+      }
+    }
+    if (depl) {
+      // Si le dome se déplace pendant le mouvement des portes: ARU
+      if (!AbriFerme && !AbriOuvert) {
+        ARU("Position");
+        return false;
+      }
+    }
+    if (portes) {
+      // Vérifie si les portes ne bougent pas
+      if (!PortesOuvert) {
+        ARU("Portes");
+        return false;
+      }
+    }
     // Bouton Arret d'urgence
     if (!mcp.digitalRead(BARU)) {
       ARU("Bouton");
@@ -276,7 +276,7 @@ void ARU(String msg) {        // Arret d'urgence
   digitalWrite(ALIMMOT, MOTOFF);
   // Passage en mode manuel
   Manuel = true;
-  msgInfo("ARU ! "+msg,3);
+  msgInfo("ARU ! " + msg, 3);
   Led(LedStatus, 0, 50, 0, true);
   // Ouverture des portes
   //changePortes(true);
@@ -302,12 +302,12 @@ void DomeStart() {
   lcd.print("2R 3B 5B 2  2  PARK");
   lcd.setCursor(POS * 3, 3);
   lcd.blink();
-  msgInfo("Ok",1);
+  msgInfo("Ok", 1);
   StartTel; // Alimentation télescope
   StartMot; // Alimentation du moteur de l'abri
   LastPark = !TelPark;  // Réactive la LED park
   Lock = false; // Clavier activé
-  Veille=false;	// Le clavier reste éclairé tant que le dome est ouvert
+  Veille = false;	// Le clavier reste éclairé tant que le dome est ouvert
 
 }
 // Arret du dome
@@ -322,7 +322,7 @@ void DomeStop() {
   StopTel;
   LastPark = true;	// Désactive l'affichage de l'état du park
   Lock = true;	// Clavier locké
-  Veille=false;
+  Veille = false;
 }
 // Fonction executée toutes les secondes
 void FuncSec() {
@@ -341,11 +341,11 @@ void EclaireClavier() {
 }
 // Eteint l'éclairage du clavier
 void EteintClavier() {
-	if (Veille) {
-		Led(LedClavier, 0, 0, 0, true);
-		Lock=true;
-		Veille = false;
-	}
+  if (Veille) {
+    Led(LedClavier, 0, 0, 0, true);
+    Lock = true;
+    Veille = false;
+  }
 }
 // Déverrouillage au clavier
 bool ClavierCode(char key) {
@@ -381,7 +381,7 @@ bool ClavierCode(char key) {
         Serial.println("Code OK");
         // TODO Allume la LED en vert pendant 2s
         bip(BUZZER, 440, 300);
-        Led(LedClavier, 0, LEDLVLCLAV, 0, true);
+        Led(LedClavier, LEDLVLCLAV, 0, 0, true);
         delay(2000);
         return true;
       }
@@ -390,78 +390,91 @@ bool ClavierCode(char key) {
 }
 // Mise à jour de l'affichage LCD, des LEDs
 void MajLCD() {
-	    lcd.setCursor(POS * 3, 3);
-    if (POS < 3) {
-      if (niveau[POS] > 5) {
-        lcd.print(niveau[POS] - 5);
-        lcd.print("B");
-        REDLED[niveau[POS]] = true;
-		LEVEL[POS]=APALEV[niveau[POS]-5];
-        Eclaire(2 - POS, LEVEL[POS] * ECLSTAT[POS], REDLED[POS]);
-        // TODO
-      }
-      else {
-        lcd.print(niveau[POS]);
-        lcd.print("R");
-        REDLED[niveau[POS]] = false;
-		LEVEL[POS]=APALEV[niveau[POS]];
-        Eclaire(2 - POS, LEVEL[POS] * ECLSTAT[POS], REDLED[POS]);
-        // TODO changement d'intensité des éclairages
-      }
+  lcd.setCursor(POS * 3, 3);
+  if (POS < 3) {
+    if (niveau[POS] > 4) {
+      lcd.print(niveau[POS] - 4);
+      lcd.print("B");
+      REDLED[POS] = true;
+      LEVEL[POS] = APALEV[niveau[POS] - 5];
+      Eclaire(2 - POS, LEVEL[POS] * ECLSTAT[POS], REDLED[POS]);
+      // TODO
     }
-    else if (POS == 4) {
-		LEVEL[4]=LEDLEV[POS];
-        Led(LedStatus, LEVEL[4], 0, 0, true);
-	}
-	else if (POS == 3) {
-		lcd.print(niveau[POS]);
-		LEVEL[3]=LCDLEV[POS];
-		analogWrite(BKLIGHT, LEVEL[3]);
-	}
     else {
-      // Commande
-      switch (niveau[POS]) {
-        case 0:
-          lcd.print("PARK ");
-          break;
-        case 1:
-          lcd.print("OU P1");
-          break;
-        case 2:
-          lcd.print("FE P1");
-          break;
-        case 3:
-          lcd.print("OU AB");
-          break;
-        case 4:
-          lcd.print("FE AB");
-          break;
-        case 5:
-          lcd.print("OU PO");
-          break;
-        case 6:
-          lcd.print("FE PO");
-          break;
-		case 7:
-			lcd.print("MANU ");
-			break;
-		 case 8:
-			lcd.print("OU P2");
-			break;
-		case 9:
-			lcd.print("FE P2");
-			break;
-		case 10:
-			lcd.print("DEPLA");
-			break;
-		case 11:
-			lcd.print("MOTON");
-			break;
-		case 12:
-			lcd.print("AUTO ");
-			break;
-      }
+      lcd.print(niveau[POS] + 1);
+      lcd.print("R");
+      REDLED[POS] = false;
+      LEVEL[POS] = APALEV[niveau[POS]];
+      Eclaire(2 - POS, LEVEL[POS] * ECLSTAT[POS], REDLED[POS]);
+      // TODO changement d'intensité des éclairages
     }
-    lcd.setCursor(POS * 3, 3);
-    delay(200);
+  }
+  else if (POS == 4) {
+    lcd.print(niveau[POS]);
+    LEVEL[4] = LEDLEV[niveau[POS]];
+    Led(LedStatus, LEVEL[4], 0, 0, true);
+    Led(LedPark, LEVEL[4] * TelPark, 0, 0, true);
+  }
+  else if (POS == 3) {
+    lcd.print(niveau[POS]);
+    LEVEL[3] = LCDLEV[niveau[POS]];
+    analogWrite(BKLIGHT, LEVEL[3]);
+  }
+  else {
+    // Commande
+    switch (niveau[POS]) {
+      case 0:
+        lcd.print("PARK ");
+        break;
+      case 1:
+        lcd.print("OU P1");
+        break;
+      case 2:
+        lcd.print("FE P1");
+        break;
+      case 3:
+        lcd.print("OU AB");
+        break;
+      case 4:
+        lcd.print("FE AB");
+        break;
+      case 5:
+        lcd.print("OU PO");
+        break;
+      case 6:
+        lcd.print("FE PO");
+        break;
+      case 7:
+        lcd.print("MANU ");
+        break;
+      case 8:
+        lcd.print("OU P2");
+        break;
+      case 9:
+        lcd.print("FE P2");
+        break;
+      case 10:
+        lcd.print("DEPLA");
+        break;
+      case 11:
+        lcd.print("MOTON");
+        break;
+      case 12:
+        lcd.print("AUTO ");
+        break;
+    }
+  }
+  lcd.setCursor(POS * 3, 3);
+  delay(200);
+}
+
+String SerESP() {
+  // Retourne les infos de l'ESP32
+  unsigned long currentMillis = millis();
+  unsigned long previousMillis = millis();
+  while ((currentMillis - previousMillis < 1000) && !Ser2.available())
+  {
+    currentMillis=millis();
+  }
+  return Ser2.readStringUntil('\r');
 }

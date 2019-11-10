@@ -1,6 +1,6 @@
 //---------------------------------------PERIPHERIQUES--------------------------
 #include <SoftwareSerial.h> // Port série 2 pour le module LoRa (TM1638...)
-SoftwareSerial Ser2(13, 2); // RX, TX
+SoftwareSerial Ser2(16, 2); // RX, TX (13, 2)
 
 // MCP23017
 #include <Wire.h>
@@ -98,7 +98,7 @@ SimpleTimer timer;
 // LEDs
 #define LEDLVLCLAV 15	// Intensité de la led du clavier
 
-const byte LEDLEV[] = {3,5,10,20,40}; 		// Intensités possibles des LEDs
+const byte LEDLEV[] = {2,5,10,20,40}; 		// Intensités possibles des LEDs
 const byte APALEV[] = {10,25,50,100,200};		// Intensités des barreaux de LEDs
 const byte LCDLEV[] = {5,10,15,20,40};		// Intensité du rétro-éclairage LCD
 
@@ -127,8 +127,8 @@ const byte LCDLEV[] = {5,10,15,20,40};		// Intensité du rétro-éclairage LCD
 //---------------------------------------Variables globales---------------------
 bool Manuel = false;  // Mode manuel
 bool LastPark = false;  // Dernier état de Park
-byte LEVEL[] = {100, 100, 100, 20, 10}; // Intensités Table, Intérieur, Extérieur, LCD, LEDs
-bool REDLED[] = {true, false, false}; // Eclairage rouge (false), blanc (true) Table, Intérieur, Extérieur
+byte LEVEL[] = {25, 50, 200, 20, 2}; // Intensités Table, Intérieur, Extérieur, LCD, LEDs
+bool REDLED[] = {false, true, true}; // Eclairage rouge (false), blanc (true) Table, Intérieur, Extérieur
 bool ECLSTAT[] = { false, false, false}; //Etat des éclairages 
 
 bool ECLINT = false;
@@ -141,4 +141,4 @@ String SECRET = "1234"; // Code de déverrouillage
 
 // IHM
 byte POS = 5;
-byte niveau[] = {2, 8, 10, 2, 2, 0};	// Choix de niveaux d'éclairage au démarrage
+byte niveau[] = {1, 7, 9, 2, 2, 0};	// Choix de niveaux d'éclairage au démarrage

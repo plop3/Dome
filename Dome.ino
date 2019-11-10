@@ -155,9 +155,9 @@ void loop() {
 		case 11:
 			if (Manuel) StartMot;
 			break;
-		case 12:
-			Manuel=false;
       delay(200);
+      case 12:
+      Manuel=false;
 	  }
     }
 	else {
@@ -180,10 +180,10 @@ void loop() {
   // Changement de valeur (3)
   if (!mcp.digitalRead(BCHOIX)) {
     niveau[POS]++;
-    if (niveau[POS] > 5 && POS > 2 && POS < 5) niveau[POS] = 1;
+    if (niveau[POS] > 4 && POS > 2 && POS < 5) niveau[POS] = 0;
 	if (niveau[POS] > 7 && POS ==5 && !Manuel) niveau[POS] = 0;
-    if (niveau[POS] > 12 && POS == 5) niveau[POS] = 0;
-    if (niveau[POS] > 10 && POS < 5) niveau[POS] = 1;
+    if (niveau[POS] > 11 && POS == 5) niveau[POS] = 0;
+    if (niveau[POS] > 9 && POS < 5) niveau[POS] = 0;
 	MajLCD();
   }
 
@@ -337,16 +337,20 @@ void loop() {
     }
     else if (SerMsg == "PA") {
       Ser2.print("PA#");
-      Serial.println(Ser2.readStringUntil('\r'));
+      Serial.println(SerESP());
 
     }
     else if (SerMsg == "HO") {
       Ser2.write("HO#");
-      Serial.println(Ser2.readStringUntil('\r'));
+      Serial.println(SerESP());
     }
     else if (SerMsg == "FN") {
       Ser2.write("FN#");
-      Serial.println(Ser2.readStringUntil('\r'));
+      Serial.println(SerESP());
+    }
+    else if (SerMsg == "EC") {
+      Ser2.write("EC#");
+      Serial.println(SerESP());
     }
     else if (SerMsg == "C?") {
       Serial.print(AbriFerme);
@@ -378,10 +382,12 @@ void loop() {
     ARU("Position");
   }
 
+ /* TODO Réactiver s'il y a un bouton cablé
   // Bouton Arret d'urgence
   if (!mcp.digitalRead(BARU)) {
     ARU("Bouton");
   }
+ */
   // Bouton Marche/Arret ? on ouvre la petite porte
   if (BoutonMA) {
     ouvrePorte1();
