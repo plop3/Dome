@@ -373,7 +373,7 @@ String GetScopeInfo(String msg) {
   {
     currentMillis=millis();
   }
-  ret = client.readStringUntil('\r');
+  ret = client.readStringUntil(35);
   //ret = client.readString();
   client.stop();
   return ret;
