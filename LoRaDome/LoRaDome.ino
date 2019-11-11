@@ -154,6 +154,7 @@ void setup()
 
   // TODO Eteint l'afficheur si les portes sont fermées
 
+  // TODO Lecture des infos de position de l'abri et des portes et envoi à MySensors
   // Setup locally attached sensors
 }
 
@@ -396,7 +397,7 @@ void AffTM2(String ch1, String ch2) {
   ch2 = ch2.substring(0, 3);
   int pos1=1<<(8-dot1);
   if (pos1>255) pos1=0;
-  int pos2=2<<(8-dot2);
+  int pos2=1<<(8-dot2);
   if (pos2>255) pos2=0;
   module.setDisplayToString(ch1,pos1,0);
   module.setDisplayToString(ch2,pos2,4);
