@@ -332,7 +332,7 @@ void FuncSec() {
         break;
       case 3:
         String Tmirror = GetScopeInfo(":GX9F#"); // Modif de OnStep pour retourner la T° miroir
-        if (Tmirror == "-100") Tmirror = "----";
+        if (Tmirror.toInt() < -80) Tmirror = "----";
         String PtRosee = GetScopeInfo(":GX9E#"); // Pt de rosée
         AffTM2(Tmirror, PtRosee);
         break;
@@ -393,12 +393,11 @@ void AffTM2(String ch1, String ch2) {
   int dot2=ch2.indexOf(".");
   ch1.remove(dot1,1);
   ch2.remove(dot2,1);
-  ch1 = ch1.substring(0, 3);
-  ch2 = ch2.substring(0, 3);
+  ch1 = ch1.substring(0, 4);
+  ch2 = ch2.substring(0, 4);
   int pos1=1<<(8-dot1);
   if (pos1>255) pos1=0;
-  int pos2=1<<(8-dot2);
+  int pos2=1<<(4-dot2);
   if (pos2>255) pos2=0;
-  module.setDisplayToString(ch1,pos1,0);
-  module.setDisplayToString(ch2,pos2,4);
+  module.setDisplayToString(ch1+ch2,pos1+pos2,0);
 }
