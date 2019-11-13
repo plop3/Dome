@@ -78,6 +78,7 @@ void fermePorte2(void) {
   digitalWrite(P21, LOW);
   delay(DELAIPORTES);
   digitalWrite(P21, HIGH);
+  DomeStop();
 }
 
 // Ouvre la porte2

@@ -154,7 +154,9 @@ void setup()
 
   // TODO Eteint l'afficheur si les portes sont fermées
 
-  // TODO Lecture des infos de position de l'abri et des portes et envoi à MySensors
+  // Lecture des infos de position de l'abri et des portes et envoi à MySensors
+  send(msgD.set(GetDomeInfo("D?#").toInt());
+  send(msgP.set(GetDomeInfo("P?#").toInt());
   // Setup locally attached sensors
 }
 
@@ -167,8 +169,6 @@ void loop()
   // Send locally attached sensors data here
   timer.run();
   ArduinoOTA.handle();
-  //Serial.println("C?#");
-  //delay(1000);
 
   // Lecture des infos provenant de l'Arduino Nano
   if (Serial.available()) {
@@ -296,7 +296,6 @@ void receive(const MyMessage &message) {
         GetScopeInfo(":hP#");
         break;
     }
-    //Serial.println(message.getBool() ? "P-" : "P+");
   }
 }
 
@@ -359,6 +358,19 @@ void FuncSec() {
       break;
   }
 }
+
+// Récupération des infos de la carte Dome
+String GetDomeInfo(String msg) {
+  Serial.println(msg);
+  unsigned long currentMillis = millis();
+  unsigned long previousMillis = millis();
+  while ((currentMillis - previousMillis < 1000) && !Serial.available())
+  {
+    currentMillis=millis();
+  }
+  return Serial.readStringUntil(35);		
+}
+
 // Récupération/envoi des infos du télescope depuis OnStepESPServer
 String GetScopeInfo(String msg) {
   String ret;
