@@ -294,7 +294,7 @@ void DomeStart() {
   Led(LedPark, LEVEL[4], 0, 0, false);
   Led(LedClavier, LEDLVLCLAV, LEDLVLCLAV, LEDLVLCLAV, true);
   // LCD
-  // TODO Rétro-éclairage
+  analogWrite(BKLIGHT, LEVEL[3]);
   lcd.clear();
   lcd.backlight();
   lcd.setCursor(0, 2);

@@ -155,8 +155,8 @@ void setup()
   // TODO Eteint l'afficheur si les portes sont fermées
 
   // Lecture des infos de position de l'abri et des portes et envoi à MySensors
-  send(msgD.set(GetDomeInfo("D?#").toInt());
-  send(msgP.set(GetDomeInfo("P?#").toInt());
+  send(msgD.set(GetDomeInfo("D?#")));
+  send(msgP.set(GetDomeInfo("P?#")));
   // Setup locally attached sensors
 }
 
@@ -194,7 +194,7 @@ void loop()
     else if (SerMsg == "PO") {
       send(msgP.set(0));
       // Allume les afficheurs
-      StateAff=true;
+      StateAff = true;
       module.setupDisplay(StateAff, NiveauAff);
     }
     else if (SerMsg == "PF") {
@@ -211,7 +211,7 @@ void loop()
     else if (SerMsg == "EC") {
       StateAff = !StateAff;
       module.setupDisplay(StateAff, NiveauAff);
-      Serial.println((StateAff)?"0":"1");
+      Serial.println((StateAff) ? "0" : "1");
 
     }
   }
@@ -276,7 +276,7 @@ void before() {
 }
 
 void receive(const MyMessage &message) {
-  // TODO Lecture des demandes MySensors (D'abord problème RX/Nano à régler)
+  // TODO Lecture des demandes MySensors
   /*
     Ouvrir dome
     Fermer dome
@@ -287,10 +287,10 @@ void receive(const MyMessage &message) {
   if (message.type == V_STATUS) {
     switch (message.sensor) {
       case 2:
-        Serial.println(message.getBool() ? "D+#" : "D-#");
+        Serial.println(message.getBool() ? "D-#" : "D+#");
         break;
       case 3:
-        Serial.println(message.getBool() ? "P+#" : "P-#");
+        Serial.println(message.getBool() ? "P-#" : "P+#");
         break;
       case 4:
         GetScopeInfo(":hP#");
@@ -366,9 +366,9 @@ String GetDomeInfo(String msg) {
   unsigned long previousMillis = millis();
   while ((currentMillis - previousMillis < 1000) && !Serial.available())
   {
-    currentMillis=millis();
+    currentMillis = millis();
   }
-  return Serial.readStringUntil(35);		
+  return Serial.readStringUntil(35);
 }
 
 // Récupération/envoi des infos du télescope depuis OnStepESPServer
@@ -384,7 +384,7 @@ String GetScopeInfo(String msg) {
   unsigned long previousMillis = millis();
   while ((currentMillis - previousMillis < 1000) && !client.available())
   {
-    currentMillis=millis();
+    currentMillis = millis();
   }
   ret = client.readStringUntil(35);
   //ret = client.readString();
@@ -400,16 +400,16 @@ void AffTM(String ch) {
 // Affiche 2 champs numériques formattés sur le TM1638
 void AffTM2(String ch1, String ch2) {
   ch1 = ch1 + "    ";
-  int dot1=ch1.indexOf(".");
+  int dot1 = ch1.indexOf(".");
   ch2 = ch2 + "    ";
-  int dot2=ch2.indexOf(".");
-  ch1.remove(dot1,1);
-  ch2.remove(dot2,1);
+  int dot2 = ch2.indexOf(".");
+  ch1.remove(dot1, 1);
+  ch2.remove(dot2, 1);
   ch1 = ch1.substring(0, 4);
   ch2 = ch2.substring(0, 4);
-  int pos1=1<<(8-dot1);
-  if (pos1>255) pos1=0;
-  int pos2=1<<(4-dot2);
-  if (pos2>255) pos2=0;
-  module.setDisplayToString(ch1+ch2,pos1+pos2,0);
+  int pos1 = 1 << (8 - dot1);
+  if (pos1 > 255) pos1 = 0;
+  int pos2 = 1 << (4 - dot2);
+  if (pos2 > 255) pos2 = 0;
+  module.setDisplayToString(ch1 + ch2, pos1 + pos2, 0);
 }

@@ -141,20 +141,21 @@ void loop() {
         case 6:
           changePortes(false);
           break;
-		case 7:
-			Manuel=true;
-		 case 8:
-			if (Manuel) ouvrePorte2();
-			break;
-		case 9:
-			if (Manuel) fermePorte2();
-			break;
-		case 10:
-			if (Manuel) DeplaceDomeARU();
-			break;
-		case 11:
-			if (Manuel) StartMot;
-			break;
+	case 7:
+		Manuel=true;
+		break;
+	 case 8:
+		if (Manuel) ouvrePorte2();
+		break;
+	case 9:
+		if (Manuel) fermePorte2();
+		break;
+	case 10:
+		if (Manuel) DeplaceDomeARU();
+		break;
+	case 11:
+		if (Manuel) StartMot;
+		break;
       delay(200);
       case 12:
       Manuel=false;
