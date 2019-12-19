@@ -51,7 +51,7 @@ SimpleTimer timer;
 //---------------------------------------CONSTANTES-----------------------------
 
 // Sorties
-#define ALIMPC   10   // (R3) Alimentation 220V sous le télescope (PC Indi /Raspi) contact NF
+#define ALIM12V   10   // (R3) Mise en marche de l'alimentation ATX
 #define ALIMTEL 9   // (R4) Alimentation télescope
 #define ALIMMOT 11   // (R2) Alimentation 220V moteur abri
 #define MOTEUR  12   // (R1) Ouverture/fermeture abri
