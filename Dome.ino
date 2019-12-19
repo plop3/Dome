@@ -22,7 +22,7 @@ void setup() {
   kpd.init();
 
   // Initialisation des relais
-  digitalWrite(ALIMPC, HIGH); pinMode(ALIMPC, OUTPUT);
+  digitalWrite(ALIM12V, HIGH); pinMode(ALIM12V, OUTPUT);
   digitalWrite(ALIMTEL, HIGH); pinMode(ALIMTEL, OUTPUT);
   digitalWrite(ALIMMOT, HIGH); pinMode(ALIMMOT, OUTPUT);
   digitalWrite(MOTEUR, HIGH); pinMode(MOTEUR, OUTPUT);
