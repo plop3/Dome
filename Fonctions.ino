@@ -62,10 +62,14 @@ void fermePorte1(void) {
   delay(DELAIPORTES);
   msgInfo("P1 Close", 1);
   digitalWrite(P11, HIGH);
+  // Arret de l'alimentation
+  digitalWrite(ALIM12V,HIGH);
 }
 
 // Ouvre la petite porte
 void ouvrePorte1(void) {
+  digitalWrite(ALIM12V,LOW);  // Mise en marche de l'alimentation ATX
+  delay(2000);
   msgInfo("P1 O...", 0);
   digitalWrite(P12, LOW);
   delay(DELAIPORTES);
@@ -96,6 +100,9 @@ bool changePortes(bool etat) {
     return false;
   }
   if (etat) {   // Ouverture des portes
+    // Alimentation 12V
+    digitalWrite(ALIM12V,LOW);
+    delay(2000);
     // Alimentation du moteur
     StartMot; // On allume assez tôt pour laisser le temps de s'initialiser
     // Ouverture des portes
@@ -289,6 +296,9 @@ void ARU(String msg) {        // Arret d'urgence
 }
 // Initialisation du dome
 void DomeStart() {
+  // Alimentation 12V
+  digitalWrite(ALIM12V,LOW);
+  delay(2000);
   // LEDs
   Led(LedStatus, LEVEL[4], 0, 0, false);
   Led(LedPark, LEVEL[4], 0, 0, false);
@@ -321,6 +331,9 @@ void DomeStop() {
   pixels.show();
   StopMot;
   StopTel;
+  // Alimentation 12V
+  digitalWrite(ALIM12V,HIGH);
+  delay(1000);
   LastPark = true;	// Désactive l'affichage de l'état du park
   Lock = true;	// Clavier locké
   Veille = false;
