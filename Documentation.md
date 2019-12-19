@@ -48,7 +48,7 @@
 #### Sorties relais:
 	0:	D12	Déplacement de l'abri.
 	1:	D11	Alimentation 220V moteur/abri.
-	2:	D10 Alimentation du PC (contact NF)
+	2:	D10 	Alimenattion ATX (12V/5V)
 	3:	D9	Alimentation 12V du télescope
 	4:	D8	Relais 1 porte 1
 	5:	D7	Relais 2 porte 1
