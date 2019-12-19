@@ -100,11 +100,7 @@ bool changePortes(bool etat) {
     return false;
   }
   if (etat) {   // Ouverture des portes
-    // Alimentation 12V
-    digitalWrite(ALIM12V,LOW);
-    delay(2000);
-    // Alimentation du moteur
-    StartMot; // On allume assez tôt pour laisser le temps de s'initialiser
+    DomeStart();
     // Ouverture des portes
     lcd.backlight();
     msgInfo("P1 O...", 0);
@@ -123,7 +119,6 @@ bool changePortes(bool etat) {
     digitalWrite(P22, HIGH);
     msgInfo("P12 Open", 1);
     Ser2.println("PO#");
-    DomeStart();
   }
   else {    // Fermeture des portes
     //if ((AbriOuvert && AbriFerme) || (!AbriOuvert && ! AbriFerme)) {
@@ -219,6 +214,7 @@ bool deplaceAbri(bool etat) {
   else {
     Ser2.println("DO#");
     msgInfo("Abri ouvert", 1);
+    StartTel;
   }
   bip(BUZZER, 440, 1000);
   return true;
@@ -314,7 +310,7 @@ void DomeStart() {
   lcd.setCursor(POS * 3, 3);
   lcd.blink();
   msgInfo("Ok", 1);
-  StartTel; // Alimentation télescope
+  //StartTel; // Alimentation 12V du télescope
   StartMot; // Alimentation du moteur de l'abri
   LastPark = !TelPark;  // Réactive la LED park
   Lock = false; // Clavier activé
@@ -474,6 +470,12 @@ void MajLCD() {
         lcd.print("MOTON");
         break;
       case 12:
+	lcd.print("ATX M");
+	break;
+      case 13:
+ 	lcd.print("ATX A");
+	break;
+      case 14:
         lcd.print("AUTO ");
         break;
     }

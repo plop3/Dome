@@ -75,6 +75,7 @@ void setup() {
   else {
     DomeStop();
   }
+  if (AbriOuvert && !AbriFerme) StartTel; else StopTel;	// Alimentation 12V du télescope
   // Vérification de la position du dome au démarrage
   if (!AbriOuvert && !AbriFerme) {
     // Position incorrecte on passe en mode manuel
@@ -156,9 +157,16 @@ void loop() {
 	case 11:
 		if (Manuel) StartMot;
 		break;
-      delay(200);
-      case 12:
-      Manuel=false;
+	case 12:
+		if (Manuel) digitalWrite(ALIM12V,LOW);
+      		delay(1000);
+		break;
+	case 13:
+		if (Manuel) digitalWrite(ALIM12V,HIGH);
+		break;
+      	case 14:
+      		Manuel=false;
+		break;
 	  }
     }
 	else {
@@ -284,6 +292,12 @@ void loop() {
       StartTel;
       Serial.println("1");
     }
+    else if ( SerMsg == "X+" ) {
+	digitalWrite(ALIM12V,LOW);
+    }
+    else if ( SerMsg == "X-" ) {
+	digitalWrite(ALIM12V,HIGH);
+    }
     else if ( SerMsg == "A-") {
       StopTel;
       Serial.println("1");
@@ -305,12 +319,6 @@ void loop() {
     else if (SerMsg == "p+") {
       ouvrePorte1();
       Serial.println("0");
-    }
-    else if (SerMsg == "PC") {
-      // Démarrage du PC
-      StopPC;
-      delay(1000);
-      StartPC;
     }
     else if (SerMsg == "AU") {
       Serial.println("0");
