@@ -78,6 +78,7 @@ SimpleTimer timer;
 #define DELAIPORTESCAPTEUR  30000L  // Durée d'ouverture/fermeture des portes (40000L)
 #define DELAIMOTEUR 10000L  // Durée d'initialisation du moteur (40000L)
 #define DELAIABRI   11000L  // Durée de déplacement de l'abri (15000L)
+#define INTERVALLEPORTES 8000
 #define MOTOFF HIGH         // Etat pour l'arret du moteur
 #define MOTON !MOTOFF
 

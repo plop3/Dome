@@ -130,7 +130,7 @@ bool changePortes(bool etat) {
     StopMot;
     msgInfo("P2 F...", 1);
     digitalWrite(P21, LOW);
-    if (!attendARU(5000, true, true, false)) return false;
+    if (!attendARU(INTERVALLEPORTES, true, true, false)) return false;
     msgInfo("P12 F...", 0);
     digitalWrite(P11, LOW);
     if (!attendARU(DELAIPORTES, true, true, false)) return false;
