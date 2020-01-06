@@ -309,7 +309,7 @@ void FuncSec() {
   if (compte10 == 10) {
     compte10 = 0;
     // TODO Lecture de l'état de chauffe du miroir
-    String Chauffe = GetScopeInfo(":GX06#");
+    String Chauffe = GetScopeInfo(":GXG6#");
     if (Chauffe != "0") {
       module.setLED(TM1638_COLOR_RED, 7);
     }
