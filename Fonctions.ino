@@ -484,6 +484,7 @@ void MajLCD() {
   delay(200);
 }
 
+/*
 String SerESP() {
   // Retourne les infos de l'ESP32
   unsigned long currentMillis = millis();
@@ -494,3 +495,4 @@ String SerESP() {
   }
   return Ser2.readStringUntil('\r');
 }
+*/

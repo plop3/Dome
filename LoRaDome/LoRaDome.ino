@@ -21,6 +21,7 @@ TM1638 module(4, 17, 25); // (4, 17, 25)
 // Enable debug prints to serial monitor
 //#define MY_DEBUG
 
+/*
 // Enables and select radio type (if attached)
 //#define MY_RADIO_RF24
 //#define MY_RADIO_RFM69
@@ -29,7 +30,7 @@ TM1638 module(4, 17, 25); // (4, 17, 25)
 #define MY_RFM95_RST_PIN 14
 #define MY_REPEATER_FEATURE
 //#define MY_GATEWAY_ESP32
-
+*/
 #define MY_WIFI_SSID "astro"
 #define MY_WIFI_PASSWORD "B546546AF0"
 
@@ -44,6 +45,7 @@ TM1638 module(4, 17, 25); // (4, 17, 25)
 //#define MY_IP_GATEWAY_ADDRESS 192,168,1,1
 //#define MY_IP_SUBNET_ADDRESS 255,255,255,0
 
+/*
 // The port to keep open on node server mode
 #define MY_PORT 5003
 
@@ -69,6 +71,7 @@ MyMessage msgP(3, V_TRIPPED); // Portes
 MyMessage msgT(4, V_STATUS);  // Télescope parqué
 MyMessage msgC(5, V_TEMP);		// Température
 MyMessage msgH(6, V_HUM);		// Humidité
+*/
 
 // NTP
 #include <NTPClient.h>
@@ -154,9 +157,11 @@ void setup()
 
   // TODO Eteint l'afficheur si les portes sont fermées
 
+/*
   // Lecture des infos de position de l'abri et des portes et envoi à MySensors
   send(msgD.set(GetDomeInfo("D?#")));
   send(msgP.set(GetDomeInfo("P?#")));
+*/
   // Setup locally attached sensors
 }
 
@@ -185,29 +190,33 @@ void loop()
       ret = GetScopeInfo(":GVN#");
       Serial.println(ret);
     }
+/*
     else if (SerMsg == "DO") {
       send(msgD.set(0));
     }
     else if (SerMsg == "DF") {
       send(msgD.set(1));
     }
+*/    
     else if (SerMsg == "PO") {
-      send(msgP.set(0));
+//      send(msgP.set(0));
       // Allume les afficheurs
       StateAff = true;
       module.setupDisplay(StateAff, NiveauAff);
     }
     else if (SerMsg == "PF") {
-      send(msgP.set(1));
+//      send(msgP.set(1));
       // Eteint les afficheurs
       module.setupDisplay(0, 0);
     }
+/*
     else if (SerMsg == "TP") {
       send(msgT.set(1));
     }
     else if (SerMsg == "TN") {
       send(msgT.set(0));
     }
+*/
     else if (SerMsg == "EC") {
       StateAff = !StateAff;
       module.setupDisplay(StateAff, NiveauAff);
@@ -260,7 +269,7 @@ void loop()
 }
 
 //---------------------------------------FONCTIONS MYSENSORS----------------------------------
-
+/*
 void presentation()
 {
   // Present locally attached sensors here
@@ -277,13 +286,11 @@ void before() {
 
 void receive(const MyMessage &message) {
   // TODO Lecture des demandes MySensors
-  /*
-    Ouvrir dome
-    Fermer dome
-    Ouvrir portes
-    Fermer portes
-    Bouton ARU
-  */
+//    Ouvrir dome
+//    Fermer dome
+//    Ouvrir portes
+//    Fermer portes
+//    Bouton ARU
   if (message.type == V_STATUS) {
     switch (message.sensor) {
       case 2:
@@ -298,6 +305,7 @@ void receive(const MyMessage &message) {
     }
   }
 }
+*/
 
 //---------------------------------------FONCTIONS--------------------------------------------
 
@@ -323,8 +331,8 @@ void FuncSec() {
     compte60 = 0;
     String Temp = GetScopeInfo(":GX9A#");	// T°
     String Hum = GetScopeInfo(":GX9C#");	// H%
-    send(msgC.set(Temp.toFloat(), 1));
-    send(msgH.set(Hum.toFloat(), 1));
+//    send(msgC.set(Temp.toFloat(), 1));
+//    send(msgH.set(Hum.toFloat(), 1));
     switch (TypeAff) {
       case 2:
         AffTM2(Temp, Hum);

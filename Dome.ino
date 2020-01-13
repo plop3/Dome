@@ -344,6 +344,7 @@ void loop() {
       Eclaire(1, 0, false);
       Serial.println("0");
     }
+    /*
     else if (SerMsg == "PA") {
       Ser2.print("PA#");
       Serial.println(SerESP());
@@ -361,6 +362,7 @@ void loop() {
       Ser2.write("EC#");
       Serial.println(SerESP());
     }
+    */
     else if (SerMsg == "C?") {
       Serial.print(AbriFerme);
       Serial.print(AbriOuvert);
