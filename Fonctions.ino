@@ -24,10 +24,12 @@ String LireCmd(void) {
     SerMsg = Serial.readStringUntil(35);
     return SerMsg;
   }
+/*  
   if (Ser2.available()) {
     SerMsg = Ser2.readStringUntil(35);
     return SerMsg;
   }
+*/  
   return "";
 }
 // Affichage d'un message d'info sur l'écran LCD
@@ -392,7 +394,7 @@ bool ClavierCode(char key) {
         // TODO Allume la LED en vert pendant 2s
         bip(BUZZER, 440, 300);
         Led(LedClavier, LEDLVLCLAV, 0, 0, true);
-        delay(2000);
+        delay(500);
         return true;
       }
     }
@@ -433,49 +435,49 @@ void MajLCD() {
   else {
     // Commande
     switch (niveau[POS]) {
+//      case 0:
+//        lcd.print("PARK ");
+//        break;
       case 0:
-        lcd.print("PARK ");
-        break;
-      case 1:
         lcd.print("OU P1");
         break;
-      case 2:
+      case 1:
         lcd.print("FE P1");
         break;
-      case 3:
+      case 2:
         lcd.print("OU AB");
         break;
-      case 4:
+      case 3:
         lcd.print("FE AB");
         break;
-      case 5:
+      case 4:
         lcd.print("OU PO");
         break;
-      case 6:
+      case 5:
         lcd.print("FE PO");
         break;
-      case 7:
+      case 6:
         lcd.print("MANU ");
         break;
-      case 8:
+      case 7:
         lcd.print("OU P2");
         break;
-      case 9:
+      case 8:
         lcd.print("FE P2");
         break;
-      case 10:
+      case 9:
         lcd.print("DEPLA");
         break;
-      case 11:
+      case 10:
         lcd.print("MOTON");
         break;
-      case 12:
+      case 11:
 	lcd.print("ATX M");
 	break;
-      case 13:
+      case 12:
  	lcd.print("ATX A");
 	break;
-      case 14:
+      case 13:
         lcd.print("AUTO ");
         break;
     }

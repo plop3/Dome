@@ -2,8 +2,8 @@
   Pilotage automatique de l'abri du telescope
   Serge CLAUS
   GPL V3
-  Version 2.8
-  22/10/2018-06/11/2019
+  Version 2.9
+  22/10/2018-14/01/2020
 */
 
 #include "Config.h"
@@ -13,7 +13,7 @@
 void setup() {
   // Initialisation des ports série
   Serial.begin(57600);	// Connexion à ESP-Link (ESP8266)
-  Ser2.begin(9600);		// Connexion à ESP32 LoRa
+  //Ser2.begin(9600);		// Connexion à ESP32 LoRa
 
   // MCP23017 Gestion des entrées capteurs, park...
   mcp.begin();
@@ -120,64 +120,64 @@ void loop() {
     else if (POS == 5) {
       // Lance la commande demandée
       switch (niveau[5]) {
+//        case 0:
+//          Serial.println("Park");
+//          Ser2.write("PA#");
+//          break;
         case 0:
-          Serial.println("Park");
-          Ser2.write("PA#");
-          break;
-        case 1:
           ouvrePorte1();
           break;
-        case 2:
+        case 1:
           fermePorte1();
           break;
-        case 3:
+        case 2:
           deplaceAbri(true);
           break;
-        case 4:
+        case 3:
           deplaceAbri(false);
           break;
-        case 5:
+        case 4:
           changePortes(true);
           break;
-        case 6:
+        case 5:
           changePortes(false);
           break;
-	case 7:
-		Manuel=true;
-		break;
-	 case 8:
-		if (Manuel) ouvrePorte2();
-		break;
-	case 9:
-		if (Manuel) fermePorte2();
-		break;
-	case 10:
-		if (Manuel) DeplaceDomeARU();
-		break;
-	case 11:
-		if (Manuel) StartMot;
-		break;
-	case 12:
-		if (Manuel) digitalWrite(ALIM12V,LOW);
-      		delay(1000);
-		break;
-	case 13:
-		if (Manuel) digitalWrite(ALIM12V,HIGH);
-		break;
-      	case 14:
-      		Manuel=false;
-		break;
-	  }
+        case 6:
+          Manuel = true;
+          break;
+        case 7:
+          if (Manuel) ouvrePorte2();
+          break;
+        case 8:
+          if (Manuel) fermePorte2();
+          break;
+        case 9:
+          if (Manuel) DeplaceDomeARU();
+          break;
+        case 10:
+          if (Manuel) StartMot;
+          break;
+        case 11:
+          if (Manuel) digitalWrite(ALIM12V, LOW);
+          delay(1000);
+          break;
+        case 12:
+          if (Manuel) digitalWrite(ALIM12V, HIGH);
+          break;
+        case 13:
+          Manuel = false;
+          break;
+      }
     }
-	else {
-		// Commande -
-		if (niveau[POS]>0) {
-			niveau[POS]--;
-			MajLCD();
-			delay(200);
-		
-		}
-	}
+    else {
+      // Commande -
+      if (niveau[POS] > 0) {
+        niveau[POS]--;
+        MajLCD();
+        delay(200);
+
+      }
+    }
   }
   // Touche de déplacement (2)
   if (!mcp.digitalRead(BSEL)) {
@@ -190,10 +190,10 @@ void loop() {
   if (!mcp.digitalRead(BCHOIX)) {
     niveau[POS]++;
     if (niveau[POS] > 4 && POS > 2 && POS < 5) niveau[POS] = 0;
-	if (niveau[POS] > 7 && POS ==5 && !Manuel) niveau[POS] = 0;
-    if (niveau[POS] > 11 && POS == 5) niveau[POS] = 0;
+    if (niveau[POS] > 6 && POS == 5 && !Manuel) niveau[POS] = 0;
+    if (niveau[POS] > 13 && POS == 5) niveau[POS] = 0;
     if (niveau[POS] > 9 && POS < 5) niveau[POS] = 0;
-	MajLCD();
+    MajLCD();
   }
 
   // Lecture des boutons du clavier
@@ -228,16 +228,16 @@ void loop() {
       else if (key == '#') {
         fermePorte1();
       }
-	  else if (key == "1") {
-	      ECLSTAT[2] = !ECLSTAT[2];
-		Eclaire(0, LEVEL[2] * ECLSTAT[2], REDLED[2]);
-		delay(300);
-	  }
-	  else if (key =="2") {
-		ECLSTAT[1] = !ECLSTAT[1];
-		Eclaire(1, LEVEL[1] * ECLSTAT[1], REDLED[1]);
-		delay(300);
-	  }
+      else if (key == "1") {
+        ECLSTAT[2] = !ECLSTAT[2];
+        Eclaire(0, LEVEL[2] * ECLSTAT[2], REDLED[2]);
+        delay(300);
+      }
+      else if (key == "2") {
+        ECLSTAT[1] = !ECLSTAT[1];
+        Eclaire(1, LEVEL[1] * ECLSTAT[1], REDLED[1]);
+        delay(300);
+      }
     }
   }
   // Lecture des données des ports série
@@ -293,10 +293,10 @@ void loop() {
       Serial.println("1");
     }
     else if ( SerMsg == "X+" ) {
-	digitalWrite(ALIM12V,LOW);
+      digitalWrite(ALIM12V, LOW);
     }
     else if ( SerMsg == "X-" ) {
-	digitalWrite(ALIM12V,HIGH);
+      digitalWrite(ALIM12V, HIGH);
     }
     else if ( SerMsg == "A-") {
       StopTel;
@@ -345,23 +345,23 @@ void loop() {
       Serial.println("0");
     }
     /*
-    else if (SerMsg == "PA") {
+      else if (SerMsg == "PA") {
       Ser2.print("PA#");
       Serial.println(SerESP());
 
-    }
-    else if (SerMsg == "HO") {
+      }
+      else if (SerMsg == "HO") {
       Ser2.write("HO#");
       Serial.println(SerESP());
-    }
-    else if (SerMsg == "FN") {
+      }
+      else if (SerMsg == "FN") {
       Ser2.write("FN#");
       Serial.println(SerESP());
-    }
-    else if (SerMsg == "EC") {
+      }
+      else if (SerMsg == "EC") {
       Ser2.write("EC#");
       Serial.println(SerESP());
-    }
+      }
     */
     else if (SerMsg == "C?") {
       Serial.print(AbriFerme);
@@ -383,7 +383,7 @@ void loop() {
   if (LastPark != TelPark) {
     Led(LedPark, LEVEL[4] * TelPark, 0, 0, true);
     LastPark = TelPark;
-	Ser2.println(TelPark?"TN":"TP");
+    Ser2.println(TelPark ? "TN" : "TP");
   }
 
   // TEST DEPLACEMENT INOPINE DU DOME
@@ -393,12 +393,12 @@ void loop() {
     ARU("Position");
   }
 
- /* TODO Réactiver s'il y a un bouton cablé
-  // Bouton Arret d'urgence
-  if (!mcp.digitalRead(BARU)) {
-    ARU("Bouton");
-  }
- */
+  /* TODO Réactiver s'il y a un bouton cablé
+    // Bouton Arret d'urgence
+    if (!mcp.digitalRead(BARU)) {
+     ARU("Bouton");
+    }
+  */
   // Bouton Marche/Arret ? on ouvre la petite porte
   if (BoutonMA) {
     ouvrePorte1();
