@@ -42,8 +42,8 @@ void msgInfo(String texte, byte type) {
     case 1:	//	Ok: LED verte
       Led(LedStatus, LEVEL[4], 0, 0, true);
       break;
-    case 2:	// Alerte: LED jaune
-      Led(LedStatus, LEVEL[4], LEVEL[4], 0, true);
+    case 2:	// Alerte: LED mauve
+      Led(LedStatus, 0, LEVEL[4], LEVEL[4], true);
       break;
     case 3:	// Alarme (ARU) LED rouge
       Led(LedStatus, 0, LEVEL[4], 0, true);
@@ -54,7 +54,6 @@ void msgInfo(String texte, byte type) {
   lcd.setCursor(0, 1);
   lcd.print(texte);
   lcd.setCursor(POS * 3, 3);
-  //Led(
 }
 
 // Ferme la petite porte
@@ -107,16 +106,16 @@ bool changePortes(bool etat) {
     lcd.backlight();
     msgInfo("P1 O...", 0);
     digitalWrite(P12, LOW);
-    if (!attendARU(5000, true, true, false)) return false;
+    delay(5000); //if (!attendARU(5000, true, true, false)) return false;
     digitalWrite(P22, LOW);
     msgInfo("P12 O...", 0);
-    if (!attendARU(DELAIPORTESCAPTEUR, true, true, false)) return false; // Délai minimum
+    delay(DELAIPORTESCAPTEUR); //if (!attendARU(DELAIPORTESCAPTEUR, true, true, false)) return false; // Délai minimum
     // On attend que les portes sont ouvertes
     while (!PortesOuvert) {
-      if (!attendARU(100, true, true, false)) return false;
+      delay(100); //if (!attendARU(100, true, true, false)) return false;
     }
     // Délai pour finir le mouvement
-    if (!attendARU(5000, true, true, false)) return false;
+    delay(5000); //if (!attendARU(5000, true, true, false)) return false;
     digitalWrite(P12, HIGH);
     digitalWrite(P22, HIGH);
     msgInfo("P12 Open", 1);
@@ -162,8 +161,10 @@ bool deplaceAbri(bool etat) {
   if (!TelPark) {
     msgInfo("Erreur Park", 2);
     // Tentative de parquer le télescope
-    Ser2.write("PA#");
-    Serial.println(Ser2.readStringUntil('\r'));
+    // TODO demande de park au raspi "astro"
+	
+	//Ser2.write("PA#");
+    //Serial.println(Ser2.readStringUntil('\r'));
     // Attente de 3mn maxi
     byte n = 18;
     while (!TelPark && n > 0) {
@@ -457,7 +458,7 @@ void MajLCD() {
         lcd.print("FE PO");
         break;
       case 6:
-        lcd.print("MANU ");
+        lcd.print((Manuel) ? "MANU" : "AUTO");
         break;
       case 7:
         lcd.print("OU P2");

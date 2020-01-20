@@ -143,7 +143,8 @@ void loop() {
           changePortes(false);
           break;
         case 6:
-          Manuel = true;
+          Manuel = !Manuel;
+		  if (Manuel) Led(LedStatus, level[4], level[4], 0, true); else Led(LedStatus, level[4], 0, 0, true);
           break;
         case 7:
           if (Manuel) ouvrePorte2();
@@ -163,9 +164,6 @@ void loop() {
           break;
         case 12:
           if (Manuel) digitalWrite(ALIM12V, HIGH);
-          break;
-        case 13:
-          Manuel = false;
           break;
       }
     }
@@ -191,7 +189,7 @@ void loop() {
     niveau[POS]++;
     if (niveau[POS] > 4 && POS > 2 && POS < 5) niveau[POS] = 0;
     if (niveau[POS] > 6 && POS == 5 && !Manuel) niveau[POS] = 0;
-    if (niveau[POS] > 13 && POS == 5) niveau[POS] = 0;
+    if (niveau[POS] > 12 && POS == 5) niveau[POS] = 0;
     if (niveau[POS] > 9 && POS < 5) niveau[POS] = 0;
     MajLCD();
   }
