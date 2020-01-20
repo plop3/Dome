@@ -144,7 +144,7 @@ void loop() {
           break;
         case 6:
           Manuel = !Manuel;
-		  if (Manuel) Led(LedStatus, level[4], level[4], 0, true); else Led(LedStatus, level[4], 0, 0, true);
+		  if (Manuel) Led(LedStatus, LEVEL[4], LEVEL[4], 0, true); else Led(LedStatus, LEVEL[4], 0, 0, true);
           break;
         case 7:
           if (Manuel) ouvrePorte2();
