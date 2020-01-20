@@ -458,7 +458,7 @@ void MajLCD() {
         lcd.print("FE PO");
         break;
       case 6:
-        lcd.print((Manuel) ? "MANU" : "AUTO");
+        lcd.print((Manuel) ? "AUTO" : "MANU");
         break;
       case 7:
         lcd.print("OU P2");
