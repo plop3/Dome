@@ -117,6 +117,7 @@ const byte LCDLEV[] = {5,10,15,20,40};		// Intensité du rétro-éclairage LCD
 #define StopPC  digitalWrite(ALIMPC, LOW)
 #define StartPC digitalWrite(ALIMPC, HIGH)
 #define TelPark mcp.digitalRead(PARK)
+//#define TelPark true
 #define BoutonMA (analogRead(BMA)<300)
 
 #define LedClavier  0
