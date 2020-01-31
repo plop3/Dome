@@ -120,10 +120,10 @@ void loop() {
     else if (POS == 5) {
       // Lance la commande demandée
       switch (niveau[5]) {
-//        case 0:
-//          Serial.println("Park");
-//          Ser2.write("PA#");
-//          break;
+        //        case 0:
+        //          Serial.println("Park");
+        //          Ser2.write("PA#");
+        //          break;
         case 0:
           ouvrePorte1();
           break;
@@ -144,7 +144,9 @@ void loop() {
           break;
         case 6:
           Manuel = !Manuel;
-		  if (Manuel) Led(LedStatus, LEVEL[4], LEVEL[4], 0, true); else Led(LedStatus, LEVEL[4], 0, 0, true);
+          if (Manuel) Led(LedStatus, LEVEL[4], LEVEL[4], 0, true); else Led(LedStatus, LEVEL[4], 0, 0, true);
+          MajLCD();
+          delay(800);
           break;
         case 7:
           if (Manuel) ouvrePorte2();
