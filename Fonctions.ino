@@ -174,11 +174,7 @@ bool deplaceAbri(bool etat) {
       return false;
     }
   }
-#if defined(LUNETTE_ON)
-  // Démarre le timer pour la coupure du 12V
-  idP=timer.setTimeout(TPSPARK * 1000L, StopPark);
-  TP=true;
-#else
+#if !defined(LUNETTE_ON)
   StopTel; // Coupure alimentation télescope
 #endif
 
@@ -212,11 +208,7 @@ bool deplaceAbri(bool etat) {
   etat = AbriOuvert;
   if (!etat) {
     // Abri fermé
-#if defined(LUNETTE_ON)
-    // Démarre le timer pour la coupure du 12V
-    idP=timer.setTimeout(TPSPARK * 1000L, StopPark);
-    TA=true;
-#else
+#if !defined(LUNETTE_ON)
     StopTel; // Coupure alimentation télescope
 #endif
     msgInfo("Abri fermé", 1);
@@ -308,15 +300,11 @@ void ARU(String msg) {        // Arret d'urgence
 }
 // Initialisation du dome
 void DomeStart() {
-  if (TA) {
-    TP=false;
-    timer.deleteTimer(idA);
+  if (timeroff) {
+    timeroff=false;
+    timer.deleteTimer(idTimer);
   }
-  if (TP) {
-    timer.deleteTimer(idP);
-    TP=false;
-  }
-  
+    
   // Alimentation 12V
   digitalWrite(ALIM12V, LOW);
   delay(2000);
@@ -360,8 +348,8 @@ void DomeStop() {
     #endif
   */
 #if defined(LUNETTE_ON)
-  idA=timer.setTimeout(TPSPARK * 1000L, StopAlim);
-  TA=true;
+  idTimer=timer.setTimeout(TPSPARK * 1000L, StopAlim);
+  timeroff=true;
 #else
   // Alimentation 12V
   digitalWrite(ALIM12V, HIGH);
@@ -521,14 +509,10 @@ void MajLCD() {
   delay(200);
 }
 
-void StopPark() {
-  // Arret de l'alimentation du télescope
-  TP=false;
-  StopTel;
-}
-
 void StopAlim() {
-  TA=false;
+  timeroff=false;
+  StopTel;
+  delay(100);
   digitalWrite(ALIM12V, HIGH);
 }
 /*

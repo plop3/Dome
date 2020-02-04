@@ -138,11 +138,8 @@ const byte LCDLEV[] = {5,10,15,20,40};		// Intensité du rétro-éclairage LCD
 #define LedOpt      3
 
 // Timers park enclanchés
-bool TP=false;  // Park
-bool TA=false;  // Alim 12V
-int idP;
-int idA;
-
+bool timeroff=false;  // Arret des alimentations
+int idTimer;
 
 //---------------------------------------Variables globales---------------------
 bool Manuel = false;  // Mode manuel
