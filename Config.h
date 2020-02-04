@@ -2,6 +2,12 @@
 #include <SoftwareSerial.h> // Port série 2 pour le module LoRa (TM1638...)
 SoftwareSerial Ser2(16, 2); // RX, TX (13, 2)
 
+// Type d'instrument (Pour la gestion du Park)
+#define LUNETTE_ON
+
+// Temps maxi de park en secondes
+#define TPSPARK 120
+
 // MCP23017
 #include <Wire.h>
 #include "Adafruit_MCP23017.h"
@@ -48,6 +54,7 @@ uint16_t const tcpPort PROGMEM = 9999;
 // Timer
 #include <SimpleTimer.h>
 SimpleTimer timer;
+
 //---------------------------------------CONSTANTES-----------------------------
 
 // Sorties
@@ -116,15 +123,26 @@ const byte LCDLEV[] = {5,10,15,20,40};		// Intensité du rétro-éclairage LCD
 #define StopMot digitalWrite(ALIMMOT, MOTOFF)
 #define StopPC  digitalWrite(ALIMPC, LOW)
 #define StartPC digitalWrite(ALIMPC, HIGH)
-//#define TelPark mcp.digitalRead(PARK)
-#define TelPark true
+
+#if defined(LUNETTE_ON)
+  #define TelPark true
+#else
+  #define TelPark mcp.digitalRead(PARK)
+#endif
+
 #define BoutonMA (analogRead(BMA)<300)
 
 #define LedClavier  0
 #define LedStatus   1
 #define LedPark     2
 #define LedOpt      3
-//#define TelPark 1
+
+// Timers park enclanchés
+bool TP=false;  // Park
+bool TA=false;  // Alim 12V
+int idP;
+int idA;
+
 
 //---------------------------------------Variables globales---------------------
 bool Manuel = false;  // Mode manuel

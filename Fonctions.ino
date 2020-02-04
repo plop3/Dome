@@ -24,12 +24,12 @@ String LireCmd(void) {
     SerMsg = Serial.readStringUntil(35);
     return SerMsg;
   }
-/*  
-  if (Ser2.available()) {
-    SerMsg = Ser2.readStringUntil(35);
-    return SerMsg;
-  }
-*/  
+  /*
+    if (Ser2.available()) {
+      SerMsg = Ser2.readStringUntil(35);
+      return SerMsg;
+    }
+  */
   return "";
 }
 // Affichage d'un message d'info sur l'écran LCD
@@ -64,12 +64,12 @@ void fermePorte1(void) {
   msgInfo("P1 Close", 1);
   digitalWrite(P11, HIGH);
   // Arret de l'alimentation
-  digitalWrite(ALIM12V,HIGH);
+  digitalWrite(ALIM12V, HIGH);
 }
 
 // Ouvre la petite porte
 void ouvrePorte1(void) {
-  digitalWrite(ALIM12V,LOW);  // Mise en marche de l'alimentation ATX
+  digitalWrite(ALIM12V, LOW); // Mise en marche de l'alimentation ATX
   delay(2000);
   msgInfo("P1 O...", 0);
   digitalWrite(P12, LOW);
@@ -162,8 +162,8 @@ bool deplaceAbri(bool etat) {
     msgInfo("Erreur Park", 2);
     // Tentative de parquer le télescope
     // TODO demande de park au raspi "astro"
-	
-	//Ser2.write("PA#");
+
+    //Ser2.write("PA#");
     //Serial.println(Ser2.readStringUntil('\r'));
     // Attente de 3mn maxi
     byte n = 18;
@@ -174,7 +174,14 @@ bool deplaceAbri(bool etat) {
       return false;
     }
   }
+#if defined(LUNETTE_ON)
+  // Démarre le timer pour la coupure du 12V
+  idP=timer.setTimeout(TPSPARK * 1000L, StopPark);
+  TP=true;
+#else
   StopTel; // Coupure alimentation télescope
+#endif
+
   Led(LedStatus, LEVEL[4], LEVEL[4], 0, true);
   if (!PortesOuvert) {
     if (!MoteurStatus) StartMot; // Alimentation du moteur
@@ -205,7 +212,13 @@ bool deplaceAbri(bool etat) {
   etat = AbriOuvert;
   if (!etat) {
     // Abri fermé
+#if defined(LUNETTE_ON)
+    // Démarre le timer pour la coupure du 12V
+    idP=timer.setTimeout(TPSPARK * 1000L, StopPark);
+    TA=true;
+#else
     StopTel; // Coupure alimentation télescope
+#endif
     msgInfo("Abri fermé", 1);
     delay(500);
     changePortes(false);             // Fermeture des portes
@@ -295,8 +308,17 @@ void ARU(String msg) {        // Arret d'urgence
 }
 // Initialisation du dome
 void DomeStart() {
+  if (TA) {
+    TP=false;
+    timer.deleteTimer(idA);
+  }
+  if (TP) {
+    timer.deleteTimer(idP);
+    TP=false;
+  }
+  
   // Alimentation 12V
-  digitalWrite(ALIM12V,LOW);
+  digitalWrite(ALIM12V, LOW);
   delay(2000);
   // LEDs
   Led(LedStatus, LEVEL[4], 0, 0, false);
@@ -329,9 +351,21 @@ void DomeStop() {
   pixels.clear();
   pixels.show();
   StopMot;
-  StopTel;
+  /*
+    #if defined(LUNETTE_ON)
+    // Démarre le timer pour la coupure du 12V
+    tpark.setTimeout(TPSPARK * 1000L, StopPark);
+    #else
+    StopTel; // Coupure alimentation télescope
+    #endif
+  */
+#if defined(LUNETTE_ON)
+  idA=timer.setTimeout(TPSPARK * 1000L, StopAlim);
+  TA=true;
+#else
   // Alimentation 12V
-  digitalWrite(ALIM12V,HIGH);
+  digitalWrite(ALIM12V, HIGH);
+#endif
   delay(1000);
   LastPark = true;	// Désactive l'affichage de l'état du park
   Lock = true;	// Clavier locké
@@ -436,9 +470,9 @@ void MajLCD() {
   else {
     // Commande
     switch (niveau[POS]) {
-//      case 0:
-//        lcd.print("PARK ");
-//        break;
+      //      case 0:
+      //        lcd.print("PARK ");
+      //        break;
       case 0:
         lcd.print("OU P1");
         break;
@@ -473,11 +507,11 @@ void MajLCD() {
         lcd.print("MOTON");
         break;
       case 11:
-	lcd.print("ATX M");
-	break;
+        lcd.print("ATX M");
+        break;
       case 12:
- 	lcd.print("ATX A");
-	break;
+        lcd.print("ATX A");
+        break;
       case 13:
         lcd.print("AUTO ");
         break;
@@ -487,8 +521,18 @@ void MajLCD() {
   delay(200);
 }
 
+void StopPark() {
+  // Arret de l'alimentation du télescope
+  TP=false;
+  StopTel;
+}
+
+void StopAlim() {
+  TA=false;
+  digitalWrite(ALIM12V, HIGH);
+}
 /*
-String SerESP() {
+  String SerESP() {
   // Retourne les infos de l'ESP32
   unsigned long currentMillis = millis();
   unsigned long previousMillis = millis();
@@ -497,5 +541,5 @@ String SerESP() {
     currentMillis=millis();
   }
   return Ser2.readStringUntil('\r');
-}
+  }
 */
