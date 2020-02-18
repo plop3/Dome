@@ -3,7 +3,7 @@
 SoftwareSerial Ser2(16, 2); // RX, TX (13, 2)
 
 // Type d'instrument (Pour la gestion du Park)
-#define LUNETTE_ON
+#define LUNETTE_OFF
 
 // Temps maxi de park en secondes
 #define TPSPARK 120
@@ -159,3 +159,5 @@ String SECRET = "1234"; // Code de déverrouillage
 // IHM
 byte POS = 5;
 byte niveau[] = {1, 7, 9, 2, 2, 0};	// Choix de niveaux d'éclairage au démarrage
+// MQTT
+bool connected;

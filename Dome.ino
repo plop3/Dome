@@ -7,6 +7,14 @@
 */
 
 #include "Config.h"
+/*
+#include <ELClient.h>
+//#include <ELClientCmd.h>
+#include <ELClientMqtt.h>
+ELClient esp(&Serial, &Serial);
+//ELClientCmd cmd(&esp);
+ELClientMqtt mqtt(&esp);
+*/
 
 //---------------------------------------SETUP-----------------------------------------------
 
@@ -69,6 +77,19 @@ void setup() {
   // Timer
   timer.setInterval(1000, FuncSec);
 
+/*
+  // MQTT
+  byte ok = 30;
+  do {
+    ok--;
+    if (esp.Sync()) ok = 0;    // sync up with esp-link, blocks for up to 2 seconds
+    if (ok) Serial.println("EL-Client sync failed!");
+  } while (ok);
+  Serial.println("EL-Client synced!");
+
+  mqtt.setup();
+  Serial.println("EL-MQTT ready");
+*/
   if (PortesOuvert) {
     DomeStart();
   }
@@ -120,10 +141,11 @@ void loop() {
     else if (POS == 5) {
       // Lance la commande demandée
       switch (niveau[5]) {
-        //        case 0:
-        //          Serial.println("Park");
-        //          Ser2.write("PA#");
-        //          break;
+          //        case 0:
+          //          Serial.println("Park");
+          //          Ser2.write("PA#");
+          //          break;
+          //mqtt.publish("/Dome/0", "ParkMount");
         case 0:
           ouvrePorte1();
           break;
@@ -344,24 +366,23 @@ void loop() {
       Eclaire(1, 0, false);
       Serial.println("0");
     }
-    /*
-      else if (SerMsg == "PA") {
-      Ser2.print("PA#");
-      Serial.println(SerESP());
 
-      }
-      else if (SerMsg == "HO") {
-      Ser2.write("HO#");
-      Serial.println(SerESP());
-      }
-      else if (SerMsg == "FN") {
-      Ser2.write("FN#");
-      Serial.println(SerESP());
-      }
-      else if (SerMsg == "EC") {
-      Ser2.write("EC#");
-      Serial.println(SerESP());
-      }
+    else if (SerMsg == "PA") {
+      Serial.println("+ParkMount");
+    }
+    /*
+         else if (SerMsg == "HO") {
+         Ser2.write("HO#");
+         Serial.println(SerESP());
+         }
+         else if (SerMsg == "FN") {
+         Ser2.write("FN#");
+         Serial.println(SerESP());
+         }
+         else if (SerMsg == "EC") {
+         Ser2.write("EC#");
+         Serial.println(SerESP());
+         }
     */
     else if (SerMsg == "C?") {
       Serial.print(AbriFerme);

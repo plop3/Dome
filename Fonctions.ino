@@ -162,9 +162,7 @@ bool deplaceAbri(bool etat) {
     msgInfo("Erreur Park", 2);
     // Tentative de parquer le télescope
     // TODO demande de park au raspi "astro"
-
-    //Ser2.write("PA#");
-    //Serial.println(Ser2.readStringUntil('\r'));
+    Serial.println("+ParkMount"); // Envoi à Astropi de la demande de Park du télescope
     // Attente de 3mn maxi
     byte n = 18;
     while (!TelPark && n > 0) {
