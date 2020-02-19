@@ -7,14 +7,20 @@
 */
 
 #include "Config.h"
-/*
+
+#ifdef REST
 #include <ELClient.h>
+#include <ELClientRest.h>
+ELClient esp(&Serial, &Serial);
+ELClientRest rest(&esp);
+#endif
+#ifdef MQTT
 //#include <ELClientCmd.h>
 #include <ELClientMqtt.h>
 ELClient esp(&Serial, &Serial);
 //ELClientCmd cmd(&esp);
 ELClientMqtt mqtt(&esp);
-*/
+#endif
 
 //---------------------------------------SETUP-----------------------------------------------
 
@@ -77,8 +83,8 @@ void setup() {
   // Timer
   timer.setInterval(1000, FuncSec);
 
-/*
-  // MQTT
+#ifdef REST || MQTT
+  // MQTT/Rest
   byte ok = 30;
   do {
     ok--;
@@ -86,10 +92,14 @@ void setup() {
     if (ok) Serial.println("EL-Client sync failed!");
   } while (ok);
   Serial.println("EL-Client synced!");
+#endif
+#ifdef REST
+  rest.begin("192.168.0.27:1789");
+#endif
+#ifdef MQTT
+  // TODO
+#endif
 
-  mqtt.setup();
-  Serial.println("EL-MQTT ready");
-*/
   if (PortesOuvert) {
     DomeStart();
   }
@@ -369,6 +379,9 @@ void loop() {
 
     else if (SerMsg == "PA") {
       Serial.println("+ParkMount");
+      #ifdef REST
+      rest.get("/");
+      #endif
     }
     /*
          else if (SerMsg == "HO") {
