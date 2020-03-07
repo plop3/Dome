@@ -8,6 +8,8 @@
 
 #include "Config.h"
 
+//#define REST
+
 #ifdef REST
 #include <ELClient.h>
 #include <ELClientRest.h>
@@ -151,11 +153,11 @@ void loop() {
     else if (POS == 5) {
       // Lance la commande demandée
       switch (niveau[5]) {
-          //        case 0:
-          //          Serial.println("Park");
-          //          Ser2.write("PA#");
-          //          break;
-          //mqtt.publish("/Dome/0", "ParkMount");
+        //        case 0:
+        //          Serial.println("Park");
+        //          Ser2.write("PA#");
+        //          break;
+        //mqtt.publish("/Dome/0", "ParkMount");
         case 0:
           ouvrePorte1();
           break;
@@ -242,16 +244,17 @@ void loop() {
     else {
 
       //Serial.print(key);
-      if (key == 'A') {
+      // TODO Changement temporaire des touches (problème avec le clavier)
+      if (key == '5') { // A
         deplaceAbri(true);
       }
-      else if (key == 'B') {
+      else if (key == '6') { //B
         deplaceAbri(false);
       }
-      else if (key == 'C') {
+      else if (key == '8') { //C
         changePortes(true);
       }
-      else if (key == 'D') {
+      else if (key == '9') { //D
         changePortes(false);
       }
       else if (key == '*') {
@@ -379,9 +382,9 @@ void loop() {
 
     else if (SerMsg == "PA") {
       Serial.println("+ParkMount");
-      #ifdef REST
+#ifdef REST
       rest.get("/");
-      #endif
+#endif
     }
     /*
          else if (SerMsg == "HO") {

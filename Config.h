@@ -119,7 +119,7 @@ const byte LCDLEV[] = {5,10,15,20,40};		// Intensité du rétro-éclairage LCD
 #define MoteurStatus (!digitalRead(ALIMMOT))
 #define StartTel digitalWrite(ALIMTEL, LOW)
 #define StopTel digitalWrite(ALIMTEL, HIGH)
-#define StartMot digitalWrite(ALIMMOT, MOTON)
+#define StartMot digitalWrite(ALIMMOT, LOW)
 #define StopMot digitalWrite(ALIMMOT, MOTOFF)
 #define StopPC  digitalWrite(ALIMPC, LOW)
 #define StartPC digitalWrite(ALIMPC, HIGH)
