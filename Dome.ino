@@ -29,7 +29,7 @@ ELClientMqtt mqtt(&esp);
 void setup() {
   // Initialisation des ports série
   Serial.begin(57600);	// Connexion à ESP-Link (ESP8266)
-  //Ser2.begin(9600);		// Connexion à ESP32 LoRa
+  Ser2.begin(9600);		// Connexion à ESP32 LoRa
 
   // MCP23017 Gestion des entrées capteurs, park...
   mcp.begin();
@@ -153,52 +153,52 @@ void loop() {
     else if (POS == 5) {
       // Lance la commande demandée
       switch (niveau[5]) {
-        //        case 0:
-        //          Serial.println("Park");
-        //          Ser2.write("PA#");
-        //          break;
-        //mqtt.publish("/Dome/0", "ParkMount");
         case 0:
+          Serial.println("Park");
+          Ser2.write("PA#");
+          break;
+        //mqtt.publish("/Dome/0", "ParkMount");
+        case 1:
           ouvrePorte1();
           break;
-        case 1:
+        case 2:
           fermePorte1();
           break;
-        case 2:
+        case 3:
           deplaceAbri(true);
           break;
-        case 3:
+        case 4:
           deplaceAbri(false);
           break;
-        case 4:
+        case 5:
           changePortes(true);
           break;
-        case 5:
+        case 6:
           changePortes(false);
           break;
-        case 6:
+        case 7:
           Manuel = !Manuel;
           if (Manuel) Led(LedStatus, LEVEL[4], LEVEL[4], 0, true); else Led(LedStatus, LEVEL[4], 0, 0, true);
           MajLCD();
           delay(800);
           break;
-        case 7:
+        case 8:
           if (Manuel) ouvrePorte2();
           break;
-        case 8:
+        case 9:
           if (Manuel) fermePorte2();
           break;
-        case 9:
+        case 10:
           if (Manuel) DeplaceDomeARU();
           break;
-        case 10:
+        case 11:
           if (Manuel) StartMot;
           break;
-        case 11:
+        case 12:
           if (Manuel) digitalWrite(ALIM12V, LOW);
           delay(1000);
           break;
-        case 12:
+        case 13:
           if (Manuel) digitalWrite(ALIM12V, HIGH);
           break;
       }
@@ -225,7 +225,7 @@ void loop() {
     niveau[POS]++;
     if (niveau[POS] > 4 && POS > 2 && POS < 5) niveau[POS] = 0;
     if (niveau[POS] > 6 && POS == 5 && !Manuel) niveau[POS] = 0;
-    if (niveau[POS] > 12 && POS == 5) niveau[POS] = 0;
+    if (niveau[POS] > 13 && POS == 5) niveau[POS] = 0;
     if (niveau[POS] > 9 && POS < 5) niveau[POS] = 0;
     MajLCD();
   }

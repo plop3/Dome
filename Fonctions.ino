@@ -24,12 +24,11 @@ String LireCmd(void) {
     SerMsg = Serial.readStringUntil(35);
     return SerMsg;
   }
-  /*
-    if (Ser2.available()) {
-      SerMsg = Ser2.readStringUntil(35);
-      return SerMsg;
-    }
-  */
+
+  if (Ser2.available()) {
+    SerMsg = Ser2.readStringUntil(35);
+    return SerMsg;
+  }
   return "";
 }
 // Affichage d'un message d'info sur l'écran LCD
@@ -161,6 +160,7 @@ bool deplaceAbri(bool etat) {
   if (!TelPark) {
     msgInfo("Erreur Park", 2);
     // Tentative de parquer le télescope
+    Ser2.write("PA#");
     // TODO demande de park au raspi "astro"
     Serial.println("+ParkMount"); // Envoi à Astropi de la demande de Park du télescope
     // Attente de 3mn maxi
@@ -299,10 +299,10 @@ void ARU(String msg) {        // Arret d'urgence
 // Initialisation du dome
 void DomeStart() {
   if (timeroff) {
-    timeroff=false;
+    timeroff = false;
     timer.deleteTimer(idTimer);
   }
-    
+
   // Alimentation 12V
   digitalWrite(ALIM12V, LOW);
   delay(2000);
@@ -317,7 +317,7 @@ void DomeStart() {
   lcd.setCursor(0, 2);
   lcd.print("TA IN EX LC LD CMD");
   lcd.setCursor(0, 3);
-  lcd.print("2R 3B 5B 2  2  PARK");
+  lcd.print("2R 3B 5B 2  2  PARK ");
   lcd.setCursor(POS * 3, 3);
   lcd.blink();
   msgInfo("Ok", 1);
@@ -346,8 +346,8 @@ void DomeStop() {
     #endif
   */
 #if defined(LUNETTE_ON)
-  idTimer=timer.setTimeout(TPSPARK * 1000L, StopAlim);
-  timeroff=true;
+  idTimer = timer.setTimeout(TPSPARK * 1000L, StopAlim);
+  timeroff = true;
 #else
   // Alimentation 12V
   digitalWrite(ALIM12V, HIGH);
@@ -456,49 +456,49 @@ void MajLCD() {
   else {
     // Commande
     switch (niveau[POS]) {
-      //      case 0:
-      //        lcd.print("PARK ");
-      //        break;
       case 0:
-        lcd.print("OU P1");
+        lcd.print("PARK ");
         break;
       case 1:
-        lcd.print("FE P1");
+        lcd.print("OU P1");
         break;
       case 2:
-        lcd.print("OU AB");
+        lcd.print("FE P1");
         break;
       case 3:
-        lcd.print("FE AB");
+        lcd.print("OU AB");
         break;
       case 4:
-        lcd.print("OU PO");
+        lcd.print("FE AB");
         break;
       case 5:
-        lcd.print("FE PO");
+        lcd.print("OU PO");
         break;
       case 6:
-        lcd.print((Manuel) ? "AUTO " : "MANU ");
+        lcd.print("FE PO");
         break;
       case 7:
-        lcd.print("OU P2");
+        lcd.print((Manuel) ? "AUTO " : "MANU ");
         break;
       case 8:
-        lcd.print("FE P2");
+        lcd.print("OU P2");
         break;
       case 9:
-        lcd.print("DEPLA");
+        lcd.print("FE P2");
         break;
       case 10:
-        lcd.print("MOTON");
+        lcd.print("DEPLA");
         break;
       case 11:
-        lcd.print("ATX M");
+        lcd.print("MOTON");
         break;
       case 12:
-        lcd.print("ATX A");
+        lcd.print("ATX M");
         break;
       case 13:
+        lcd.print("ATX A");
+        break;
+      case 14:
         lcd.print("AUTO ");
         break;
     }
@@ -508,7 +508,7 @@ void MajLCD() {
 }
 
 void StopAlim() {
-  timeroff=false;
+  timeroff = false;
   StopTel;
   delay(100);
   digitalWrite(ALIM12V, HIGH);
