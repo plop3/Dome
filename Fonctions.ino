@@ -162,10 +162,10 @@ bool deplaceAbri(bool etat) {
     // Tentative de parquer le télescope
     Ser2.write("PA#");
     // TODO demande de park au raspi "astro"
-    Serial.println("+ParkMount"); // Envoi à Astropi de la demande de Park du télescope
     // Attente de 3mn maxi
     byte n = 18;
     while (!TelPark && n > 0) {
+      n--;
       delay(10000L);
     }
     if (!TelPark) {
@@ -288,6 +288,7 @@ void ARU(String msg) {        // Arret d'urgence
   Manuel = true;
   msgInfo("ARU ! " + msg, 3);
   Led(LedStatus, 0, 50, 0, true);
+  lcd.backlight();
   // Ouverture des portes
   //changePortes(true);
   // ouvrePorte1();

@@ -41,16 +41,6 @@ Adafruit_NeoPixel pixels(NBLEDS, LEDPIN, NEO_GRB + NEO_KHZ400);
    20-28:	Eclairage extérieur
 */
 
-/*
-// Client REST: Lecture de l'heure/date, Demande de park vers OnStepESP
-#include <ELClient.h>
-#include <ELClientSocket.h>
-ELClient esp(&Serial, &Serial);
-ELClientSocket tcp(&esp);
-char * const tcpServer PROGMEM = "192.168.0.103";
-uint16_t const tcpPort PROGMEM = 9999;
-*/
-
 // Timer
 #include <SimpleTimer.h>
 SimpleTimer timer;
@@ -106,9 +96,9 @@ SimpleTimer timer;
 // LEDs
 #define LEDLVLCLAV 15	// Intensité de la led du clavier
 
-const byte LEDLEV[] = {2,5,10,20,40}; 		// Intensités possibles des LEDs
-const byte APALEV[] = {10,25,50,100,200};		// Intensités des barreaux de LEDs
-const byte LCDLEV[] = {5,10,15,20,40};		// Intensité du rétro-éclairage LCD
+const byte LEDLEV[] = {2, 5, 10, 20, 40}; 		// Intensités possibles des LEDs
+const byte APALEV[] = {10, 25, 50, 100, 200};		// Intensités des barreaux de LEDs
+const byte LCDLEV[] = {5, 10, 15, 20, 40};		// Intensité du rétro-éclairage LCD
 
 //---------------------------------------Macros---------------------------------
 #define AlimStatus  (!digitalRead(ALIMTEL))    // Etat de l'alimentation télescope
@@ -125,9 +115,9 @@ const byte LCDLEV[] = {5,10,15,20,40};		// Intensité du rétro-éclairage LCD
 #define StartPC digitalWrite(ALIMPC, HIGH)
 
 #if defined(LUNETTE_ON)
-  #define TelPark true
+#define TelPark true
 #else
-  #define TelPark mcp.digitalRead(PARK)
+#define TelPark mcp.digitalRead(PARK)
 #endif
 
 #define BoutonMA (analogRead(BMA)<300)
@@ -138,7 +128,7 @@ const byte LCDLEV[] = {5,10,15,20,40};		// Intensité du rétro-éclairage LCD
 #define LedOpt      3
 
 // Timers park enclanchés
-bool timeroff=false;  // Arret des alimentations
+bool timeroff = false; // Arret des alimentations
 int idTimer;
 
 //---------------------------------------Variables globales---------------------
@@ -146,7 +136,7 @@ bool Manuel = false;  // Mode manuel
 bool LastPark = false;  // Dernier état de Park
 byte LEVEL[] = {25, 50, 200, 20, 2}; // Intensités Table, Intérieur, Extérieur, LCD, LEDs
 bool REDLED[] = {false, true, true}; // Eclairage rouge (false), blanc (true) Table, Intérieur, Extérieur
-bool ECLSTAT[] = { false, false, false}; //Etat des éclairages 
+bool ECLSTAT[] = { false, false, false}; //Etat des éclairages
 
 bool ECLINT = false;
 bool ECLEXT = false;

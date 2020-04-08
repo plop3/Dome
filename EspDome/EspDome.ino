@@ -40,13 +40,14 @@ void setup()
   Serial.println("Booting");
 
   WiFi.mode(WIFI_STA);
-  wifiMulti.addAP("astro",  "pwd");
-  //wifiMulti.addAP("onstep", "pwd");
-  wifiMulti.addAP("dehors", "pwd");
+  wifiMulti.addAP("astro",  "B546546AF0");
+  //wifiMulti.addAP("onstep", "B546546AF0");
+  wifiMulti.addAP("dehors", "B546546AF0");
 
   while ((wifiMulti.run() != WL_CONNECTED) ) {
     Serial.println("Connection Failed! Restart...");
     delay(5000);
+    ESP.restart();
   }
   ArduinoOTA.setHostname("espdome");
 

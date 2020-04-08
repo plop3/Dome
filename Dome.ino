@@ -8,22 +8,6 @@
 
 #include "Config.h"
 
-//#define REST
-
-#ifdef REST
-#include <ELClient.h>
-#include <ELClientRest.h>
-ELClient esp(&Serial, &Serial);
-ELClientRest rest(&esp);
-#endif
-#ifdef MQTT
-//#include <ELClientCmd.h>
-#include <ELClientMqtt.h>
-ELClient esp(&Serial, &Serial);
-//ELClientCmd cmd(&esp);
-ELClientMqtt mqtt(&esp);
-#endif
-
 //---------------------------------------SETUP-----------------------------------------------
 
 void setup() {
@@ -85,23 +69,6 @@ void setup() {
   // Timer
   timer.setInterval(1000, FuncSec);
 
-#ifdef REST || MQTT
-  // MQTT/Rest
-  byte ok = 30;
-  do {
-    ok--;
-    if (esp.Sync()) ok = 0;    // sync up with esp-link, blocks for up to 2 seconds
-    if (ok) Serial.println("EL-Client sync failed!");
-  } while (ok);
-  Serial.println("EL-Client synced!");
-#endif
-#ifdef REST
-  rest.begin("192.168.0.27:1789");
-#endif
-#ifdef MQTT
-  // TODO
-#endif
-
   if (PortesOuvert) {
     DomeStart();
   }
@@ -157,7 +124,6 @@ void loop() {
           Serial.println("Park");
           Ser2.write("PA#");
           break;
-        //mqtt.publish("/Dome/0", "ParkMount");
         case 1:
           ouvrePorte1();
           break;
@@ -224,7 +190,7 @@ void loop() {
   if (!mcp.digitalRead(BCHOIX)) {
     niveau[POS]++;
     if (niveau[POS] > 4 && POS > 2 && POS < 5) niveau[POS] = 0;
-    if (niveau[POS] > 6 && POS == 5 && !Manuel) niveau[POS] = 0;
+    if (niveau[POS] > 7 && POS == 5 && !Manuel) niveau[POS] = 0;
     if (niveau[POS] > 13 && POS == 5) niveau[POS] = 0;
     if (niveau[POS] > 9 && POS < 5) niveau[POS] = 0;
     MajLCD();
@@ -381,10 +347,7 @@ void loop() {
     }
 
     else if (SerMsg == "PA") {
-      Serial.println("+ParkMount");
-#ifdef REST
-      rest.get("/");
-#endif
+      Ser2.println("PA#");
     }
     /*
          else if (SerMsg == "HO") {
