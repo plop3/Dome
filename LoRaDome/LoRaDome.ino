@@ -14,6 +14,8 @@
 #include <WiFiUdp.h>
 #include <ArduinoOTA.h>
 
+#include "WiFiP.h"
+
 // TM1638 LEDs & Keys /!\ Librairie sur Ghitub plop3 (https://github.com/plop3/tm1638-library)
 #include <TM1638.h>
 TM1638 module(4, 17, 25); // (4, 17, 25)
@@ -31,8 +33,8 @@ TM1638 module(4, 17, 25); // (4, 17, 25)
 #define MY_REPEATER_FEATURE
 //#define MY_GATEWAY_ESP32
 */
-#define MY_WIFI_SSID "astro"
-#define MY_WIFI_PASSWORD "B546546AF0"
+#define MY_WIFI_SSID STASSID
+#define MY_WIFI_PASSWORD STAPSK
 
 // Set the hostname for the WiFi Client. This is the hostname
 // passed to the DHCP server if not static.
