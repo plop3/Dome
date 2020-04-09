@@ -41,7 +41,7 @@ void setup()
   Serial.println("Booting");
 
   WiFi.mode(WIFI_STA);
-  wifiMulti.addAP(STASSID,  STAPSK");
+  wifiMulti.addAP(STASSID,  STAPSK);
   //wifiMulti.addAP("onstep", STAPSK);
   wifiMulti.addAP("dehors", STAPSK);
 
