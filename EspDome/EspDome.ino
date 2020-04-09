@@ -15,6 +15,7 @@
 #include <WiFiUdp.h>
 #include <ArduinoOTA.h>
 
+#include "WiFiP.h"
 ESP8266WiFiMulti wifiMulti;
 
 // NTP
@@ -40,9 +41,9 @@ void setup()
   Serial.println("Booting");
 
   WiFi.mode(WIFI_STA);
-  wifiMulti.addAP("astro",  "B546546AF0");
-  //wifiMulti.addAP("onstep", "B546546AF0");
-  wifiMulti.addAP("dehors", "B546546AF0");
+  wifiMulti.addAP(STASSID,  STAPSK");
+  //wifiMulti.addAP("onstep", STAPSK);
+  wifiMulti.addAP("dehors", STAPSK);
 
   while ((wifiMulti.run() != WL_CONNECTED) ) {
     Serial.println("Connection Failed! Restart...");
