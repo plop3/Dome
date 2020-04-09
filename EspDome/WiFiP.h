@@ -1,4 +1,4 @@
 #ifndef STASSID
 #define STASSID "ssid"
-#define STAPSK  "pwd"
+#define STAPSK  "password"
 #endif
