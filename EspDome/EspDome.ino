@@ -44,11 +44,10 @@ void setup()
   wifiMulti.addAP(STASSID,  STAPSK);
   //wifiMulti.addAP("onstep", STAPSK);
   wifiMulti.addAP("dehors", STAPSK);
-
-  while ((wifiMulti.run() != WL_CONNECTED) ) {
+  while ((wifiMulti.run() != WL_CONNECTED)) {
     Serial.println("Connection Failed! Restart...");
     delay(5000);
-    ESP.restart();
+    //ESP.restart();
   }
   ArduinoOTA.setHostname("espdome");
 
@@ -131,13 +130,13 @@ void FuncSec() {
     compte10 = 0;
     // TODO Lecture de l'état de chauffe du miroir
     String Chauffe = GetScopeInfo(":GXG6#");
-/*    if (Chauffe != "0") {
-      module.setLED(TM1638_COLOR_RED, 7);
-    }
-    else {
-      module.setLED(TM1638_COLOR_NONE, 7);
-    }
-*/
+    /*    if (Chauffe != "0") {
+          module.setLED(TM1638_COLOR_RED, 7);
+        }
+        else {
+          module.setLED(TM1638_COLOR_NONE, 7);
+        }
+    */
   }
   // Toutes les 60s
   if (compte60 == 60) {
