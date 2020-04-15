@@ -76,7 +76,7 @@ void setup() {
   else {
     DomeStop();
   }
-  if (AlimStatus) {
+  if (ALIM12VStatus) {
     if (AbriOuvert && !AbriFerme) StartTel; else StopTel;	// Alimentation 12V du télescope
     // Vérification de la position du dome au démarrage
     if (!AbriOuvert && !AbriFerme) {
