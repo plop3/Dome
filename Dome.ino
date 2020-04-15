@@ -291,6 +291,35 @@ void loop() {
       }
     }
     // Commandes Auto/Manuel
+
+ /*   // Aide
+    if (SerMsg == "??") {
+      Serial.println("Manuel:");
+      Serial.println("OK      Retour en mode automatique");
+      Serial.println("m+ / m- Alimentation moteur déplacement");
+      Serial.println("2+ / 2- Porte 2");
+      Serial.println("dd  /!\\ Déplacement inconditionnel");
+      Serial.println("Auto/manuel:");
+      Serial.println("A? / A+ / A- Alimentation télescope");
+      Serial.println("X? / X+ X X- Alimentation ATX 12V");
+      Serial.println("P?           Etat des portes");
+      Serial.println("D?           Etat du dome");
+      Serial.println("T?           Type de télescope");
+      Serial.println("p+ / p-      Petite porte");
+      Serial.println("AU           ARRET D'URGENCE");
+      Serial.println("M?           Mode (manuel/auto)");
+      Serial.println("E+ / E-      Eclairage extérieur");
+      Serial.println("I+ / I-      Eclairage intérieur");
+      Serial.println("PA           Park du télescope");
+      Serial.println("Auto/manuel:");
+      Serial.println("C?  Informations (abr ferm, abr ouv, po ferm, po ferm, alim tél, park, man/auto");
+      Serial.println("    Capteurs portes pf1, pf2, po1, po2");
+      Serial.println("Auto:");
+      Serial.println("P+ / P-  Portes");
+      Serial.println("D+ / D-  Dome");
+
+    }
+ */
     if (SerMsg == "A+") {
       StartTel;
       Serial.println("1");
@@ -313,6 +342,9 @@ void loop() {
     }
     else if (SerMsg == "A?") {
       Serial.println(AlimStatus ? "1" : "0");
+    }
+    else if (SerMsg == "T?") {
+      Serial.println(TType ? "long" : "court");
     }
 
     else if (SerMsg == "p-") {
