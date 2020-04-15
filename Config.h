@@ -2,9 +2,6 @@
 #include <SoftwareSerial.h> // Port série 2 pour le module LoRa (TM1638...)
 SoftwareSerial Ser2(16, 2); // RX, TX (13, 2)
 
-// Type d'instrument (Pour la gestion du Park)
-#define LUNETTE_OFF
-
 // Temps maxi de park en secondes
 #define TPSPARK 120
 
@@ -57,8 +54,9 @@ SimpleTimer timer;
 #define P21     6   // (R7) Relais 1 porte 2
 #define P22     5   // (R8) Relais 2 porte 2
 
-#define BARU    3 // MCP  // Bouton arret d'urgence
-#define BMA     A6  // Bouton M/A
+#define TSEL    3   // Selection du type d'instument (1: court, 0: long)
+#define BARU    A6 // MCP  // Bouton arret d'urgence
+//#define BMA     A6  // Bouton M/A
 
 // Entrées
 #define PARK  1   	//MCP // Etat du telescope 0: non parqué, 1: parqué
@@ -114,13 +112,12 @@ const byte LCDLEV[] = {5, 10, 15, 20, 40};		// Intensité du rétro-éclairage L
 #define StopPC  digitalWrite(ALIMPC, LOW)
 #define StartPC digitalWrite(ALIMPC, HIGH)
 
-#if defined(LUNETTE_ON)
-#define TelPark true
-#else
-#define TelPark mcp.digitalRead(PARK)
-#endif
+// Type de télescope
+#define TType digitalRead(TSEL)  // Type de télescope 0: petit instrument, 1: grand instrument
 
-#define BoutonMA (analogRead(BMA)<300)
+#define TelPark mcp.digitalRead(PARK)
+
+//#define BoutonMA (analogRead(BMA)<300)
 
 #define LedClavier  0
 #define LedStatus   1

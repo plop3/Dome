@@ -168,13 +168,11 @@ bool deplaceAbri(bool etat) {
       n--;
       delay(10000L);
     }
-    if (!TelPark) {
+    if (!TelPark && TType) {
       return false;
     }
   }
-#if !defined(LUNETTE_ON)
-  StopTel; // Coupure alimentation télescope
-#endif
+  if (!TType) StopTel; // Coupure alimentation télescope
 
   Led(LedStatus, LEVEL[4], LEVEL[4], 0, true);
   if (!PortesOuvert) {
@@ -206,9 +204,7 @@ bool deplaceAbri(bool etat) {
   etat = AbriOuvert;
   if (!etat) {
     // Abri fermé
-#if !defined(LUNETTE_ON)
-    StopTel; // Coupure alimentation télescope
-#endif
+    if (!TType) StopTel; // Coupure alimentation télescope
     msgInfo("Abri fermé", 1);
     delay(500);
     changePortes(false);             // Fermeture des portes
@@ -241,7 +237,7 @@ bool attendARU(unsigned long delai, bool park, bool depl, bool portes) {
     }
     // Si le telescope n'est plus parqué pendant le déplacement -> ARU
     if (park) {
-      if (!TelPark) nbpark++;
+      if (!TelPark && TType) nbpark++;
       if (nbpark >= ERRMAX) {
         ARU("Park");
         return false;
@@ -346,13 +342,14 @@ void DomeStop() {
     StopTel; // Coupure alimentation télescope
     #endif
   */
-#if defined(LUNETTE_ON)
-  idTimer = timer.setTimeout(TPSPARK * 1000L, StopAlim);
-  timeroff = true;
-#else
-  // Alimentation 12V
-  digitalWrite(ALIM12V, HIGH);
-#endif
+  if (!TType) {
+    idTimer = timer.setTimeout(TPSPARK * 1000L, StopAlim);
+    timeroff = true;
+  }
+  else {
+    // Alimentation 12V
+    digitalWrite(ALIM12V, HIGH);
+  }
   delay(1000);
   LastPark = true;	// Désactive l'affichage de l'état du park
   Lock = true;	// Clavier locké

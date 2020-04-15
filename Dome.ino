@@ -41,7 +41,7 @@ void setup() {
   mcp.pinMode(Pf2, INPUT); mcp.pullUp(Pf2, HIGH);
   mcp.pinMode(BARU, INPUT); mcp.pullUp(BARU, HIGH);
   mcp.pinMode(PARK, INPUT); 		//Résistance pulldown de 10k
-  pinMode(BMA, INPUT);				//Bouton Marche/arret (pour l'instant non cablé)
+  //pinMode(BMA, INPUT);				//Bouton Marche/arret (pour l'instant non cablé)
   pinMode(BKLIGHT, OUTPUT);			//Sortie rétro-éclairage LCD
   analogWrite(BKLIGHT, LEVEL[3]);
 
@@ -75,11 +75,13 @@ void setup() {
   else {
     DomeStop();
   }
-  if (AbriOuvert && !AbriFerme) StartTel; else StopTel;	// Alimentation 12V du télescope
-  // Vérification de la position du dome au démarrage
-  if (!AbriOuvert && !AbriFerme) {
-    // Position incorrecte on passe en mode manuel
-    Manuel = true;
+  if (AlimStatus) {
+    if (AbriOuvert && !AbriFerme) StartTel; else StopTel;	// Alimentation 12V du télescope
+    // Vérification de la position du dome au démarrage
+    if (!AbriOuvert && !AbriFerme) {
+      // Position incorrecte on passe en mode manuel
+      Manuel = true;
+    }
   }
 }
 
@@ -389,7 +391,7 @@ void loop() {
   // TEST DEPLACEMENT INOPINE DU DOME
   // TODO à décommenter quand installé
 
-  if (!Manuel && !AbriFerme && !AbriOuvert) {
+  if (AlimStatus && !Manuel && !AbriFerme && !AbriOuvert) {
     ARU("Position");
   }
 
@@ -399,9 +401,9 @@ void loop() {
      ARU("Bouton");
     }
   */
-  // Bouton Marche/Arret ? on ouvre la petite porte
-  if (BoutonMA) {
-    ouvrePorte1();
-  }
-
+  /*  // Bouton Marche/Arret ? on ouvre la petite porte
+    if (BoutonMA) {
+      ouvrePorte1();
+    }
+  */
 }
