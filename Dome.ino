@@ -40,6 +40,7 @@ void setup() {
   mcp.pinMode(Po2, INPUT); mcp.pullUp(Po2, HIGH);
   mcp.pinMode(Pf2, INPUT); mcp.pullUp(Pf2, HIGH);
   mcp.pinMode(BARU, INPUT); mcp.pullUp(BARU, HIGH);
+  mcp.pinMode(TSEL, INPUT); mcp.pullUp(TSEL, HIGH);
   mcp.pinMode(PARK, INPUT); 		//Résistance pulldown de 10k
   //pinMode(BMA, INPUT);				//Bouton Marche/arret (pour l'instant non cablé)
   pinMode(BKLIGHT, OUTPUT);			//Sortie rétro-éclairage LCD

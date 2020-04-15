@@ -113,7 +113,7 @@ const byte LCDLEV[] = {5, 10, 15, 20, 40};		// Intensité du rétro-éclairage L
 #define StartPC digitalWrite(ALIMPC, HIGH)
 
 // Type de télescope
-#define TType digitalRead(TSEL)  // Type de télescope 0: petit instrument, 1: grand instrument
+#define TType mcp.digitalRead(TSEL)  // Type de télescope 0: petit instrument, 1: grand instrument
 
 #define TelPark mcp.digitalRead(PARK)
 
