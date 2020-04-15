@@ -94,9 +94,16 @@ void ouvrePorte2(void) {
 
 // Change la position des portes 0: ouverture 1 fermeture
 bool changePortes(bool etat) {
+  bool alimOn = false;
+  if (!ALIM12VStatus) {
+    digitalWrite(ALIM12V, LOW);
+    delay(2000);
+    alimOn = true;
+  }
   // Commande identique à l'état actuel, on sort
   if ((etat && PortesOuvert) || (!etat && PortesFerme)) {
     msgInfo("Erreur position", 2);
+    if (!alimOn)   digitalWrite(ALIM12V, HIGH);
     return false;
   }
   if (etat) {   // Ouverture des portes
@@ -151,9 +158,16 @@ void DeplaceDomeARU(void) {
 }
 // Déplacement de l'abri 1: ouverture 0: fermeture
 bool deplaceAbri(bool etat) {
+  bool alimOn = false;
+  if (!ALIM12VStatus) {
+    digitalWrite(ALIM12V, LOW);
+    delay(2000);
+    alimOn = true;
+  }
   // Commande identique à l'état actuel, on sort
   if ((etat && AbriOuvert) || (!etat && AbriFerme)) {
     msgInfo("Erreur position", 2);
+    if (!alimOn)   digitalWrite(ALIM12V, HIGH);
     return false;
   }
   // Test telescope parqué
@@ -169,6 +183,7 @@ bool deplaceAbri(bool etat) {
       delay(10000L);
     }
     if (!TelPark && TType) {
+      if (!alimOn)   digitalWrite(ALIM12V, HIGH);
       return false;
     }
   }
