@@ -215,22 +215,22 @@ void loop() {
 
       //Serial.print(key);
       // TODO Changement temporaire des touches (problème avec le clavier)
-      if (key == '5') { // A
+      if (key == '*') { // A
         deplaceAbri(true);
       }
-      else if (key == '6') { //B
+      else if (key == '#') { //B
         deplaceAbri(false);
       }
-      else if (key == '8') { //C
+      else if (key == 'A') { //C
         changePortes(true);
       }
-      else if (key == '9') { //D
+      else if (key == 'B') { //D
         changePortes(false);
       }
-      else if (key == '*') {
+      else if (key == 'C') {
         ouvrePorte1();
       }
-      else if (key == '#') {
+      else if (key == 'D') {
         fermePorte1();
       }
       else if (key == "1") {
@@ -242,6 +242,9 @@ void loop() {
         ECLSTAT[1] = !ECLSTAT[1];
         Eclaire(1, LEVEL[1] * ECLSTAT[1], REDLED[1]);
         delay(300);
+      }
+      else if (key=="9") {
+         Ser2.println("PA#");
       }
     }
   }
