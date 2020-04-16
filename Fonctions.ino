@@ -287,7 +287,7 @@ bool attendARU(unsigned long delai, bool park, bool depl, bool portes) {
 void ARU(String msg) {        // Arret d'urgence
   // Arret de l'alimentation de l'abri
   // Initialisation des relais
-  Serial.println("ARU");
+  Serial.println("ARU "+msg);
   digitalWrite(ALIMTEL, HIGH);
   digitalWrite(ALIMMOT, HIGH);
   digitalWrite(MOTEUR, HIGH);
