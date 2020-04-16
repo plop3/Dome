@@ -66,7 +66,7 @@ void setup() {
   lcd.print("2R 3B 5B 2  2  PARK");
   lcd.setCursor(POS * 3, 3);
   lcd.blink();
-  
+
   // Démarrage de l'alimentation 12V (pour la lecture des capteurs)
   digitalWrite(ALIM12V, LOW);
   delay(5000);
@@ -126,6 +126,7 @@ void loop() {
         case 0:
           Serial.println("Park");
           Ser2.write("PA#");
+          delay(300);
           break;
         case 1:
           ouvrePorte1();
@@ -233,18 +234,19 @@ void loop() {
       else if (key == 'D') {
         fermePorte1();
       }
-      else if (key == "1") {
+      else if (key == '1') {
         ECLSTAT[2] = !ECLSTAT[2];
         Eclaire(0, LEVEL[2] * ECLSTAT[2], REDLED[2]);
         delay(300);
       }
-      else if (key == "2") {
+      else if (key == '2') {
         ECLSTAT[1] = !ECLSTAT[1];
         Eclaire(1, LEVEL[1] * ECLSTAT[1], REDLED[1]);
         delay(300);
       }
-      else if (key=="9") {
-         Ser2.println("PA#");
+      else if (key == '9') {
+        Ser2.println("PA#");
+        delay(300);
       }
     }
   }
