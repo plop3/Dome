@@ -18,19 +18,20 @@ void bip(byte pin, int freq, int delai) {
   delay(200);
   analogWrite(BKLIGHT, LEVEL[3]);
 }
+
 // Lecture des commandes depuis le port série
 String LireCmd(void) {
   if (Serial.available()) {
     SerMsg = Serial.readStringUntil(35);
     return SerMsg;
   }
-
   if (Ser2.available()) {
     SerMsg = Ser2.readStringUntil(35);
     return SerMsg;
   }
   return "";
 }
+
 // Affichage d'un message d'info sur l'écran LCD
 void msgInfo(String texte, byte type) {
   // Type: 0 mouvement en cours, 1 info, 2 erreur, 3 alerte
@@ -95,7 +96,7 @@ void ouvrePorte2(void) {
 // Change la position des portes 0: ouverture 1 fermeture
 bool changePortes(bool etat) {
   bool alimOn = false;
-  if (!ALIM12VStatus) {
+  if (!Alim12VStatus) {
     digitalWrite(ALIM12V, LOW);
     delay(2000);
     alimOn = true;
@@ -103,7 +104,7 @@ bool changePortes(bool etat) {
   // Commande identique à l'état actuel, on sort
   if ((etat && PortesOuvert) || (!etat && PortesFerme)) {
     msgInfo("Erreur position", 2);
-    if (!alimOn)   digitalWrite(ALIM12V, HIGH);
+    if (alimOn)   digitalWrite(ALIM12V, HIGH);
     return false;
   }
   if (etat) {   // Ouverture des portes
@@ -156,10 +157,11 @@ void DeplaceDomeARU(void) {
   delay(600);
   digitalWrite(MOTEUR, HIGH);
 }
+
 // Déplacement de l'abri 1: ouverture 0: fermeture
 bool deplaceAbri(bool etat) {
   bool alimOn = false;
-  if (!ALIM12VStatus) {
+  if (!Alim12VStatus) {
     digitalWrite(ALIM12V, LOW);
     delay(2000);
     alimOn = true;
@@ -167,7 +169,7 @@ bool deplaceAbri(bool etat) {
   // Commande identique à l'état actuel, on sort
   if ((etat && AbriOuvert) || (!etat && AbriFerme)) {
     msgInfo("Erreur position", 2);
-    if (!alimOn)   digitalWrite(ALIM12V, HIGH);
+    if (alimOn)   digitalWrite(ALIM12V, HIGH);
     return false;
   }
   // Test telescope parqué
@@ -175,7 +177,6 @@ bool deplaceAbri(bool etat) {
     msgInfo("Erreur Park", 2);
     // Tentative de parquer le télescope
     Ser2.write("PA#");
-    // TODO demande de park au raspi "astro"
     // Attente de 3mn maxi
     byte n = 18;
     while (!TelPark && n > 0) {
@@ -183,7 +184,7 @@ bool deplaceAbri(bool etat) {
       delay(10000L);
     }
     if (!TelPark && TType) {
-      if (!alimOn)   digitalWrite(ALIM12V, HIGH);
+      if (alimOn)   digitalWrite(ALIM12V, HIGH);
       return false;
     }
   }
@@ -239,7 +240,7 @@ bool deplaceAbri(bool etat) {
 
 // Boucle d'attente pendant le déplacement de l'abri
 bool attendARU(unsigned long delai, bool park, bool depl, bool portes) {
-  byte ERRMAX = 2;
+  byte ERRMAX = 3;
   byte nbpark = 0;
   unsigned long Cprevious = millis();
   while ((millis() - Cprevious) < delai) {
@@ -349,16 +350,9 @@ void DomeStop() {
   pixels.clear();
   pixels.show();
   StopMot;
-  /*
-    #if defined(LUNETTE_ON)
-    // Démarre le timer pour la coupure du 12V
-    tpark.setTimeout(TPSPARK * 1000L, StopPark);
-    #else
-    StopTel; // Coupure alimentation télescope
-    #endif
-  */
+ 
   if (!TType) {
-    idTimer = timer.setTimeout(TPSPARK * 1000L, StopAlim);
+    idTimer = timer.setTimeout(TPSPARK * 1000L, StopAlim12Vtimer);
     timeroff = true;
   }
   else {
@@ -370,11 +364,7 @@ void DomeStop() {
   Lock = true;	// Clavier locké
   Veille = false;
 }
-// Fonction executée toutes les secondes
-void FuncSec() {
-  // Repositionne le curseur de l'afficheur
-  //lcd.setCursor(POS * 3, 3);
-}
+
 // Eclairage du clavier
 void EclaireClavier() {
   // Allume la LED pendant 5mn
@@ -520,21 +510,9 @@ void MajLCD() {
   delay(200);
 }
 
-void StopAlim() {
+void StopAlim12Vtimer() {
   timeroff = false;
   StopTel;
   delay(100);
   digitalWrite(ALIM12V, HIGH);
 }
-/*
-  String SerESP() {
-  // Retourne les infos de l'ESP32
-  unsigned long currentMillis = millis();
-  unsigned long previousMillis = millis();
-  while ((currentMillis - previousMillis < 1000) && !Ser2.available())
-  {
-    currentMillis=millis();
-  }
-  return Ser2.readStringUntil('\r');
-  }
-*/

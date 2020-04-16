@@ -2,8 +2,8 @@
   Pilotage automatique de l'abri du telescope
   Serge CLAUS
   GPL V3
-  Version 2.9
-  22/10/2018-14/01/2020
+  Version 3.0
+  22/10/2018-16/04/2020
 */
 
 #include "Config.h"
@@ -13,7 +13,7 @@
 void setup() {
   // Initialisation des ports série
   Serial.begin(57600);	// Connexion à ESP-Link (ESP8266)
-  Ser2.begin(9600);		// Connexion à ESP32 LoRa
+  Ser2.begin(9600);		// Connexion à ESP8266 espDome
 
   // MCP23017 Gestion des entrées capteurs, park...
   mcp.begin();
@@ -66,23 +66,23 @@ void setup() {
   lcd.print("2R 3B 5B 2  2  PARK");
   lcd.setCursor(POS * 3, 3);
   lcd.blink();
+  
+  // Démarrage de l'alimentation 12V (pour la lecture des capteurs)
+  digitalWrite(ALIM12V, LOW);
+  delay(5000);
 
-  // Timer
-  timer.setInterval(1000, FuncSec);
-
+  if (AbriOuvert && !AbriFerme) StartTel; else StopTel;	// Alimentation 12V du télescope
+  // Vérification de la position du dome au démarrage
+  if (!AbriOuvert && !AbriFerme) {
+    // Position incorrecte on passe en mode manuel
+    Manuel = true;
+  }
+  // Etat actuel de l'abri
   if (PortesOuvert) {
     DomeStart();
   }
   else {
     DomeStop();
-  }
-  if (ALIM12VStatus) {
-    if (AbriOuvert && !AbriFerme) StartTel; else StopTel;	// Alimentation 12V du télescope
-    // Vérification de la position du dome au démarrage
-    if (!AbriOuvert && !AbriFerme) {
-      // Position incorrecte on passe en mode manuel
-      Manuel = true;
-    }
   }
 }
 
@@ -112,7 +112,7 @@ void loop() {
     Eclaire(0, LEVEL[2] * ECLSTAT[2], REDLED[2]);
     delay(300);
   }
-  // IHM
+  // IHM Menus de l'écran LCD
   if (!mcp.digitalRead(BVALID)) {
     if (Lock) {
       // Active l'afficheur LCD
@@ -152,23 +152,23 @@ void loop() {
           delay(800);
           break;
         case 8:
-          if (Manuel) ouvrePorte2();
+          ouvrePorte2();
           break;
         case 9:
-          if (Manuel) fermePorte2();
+          fermePorte2();
           break;
         case 10:
-          if (Manuel) DeplaceDomeARU();
+          DeplaceDomeARU();
           break;
         case 11:
-          if (Manuel) StartMot;
+          StartMot;
           break;
         case 12:
-          if (Manuel) digitalWrite(ALIM12V, LOW);
+          digitalWrite(ALIM12V, LOW);
           delay(1000);
           break;
         case 13:
-          if (Manuel) digitalWrite(ALIM12V, HIGH);
+          digitalWrite(ALIM12V, HIGH);
           break;
       }
     }
@@ -184,6 +184,7 @@ void loop() {
   }
   // Touche de déplacement (2)
   if (!mcp.digitalRead(BSEL)) {
+    lcd.backlight();
     POS++;
     if (POS > 5) POS = 0;
     lcd.setCursor(POS * 3, 3);
@@ -332,7 +333,7 @@ void loop() {
       digitalWrite(ALIM12V, HIGH);
     }
     else if ( SerMsg == "X?" ) {
-      Serial.println(ALIM12VStatus ? "1" : "0");
+      Serial.println(Alim12VStatus ? "1" : "0");
     }
     else if ( SerMsg == "A-") {
       StopTel;
@@ -345,7 +346,7 @@ void loop() {
       Serial.println((AbriFerme) ? "0" : "1");
     }
     else if (SerMsg == "A?") {
-      Serial.println(AlimStatus ? "1" : "0");
+      Serial.println(AlimTelStatus ? "1" : "0");
     }
     else if (SerMsg == "T?") {
       Serial.println(TType ? "long" : "court");
@@ -387,26 +388,13 @@ void loop() {
     else if (SerMsg == "PA") {
       Ser2.println("PA#");
     }
-    /*
-         else if (SerMsg == "HO") {
-         Ser2.write("HO#");
-         Serial.println(SerESP());
-         }
-         else if (SerMsg == "FN") {
-         Ser2.write("FN#");
-         Serial.println(SerESP());
-         }
-         else if (SerMsg == "EC") {
-         Ser2.write("EC#");
-         Serial.println(SerESP());
-         }
-    */
     else if (SerMsg == "C?") {
       Serial.print(AbriFerme);
       Serial.print(AbriOuvert);
       Serial.print(PortesFerme);
       Serial.print(PortesOuvert);
-      Serial.print(AlimStatus);
+      Serial.print(Alim12VStatus);
+      Serial.print(AlimTelStatus);
       Serial.print(TelPark ? "p" : "n");
       Serial.println(Manuel ? "m" : "a");
       Serial.print(mcp.digitalRead(Pf1));
@@ -427,7 +415,7 @@ void loop() {
   // TEST DEPLACEMENT INOPINE DU DOME
   // TODO à décommenter quand installé
 
-  if (ALIM12VStatus && !Manuel && !AbriFerme && !AbriOuvert) {
+  if (Alim12VStatus && !Manuel && !AbriFerme && !AbriOuvert) {
     ARU("Position");
   }
 

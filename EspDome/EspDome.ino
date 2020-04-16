@@ -18,19 +18,19 @@
 #include "WiFiP.h"
 ESP8266WiFiMulti wifiMulti;
 
+/*
 // NTP
 #include <NTPClient.h>
 WiFiUDP ntpUDP;
 NTPClient timeClient(ntpUDP);
+*/
 
 //---------------------------------------Macros---------------------------------------------------
+#define DEBUG_OFF
 
 //---------------------------------------CONSTANTES-----------------------------------------------
 
 //---------------------------------------VARIABLES GLOBALES---------------------------------------
-int compte60 = 0;    // Compteur pour exécuter des commandes toutes les 10s
-int compte10 = 0;   // Compteur pour exécuter des commandes toutes les 5s
-
 
 //---------------------------------------SETUP-----------------------------------------------
 
@@ -38,14 +38,12 @@ void setup()
 {
   // WiFi
   Serial.begin(9600);
-  Serial.println("Booting");
 
   WiFi.mode(WIFI_STA);
   wifiMulti.addAP(STASSID,  STAPSK);
   //wifiMulti.addAP("onstep", STAPSK);
   wifiMulti.addAP("dehors", STAPSK);
   while ((wifiMulti.run() != WL_CONNECTED)) {
-    Serial.println("Connection Failed! Restart...");
     delay(5000);
     //ESP.restart();
   }
@@ -53,42 +51,23 @@ void setup()
 
   // Setup locally attached sensors
   ArduinoOTA.onStart([]() {
-    Serial.println("Start updating");
   });
   ArduinoOTA.onEnd([]() {
-    Serial.println("\nEnd updating");
   });
   ArduinoOTA.onProgress([](unsigned int progress, unsigned int total) {
-    Serial.printf("OTA Progress: %u%%\r", (progress / (total / 100)));
   });
   ArduinoOTA.onError([](ota_error_t error) {
-    Serial.printf("Error[%u]: ", error);
-    if (error == OTA_AUTH_ERROR) {
-      Serial.println("Auth Failed");
-    } else if (error == OTA_BEGIN_ERROR) {
-      Serial.println("Begin Failed");
-    } else if (error == OTA_CONNECT_ERROR) {
-      Serial.println("Connect Failed");
-    } else if (error == OTA_RECEIVE_ERROR) {
-      Serial.println("Receive Failed");
-    } else if (error == OTA_END_ERROR) {
-      Serial.println("End Failed");
-    }
   });
   ArduinoOTA.begin();
-  Serial.println("Ready");
-  Serial.print("IP address: ");
-  Serial.println(WiFi.localIP());
 
   // NTP
-  timeClient.begin();
+  //timeClient.begin();
   //timeClient.setTimeOffset(3600); On reste en GMT
 }
 
 //---------------------------------------BOUCLE PRINCIPALE------------------------------------
 
-void loop()
-{
+void loop() {
   String SerMsg;
   String ret;
   ArduinoOTA.handle();
@@ -98,55 +77,12 @@ void loop()
     SerMsg = Serial.readStringUntil(35);
     if (SerMsg == "PA") {
       ret = GetScopeInfo(":hP#");
-      Serial.println(ret);
+      //Serial.println(ret);
     }
-    else if (SerMsg == "HO") {
-      GetScopeInfo(":hC#");
-      Serial.println("0");
-    }
-    else if (SerMsg == "FN") {
-      ret = GetScopeInfo(":GVN#");
-      Serial.println(ret);
-    }
-    /*
-        else if (SerMsg == "DO") {
-          send(msgD.set(0));
-        }
-        else if (SerMsg == "DF") {
-          send(msgD.set(1));
-        }
-    */
   }
 }
 
 //---------------------------------------FONCTIONS--------------------------------------------
-
-// Fonction executée toutes les secondes
-void FuncSec() {
-  compte10++;
-  compte60++;
-  // Toutes les 10s
-  if (compte10 == 10) {
-    compte10 = 0;
-    // TODO Lecture de l'état de chauffe du miroir
-    String Chauffe = GetScopeInfo(":GXG6#");
-    /*    if (Chauffe != "0") {
-          module.setLED(TM1638_COLOR_RED, 7);
-        }
-        else {
-          module.setLED(TM1638_COLOR_NONE, 7);
-        }
-    */
-  }
-  // Toutes les 60s
-  if (compte60 == 60) {
-    // Fonctions exécutées toutes les 60s
-    compte60 = 0;
-    String Temp = GetScopeInfo(":GX9A#");	// T°
-    String Hum = GetScopeInfo(":GX9C#");	// H%
-  }
-  // Toutes les 1s
-}
 
 // Récupération des infos de la carte Dome
 String GetDomeInfo(String msg) {

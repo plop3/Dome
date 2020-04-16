@@ -11,10 +11,13 @@
                 "/opt/arduino-1.8.9/tools/**",
                 "/opt/arduino-1.8.10/hardware/arduino/avr/**",
                 "/opt/arduino-1.8.10/tools/**",
-                "/home/serge/Arduino/libraries/**"
+                "/home/serge/Arduino/libraries/**",
+                "/opt/arduino-1.8.12/hardware/arduino/avr/**",
+                "/opt/arduino-1.8.12/tools/**"
             ],
             "forcedInclude": [
-                "/opt/arduino-1.8.10/hardware/arduino/avr/cores/arduino/Arduino.h"
+                "/opt/arduino-1.8.10/hardware/arduino/avr/cores/arduino/Arduino.h",
+                "/opt/arduino-1.8.12/hardware/arduino/avr/cores/arduino/Arduino.h"
             ],
             "intelliSenseMode": "gcc-x64",
             "compilerPath": "/usr/bin/clang",

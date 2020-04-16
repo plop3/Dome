@@ -99,8 +99,8 @@ const byte APALEV[] = {10, 25, 50, 100, 200};		// Intensités des barreaux de LE
 const byte LCDLEV[] = {5, 10, 15, 20, 40};		// Intensité du rétro-éclairage LCD
 
 //---------------------------------------Macros---------------------------------
-#define AlimStatus  (!digitalRead(ALIMTEL))    // Etat de l'alimentation télescope
-#define ALIM12VStatus (!digitalRead(ALIM12V))  // Etat de l'alimentation 12V ATX
+#define AlimTelStatus  (!digitalRead(ALIMTEL))    // Etat de l'alimentation télescope
+#define Alim12VStatus (!digitalRead(ALIM12V))  // Etat de l'alimentation 12V ATX
 #define PortesOuvert (!mcp.digitalRead(Po1) && !mcp.digitalRead(Po2))
 #define PortesFerme (!mcp.digitalRead(Pf1) && !mcp.digitalRead(Pf2))
 #define AbriFerme (!mcp.digitalRead(AF))
