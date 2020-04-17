@@ -208,13 +208,13 @@ bool deplaceAbri(bool etat) {
     digitalWrite(MOTEUR, LOW);
     delay(600);
     digitalWrite(MOTEUR, HIGH);
-    attendARU(4000, true, false, true);	// Attente pour voir si la commande est bien passée
+    attendARU(4000, true, false, false);	// Attente pour voir si la commande est bien passée
   }
-  if (!attendARU(DELAIABRI, true, false, true)) return false;
+  if (!attendARU(DELAIABRI, true, false, false)) return false;
   while (!AbriFerme && !AbriOuvert) {
-    if (!attendARU(1000, true, false, true)) return false;
+    if (!attendARU(1000, true, false, false)) return false;
   }
-  if (!attendARU(2000, true, false, true)) return false;   // Finir le déplacement
+  if (!attendARU(2000, true, false, false)) return false;   // Finir le déplacement
   Eclaire(2, 0, 1);
   // Etat réel de l'abri au cas ou le déplacement soit inversé
   etat = AbriOuvert;
