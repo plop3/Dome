@@ -407,6 +407,12 @@ void loop() {
       Serial.print(mcp.digitalRead(Po1));
       Serial.println(mcp.digitalRead(Po2));
     }
+    else if (SerMsg == "DI") {
+      Ser2.println(!AbriOuvert);
+    }
+    else if (SerMsg == "PI") {
+      Ser2.println(PortesOuvert);
+    }
   }
 
   // LED état park
