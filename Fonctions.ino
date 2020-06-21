@@ -358,6 +358,7 @@ void DomeStop() {
   else {
     // Alimentation 12V
     digitalWrite(ALIM12V, HIGH);
+    StopTel;
   }
   delay(1000);
   LastPark = true;	// Désactive l'affichage de l'état du park
