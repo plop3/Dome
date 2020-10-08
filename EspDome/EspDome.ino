@@ -54,10 +54,10 @@ void setup()
   Serial.begin(9600);
 
   WiFi.mode(WIFI_STA);
-  IPAddress ip(192, 168, 0, 17);
+  IPAddress ip(10, 42, 0, 7);
   IPAddress subnet(255, 255, 255, 0);
-  IPAddress dns(192, 168, 0, 1);
-  IPAddress gateway(192, 168, 0, 1);
+  IPAddress dns(10, 42, 0, 1);
+  IPAddress gateway(10, 42, 0, 1);
   WiFi.config(ip, gateway, subnet, dns);
    WiFi.begin(ssid, password);
   while (WiFi.waitForConnectResult() != WL_CONNECTED) {

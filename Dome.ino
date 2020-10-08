@@ -7,8 +7,10 @@
 */
 
 #include "Config.h"
-
+#include <WiFiLink.h>
 //---------------------------------------SETUP-----------------------------------------------
+
+WiFiServer server(80); // will stop the Web Panel web server at port 80
 
 void setup() {
   // Initialisation des ports série
